@@ -32,6 +32,12 @@ main{max-width:1240px;margin:auto;padding:18px}.section{display:none}.section.ac
 .subgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.subbox{border:1px solid var(--line);border-radius:12px;padding:10px}.subbox label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}.subbox input{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:right}
 table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{font-size:12px;color:var(--muted)}th:last-child,td:last-child{text-align:right}
 input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius:999px;background:#f3f4f6;color:var(--muted)}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.summary-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:0 1px 5px #00000008}
+.summary-title{font-size:13px;font-weight:800;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.summary-list{display:grid;gap:0}.summary-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:4px 0;font-size:12px;border-bottom:1px solid #f1f5f9}.summary-item:last-child{border-bottom:0}
+.summary-item span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#374151}.summary-item strong{font-size:12px;color:var(--blue);white-space:nowrap}
+.summary-card.compact .summary-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.summary-card.compact .summary-item:nth-last-child(2):nth-child(odd){border-bottom:0}
 @media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}}
 </style>
 </head>
@@ -49,7 +55,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </div></div></header>
 
 <main>
-<section id="summary" class="section active"><div class="note">所持数から「何人分相当か」を自動計算します。装備は通常設計図と種類別万能設計図を合わせ、T1→T10まで最大何人を完成できるかを計算します。</div><table><thead><tr><th>素材</th><th>現在</th></tr></thead><tbody id="summaryBody"></tbody></table></section>
+<section id="summary" class="section active"><div class="note">種類ごとに現在の育成可能量だけをまとめて表示します。詳しい内訳は各タブで確認できます。</div><div id="summaryGrid" class="summary-grid"></div></section>
 
 <section id="bd" class="section"><div class="note">各学園について、4レアリティのうち最も不足している段階を基準に人数換算します。</div><div id="bdGrid" class="grid"></div></section>
 <section id="notes" class="section"><div class="note">各学園について、4レアリティのうち最も不足している段階を基準に人数換算します。</div><div id="notesGrid" class="grid"></div></section>
@@ -112,7 +118,28 @@ weaponGroups.forEach(([k,l,img])=>miscGrid.append(expCard("固有武器素材・
 const wb=document.createElement("div");wb.className="card";wb.innerHTML='<div class="imgline"><img class="icon" src="images/misc/wb.png" alt="WB"><div><div class="name">WB</div><div class="caption">代表画像1枚／各種類70冊＝1人分</div></div></div><div class="subgrid"><div class="subbox"><label>HP</label><input data-wb="hp" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="hp"></strong></div></div><div class="subbox"><label>攻撃</label><input data-wb="atk" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="atk"></strong></div></div><div class="subbox"><label>治癒</label><input data-wb="heal" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="heal"></strong></div></div></div>';
 ["hp","atk","heal"].forEach(k=>{const x=wb.querySelector('[data-wb="'+k+'"]');x.value=state.wb[k]||"";const up=()=>wb.querySelector('[data-r="'+k+'"]').textContent=fr(n(state.wb[k])/70);x.oninput=()=>{state.wb[k]=n(x.value);save();up()};up()});miscGrid.append(wb);
 [["credits","クレジット",simpleBase.credits],["secretNotes","秘伝ノート",simpleBase.secretNotes],["eligma","カケラ",simpleBase.eligma]].forEach(([k,l,b])=>{const c=document.createElement("div");c.className="mini";c.innerHTML='<div class="name">'+l+'</div><input type="number" min="0"><div class="meta"><span>1人分：'+b.toLocaleString()+'</span><strong></strong></div>';const x=c.querySelector("input"),o=c.querySelector("strong");x.value=state.simple[k]||"";const up=()=>o.textContent=fr(n(state.simple[k])/b);x.oninput=()=>{state.simple[k]=n(x.value);save();up()};up();miscGrid.append(c)})}
-function summary(){const rows=[];schools.forEach(([k,l])=>{rows.push([l+" BD",fr(smin(state.bd[k],base.bd))]);rows.push([l+" ノート",fr(smin(state.notes[k],base.notes))])});ops.forEach(([k,l])=>rows.push([l,fr(smin(state.ooparts[k],base.ooparts))]));eq.forEach(([k,l])=>rows.push([l+" 装備",maxEquipPeople(k)+"人"]));rows.push(["レポート",fr(expOf(state.reports,reportExp)/reportTarget)]);rows.push(["強化珠",fr(expOf(state.stones,stoneExp)/stoneTarget)]);weaponGroups.forEach(([k,l])=>rows.push(["固有武器素材・"+l,fr(expOf(state.weapon[k],weaponExp)/weaponTarget)]));rows.push(["WB・HP",fr(n(state.wb.hp)/70)],["WB・攻撃",fr(n(state.wb.atk)/70)],["WB・治癒",fr(n(state.wb.heal)/70)]);Object.entries(simpleBase).forEach(([k,b])=>{const l={credits:"クレジット",secretNotes:"秘伝ノート",eligma:"カケラ"}[k];rows.push([l,fr(n(state.simple[k])/b)])});summaryBody.innerHTML=rows.map(([a,b])=>"<tr><td>"+a+"</td><td><b>"+b+"</b></td></tr>").join("")}
+function summary(){
+const groups=[
+["BD",schools.map(([k,l])=>[l,fr(smin(state.bd[k],base.bd))]),true],
+["ノート",schools.map(([k,l])=>[l,fr(smin(state.notes[k],base.notes))]),true],
+["オーパーツ",ops.map(([k,l])=>[l,fr(smin(state.ooparts[k],base.ooparts))]),false],
+["装備",eq.map(([k,l])=>[l,maxEquipPeople(k)+"人"]),true],
+["育成素材",[
+["レポート",fr(expOf(state.reports,reportExp)/reportTarget)],
+["強化珠",fr(expOf(state.stones,stoneExp)/stoneTarget)],
+["クレジット",fr(n(state.simple.credits)/simpleBase.credits)],
+["秘伝ノート",fr(n(state.simple.secretNotes)/simpleBase.secretNotes)],
+["カケラ",fr(n(state.simple.eligma)/simpleBase.eligma)]
+],false],
+["固有武器",weaponGroups.map(([k,l])=>[l,fr(expOf(state.weapon[k],weaponExp)/weaponTarget)]),false],
+["WB",[
+["HP",fr(n(state.wb.hp)/70)],
+["攻撃",fr(n(state.wb.atk)/70)],
+["治癒",fr(n(state.wb.heal)/70)]
+],false]
+];
+summaryGrid.innerHTML=groups.map(([title,items,compact])=>'<div class="summary-card'+(compact?' compact':'')+'"><div class="summary-title"><span>'+title+'</span><span class="pill">'+items.length+'種</span></div><div class="summary-list">'+items.map(([a,b])=>'<div class="summary-item"><span>'+a+'</span><strong>'+b+'</strong></div>').join("")+'</div></div>').join("");
+}
 function sortOps(){const q=opSearch.value.trim().toLowerCase(),s=opSort.value,c=[...opGrid.children];c.forEach(x=>x.style.display=x.dataset.label.toLowerCase().includes(q)?"":"none");c.sort((a,b)=>s==="asc"?+a.dataset.score-+b.dataset.score:s==="desc"?+b.dataset.score-+a.dataset.score:a.dataset.label.localeCompare(b.dataset.label,"ja")).forEach(x=>opGrid.append(x))}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active")});
 opSearch.oninput=sortOps;opSort.onchange=sortOps;
