@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.15";
+const APP_VERSION="0.9.16";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -610,8 +610,45 @@ function bdCanonicalItems(){
     school,tier
   })));
 }
+function rgbToHsv(r,g,b){
+  r/=255;g/=255;b/=255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;
+  let h=0;
+  if(d){
+    if(mx===r)h=((g-b)/d)%6;
+    else if(mx===g)h=(b-r)/d+2;
+    else h=(r-g)/d+4;
+    h*=60;if(h<0)h+=360;
+  }
+  return {h,s:mx?d/mx:0,v:mx};
+}
+function slotTierByCardColor(slot){
+  const w=slot.width,h=slot.height,ctx=slot.getContext("2d",{willReadFrequently:true});
+  // アイコンや文字を避け、カード右上の背景色を複数点から採る。
+  const x1=Math.round(w*.72),y1=Math.round(h*.08),x2=Math.round(w*.94),y2=Math.round(h*.28);
+  const d=ctx.getImageData(x1,y1,Math.max(1,x2-x1),Math.max(1,y2-y1)).data;
+  const samples=[];
+  for(let i=0;i<d.length;i+=16){
+    const r=d[i],g=d[i+1],b=d[i+2],hsv=rgbToHsv(r,g,b);
+    if(hsv.v<.55)continue;
+    samples.push([r,g,b,hsv.h,hsv.s,hsv.v]);
+  }
+  if(!samples.length)return null;
+  const med=(arr,idx)=>{const a=arr.map(x=>x[idx]).sort((a,b)=>a-b);return a[Math.floor(a.length/2)]};
+  const r=med(samples,0),g=med(samples,1),b=med(samples,2),hue=med(samples,3),sat=med(samples,4);
+  if(sat<.10||Math.max(r,g,b)-Math.min(r,g,b)<22)return "basic";
+  if(hue>=185&&hue<=235)return "intermediate";
+  if(hue>=25&&hue<=75)return "advanced";
+  if(hue>=255&&hue<=330)return "superior";
+  // RGB差分による保険
+  if(b-r>18&&b-g>3)return "intermediate";
+  if(r-b>28&&g-b>12)return "advanced";
+  if(r-g>12&&b-g>12)return "superior";
+  return null;
+}
 function sameBdObservation(a,b){
-  return !!a&&!!b&&a.tier===b.tier&&a.count===b.count;
+  if(!a||!b||a.count!==b.count)return false;
+  return !a.tier||!b.tier||a.tier===b.tier;
 }
 function stitchBdPages(pages){
   let out=[];
@@ -620,8 +657,8 @@ function stitchBdPages(pages){
     if(!out.length){out=[...page];continue}
     let overlap=0;
     const max=Math.min(out.length,page.length);
-    // 1件だけ同値は偶然一致しやすいので、2件以上の連続一致だけを重複スクロールとみなす。
-    for(let k=max;k>=2;k--){
+    // 個数列の3件以上の連続一致でスクロール重複を判定。
+    for(let k=max;k>=3;k--){
       let ok=true;
       for(let i=0;i<k;i++){
         if(!sameBdObservation(out[out.length-k+i],page[i])){ok=false;break}
@@ -639,43 +676,56 @@ async function analyzeBdSequencePage(file,fileIndex){
     for(let i=0;i<SCAN_SLOTS.length;i++){
       const [x1,y1,x2,y2]=SCAN_SLOTS[i];
       const slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-      const count=readConnectedCount(slot),tier=slotTier(slot);
-      if(!count||count.value<0||count.value>999999||!tier)continue;
+      const count=readConnectedCount(slot);
+      if(!count||count.value<0||count.value>999999)continue;
+      const tier=slotTierByCardColor(slot)||slotTier(slot)||null;
       page.push({count:count.value,countConf:count.conf,tier,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
     }
     return {page,base};
   }finally{URL.revokeObjectURL(url)}
 }
 function alignBdFullScan(pages){
-  const observed=stitchBdPages(pages),canon=bdCanonicalItems();
-  if(!observed.length)return [];
-  // フルスキャン時は「ゲーム内の固定表示順」を主キーにする。
-  // 0個の素材は一覧に出ないため、tierが飛んだ箇所だけcanonical側をスキップして0個と推定する。
-  const rows=[];
-  let ci=0;
-  for(const o of observed){
-    while(ci<canon.length&&canon[ci].tier!==o.tier){
-      const z=canon[ci++];
-      rows.push({...z,count:0,confidence:"中",confClass:"mid",score:1,margin:1,candidates:[],source:o.source,row:o.row,col:o.col,inferredZero:true});
+  const obs=stitchBdPages(pages),canon=bdCanonicalItems();
+  if(!obs.length)return [];
+  const O=obs.length,C=canon.length,INF=1e9;
+  // DP: 観測はすべて使い、canonical側だけスキップ可（=一覧に出ない0個）。
+  // tierが取れた枠を強いアンカーにし、取れなかった枠は並び順で補う。
+  const dp=Array.from({length:O+1},()=>Array(C+1).fill(INF));
+  const prev=Array.from({length:O+1},()=>Array(C+1).fill(null));
+  dp[0][0]=0;
+  for(let i=0;i<=O;i++)for(let j=0;j<=C;j++){
+    const cur=dp[i][j];if(cur>=INF)continue;
+    if(j<C){
+      const skipCost=1.25;
+      if(cur+skipCost<dp[i][j+1]){dp[i][j+1]=cur+skipCost;prev[i][j+1]=[i,j,"skip"]}
     }
-    if(ci>=canon.length)break;
-    const item=canon[ci++];
-    const cc=o.countConf>=45?"high":o.countConf>=22?"mid":"low";
-    rows.push({...item,count:o.count,confidence:cc==="high"?"高":cc==="mid"?"中":"要確認",confClass:cc,score:1,margin:1,candidates:[],source:o.source,row:o.row,col:o.col});
+    if(i<O&&j<C){
+      const t=obs[i].tier,expect=canon[j].tier;
+      const matchCost=!t?0:(t===expect?0:8);
+      if(cur+matchCost<dp[i+1][j+1]){dp[i+1][j+1]=cur+matchCost;prev[i+1][j+1]=[i,j,"match"]}
+    }
   }
-  // 最終画像が20枠未満ならリスト末尾まで撮れているとみなし、末尾の非表示0個も補完。
-  const lastPage=pages[pages.length-1]||[];
-  if(lastPage.length<SCAN_SLOTS.length){
-    while(ci<canon.length){
+  if(dp[O][C]>=INF)return [];
+  const actions=[];let i=O,j=C;
+  while(i||j){const p=prev[i][j];if(!p)break;actions.push([p[2],i,j]);[i,j]=[p[0],p[1]]}
+  actions.reverse();
+  const rows=[];let oi=0,ci=0;
+  for(const [act] of actions){
+    if(act==="skip"){
       const z=canon[ci++];
-      rows.push({...z,count:0,confidence:"中",confClass:"mid",score:1,margin:1,candidates:[],source:pages.length,candidates:[],inferredZero:true});
+      rows.push({...z,count:0,confidence:"中",confClass:"mid",score:1,margin:1,candidates:[],source:pages.length,inferredZero:true});
+    }else{
+      const o=obs[oi++],item=canon[ci++];
+      const cc=o.countConf>=45?"high":o.countConf>=22?"mid":"low";
+      rows.push({...item,count:o.count,confidence:cc==="high"?"高":cc==="mid"?"中":"要確認",confClass:cc,score:1,margin:1,candidates:[],source:o.source,row:o.row,col:o.col});
     }
   }
   return rows;
 }
 function canUseBdFullScan(pages){
-  const stitched=stitchBdPages(pages);
-  return pages.length>=2&&pages[0]?.length===SCAN_SLOTS.length&&stitched.length>=36&&(pages[pages.length-1]?.length||0)<SCAN_SLOTS.length;
+  const stitched=stitchBdPages(pages),first=pages[0]?.length||0,last=pages[pages.length-1]?.length||0;
+  // tier判定の成否ではなく数量枠の検出数で「一覧全体」を判定する。
+  return pages.length>=2&&first>=18&&stitched.length>=42&&last<20;
 }
 async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
