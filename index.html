@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.3";
+const APP_VERSION="0.9.4";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -383,6 +383,40 @@ function b64bytes(s){const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.
 function unpackBitsB64(s,total){const b=b64bytes(s),a=new Uint8Array(total);let p=0;for(let i=0;i<b.length&&p<total;i++)for(let bit=7;bit>=0&&p<total;bit--)a[p++]=(b[i]>>bit)&1;return a}
 const NOTE_HASH_DECODED=Object.fromEntries(Object.entries(NOTE_HASH_BANK).map(([k,v])=>[k,unpackBitsB64(v,144)]));
 const DIGIT_EXEMPLARS_DECODED=Object.fromEntries(Object.entries(DIGIT_EXEMPLARS).map(([k,arr])=>[k,arr.map(v=>unpackBitsB64(v,16*24))]));
+
+function connectedComponents(mask,w,h){
+  const seen=new Uint8Array(mask.length),out=[];
+  const dirs=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
+  for(let p=0;p<mask.length;p++){
+    if(!mask[p]||seen[p])continue;
+    const stack=[p];seen[p]=1;const pts=[];let minx=w,miny=h,maxx=0,maxy=0;
+    while(stack.length){
+      const q=stack.pop(),x=q%w,y=Math.floor(q/w);pts.push(q);
+      if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;
+      for(const [dx,dy] of dirs){
+        const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;
+        const n=ny*w+nx;if(seen[n]||!mask[n])continue;seen[n]=1;stack.push(n);
+      }
+    }
+    out.push({pts,minx,miny,maxx,maxy,w:maxx-minx+1,h:maxy-miny+1,area:pts.length});
+  }
+  return out;
+}
+function normalizeDigitComponent(comp,mask,w,h){
+  const srcW=comp.w,srcH=comp.h,tw=16,th=24,scale=Math.min(14/srcW,22/srcH),nw=Math.max(1,Math.round(srcW*scale)),nh=Math.max(1,Math.round(srcH*scale));
+  const src=new Uint8Array(srcW*srcH);
+  for(const p of comp.pts){
+    const x=p%w-comp.minx,y=Math.floor(p/w)-comp.miny;
+    if(x>=0&&x<srcW&&y>=0&&y<srcH)src[y*srcW+x]=1;
+  }
+  const out=new Uint8Array(tw*th),ox=Math.floor((tw-nw)/2),oy=th-nh-1;
+  for(let yy=0;yy<nh;yy++)for(let xx=0;xx<nw;xx++){
+    const sx=Math.min(srcW-1,Math.floor(xx*srcW/nw)),sy=Math.min(srcH-1,Math.floor(yy*srcH/nh));
+    if(src[sy*srcW+sx])out[(oy+yy)*tw+ox+xx]=1;
+  }
+  return out;
+}
+
 function noteHash(slot){
   const w=slot.width,h=slot.height,x1=Math.round(w*.35),y1=Math.round(h*.26),x2=Math.round(w*.59),y2=Math.round(h*.55);
   const c=document.createElement("canvas");c.width=12;c.height=12;const g=c.getContext("2d",{willReadFrequently:true});
