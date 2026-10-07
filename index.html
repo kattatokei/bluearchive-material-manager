@@ -156,7 +156,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.13.0";
+const APP_VERSION="0.13.1";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -217,7 +217,13 @@ function paintGoal(el,value,path){
   el.classList.remove("goal-unset","goal-over","goal-met","goal-miss","goal-critical");
   el.classList.add(goalClass(value,targetAt(path)));
 }
-function goalHtml(value,text,path){return '<span class="'+goalClass(value,targetAt(path))+'">'+text+'</span>'}
+function targetText(path){
+  const t=targetAt(path);
+  if(t<=0)return "未設定";
+  return (Number.isInteger(t)?String(t):String(Math.round(t*100)/100))+"人分";
+}
+function goalDisplay(value,path){return fr(value)+" / "+targetText(path)}
+function goalHtml(value,text,path){return '<span class="'+goalClass(value,targetAt(path))+'">'+text+' / '+targetText(path)+'</span>'}
 
 function series(kind,key,label,b,img){
   const c=document.createElement("div");c.className="card";c.dataset.label=label;
@@ -230,10 +236,10 @@ function series(kind,key,label,b,img){
   function up(){
     const sc=smin(state[kind][key],b),goal=targetAt(goalPath);
     c.dataset.score=sc;
-    const score=c.querySelector(".score");score.textContent=fr(sc);paintGoal(score,sc,goalPath);
+    const score=c.querySelector(".score");score.textContent=goalDisplay(sc,goalPath);paintGoal(score,sc,goalPath);
     tiers.forEach(([k])=>{
       const v=n(state[kind][key][k])/b[k],el=c.querySelector('[data-r="'+k+'"]');
-      el.textContent=fr(v);paintGoal(el,v,goalPath);
+      el.textContent=goalDisplay(v,goalPath);paintGoal(el,v,goalPath);
     });
   }
   tiers.forEach(([k])=>{
@@ -269,7 +275,7 @@ function renderEq(){
       +'</div><div class="calcbox"><div><div class="label">万能設計図を最適に使用した場合</div><b>最大育成可能人数</b></div><strong data-max></strong></div>';
     const ui=c.querySelector("[data-u]");
     ui.value=d.universal||"";
-    const up=()=>{const v=maxEquipPeople(k),el=c.querySelector("[data-max]");el.textContent=v+"人";paintGoal(el,v,goalPath)};
+    const up=()=>{const v=maxEquipPeople(k),el=c.querySelector("[data-max]");el.textContent=v+"人分 / "+targetText(goalPath);paintGoal(el,v,goalPath)};
     ui.oninput=()=>{d.universal=n(ui.value);save();up()};
     Array.from({length:10},(_,i)=>i+1).forEach(t=>{
       const x=c.querySelector('[data-tier="'+t+'"]');x.value=d.tiers[t]||"";
@@ -287,7 +293,7 @@ function expCard(title,img,obj,values,needExp,sub,goalPath){
   function up(){
     const total=expOf(obj,values),people=total/needExp;
     c.querySelector("[data-exp]").textContent=num(total);
-    const pe=c.querySelector("[data-people]");pe.textContent=fr(people);paintGoal(pe,people,goalPath);
+    const pe=c.querySelector("[data-people]");pe.textContent=goalDisplay(people,goalPath);paintGoal(pe,people,goalPath);
     tiers.forEach(([k],i)=>c.querySelector('[data-sub="'+k+'"]').textContent=num(n(obj[k])*values[i]));
   }
   tiers.forEach(([k])=>{
@@ -310,7 +316,7 @@ function renderMisc(){
   ["hp","atk","heal"].forEach(k=>{
     const x=wb.querySelector('[data-wb="'+k+'"]'),r=wb.querySelector('[data-r="'+k+'"]'),goalPath="wb."+k;
     x.value=state.wb[k]||"";
-    const up=()=>{const v=n(state.wb[k])/70;r.textContent=fr(v);paintGoal(r,v,goalPath)};
+    const up=()=>{const v=n(state.wb[k])/70;r.textContent=goalDisplay(v,goalPath);paintGoal(r,v,goalPath)};
     x.oninput=()=>{state.wb[k]=n(x.value);save();up()};
     up();
   });
@@ -322,7 +328,7 @@ function renderMisc(){
       +'<input data-count type="number" min="0"><div class="meta"><span>1人分：'+b.toLocaleString()+'</span><strong data-r></strong></div>';
     const x=c.querySelector("[data-count]"),o=c.querySelector("[data-r]");
     x.value=state.simple[k]||"";
-    const up=()=>{const v=n(state.simple[k])/b;o.textContent=fr(v);paintGoal(o,v,goalPath)};
+    const up=()=>{const v=n(state.simple[k])/b;o.textContent=goalDisplay(v,goalPath);paintGoal(o,v,goalPath)};
     x.oninput=()=>{state.simple[k]=n(x.value);save();up()};
     up();miscGrid.append(c);
   });
