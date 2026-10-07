@@ -691,7 +691,7 @@ scanAnalyzeBtn.onclick=async()=>{
 function scanCopyText(){
   const kindLabel=scanKind.selectedOptions[0]?.textContent||scanKind.value;
   const lines=["【ブルアカ素材 画像読取結果】","種類: "+kindLabel,"画像数: "+scanFiles.length,""];
-  scanRows.forEach((r,i)=>lines.push((i+1)+". "+r.label+" = "+n(r.count)+" / 判定:"+r.confidence+(r.source?" / 画像"+r.source:"")));
+  scanRows.forEach((r,i)=>lines.push((i+1)+". "+r.label+" = "+(r.count===""?"?":n(r.count))+" / 判定:"+r.confidence+(r.source?" / 画像"+r.source:"")));
   return lines.join("\n");
 }
 scanCopyBtn.onclick=async()=>{
@@ -708,7 +708,7 @@ scanCopyBtn.onclick=async()=>{
 };
 scanApplyBtn.onclick=()=>{
   if(!scanRows.length)return;if(!confirm(scanRows.length+"件を所持数へ反映しますか？"))return;
-  scanRows.forEach(r=>applyScanKey(r.key,n(r.count)));save();render();scanStatus.textContent=scanRows.length+"件を反映しました。";scanApplyBtn.disabled=true;
+  const ready=scanRows.filter(r=>r.count!=="");ready.forEach(r=>applyScanKey(r.key,n(r.count)));save();render();scanStatus.textContent=ready.length+"件を反映しました。未読取は反映していません。";scanApplyBtn.disabled=true;
 };
 
 function render(){renderSeries();renderEq();renderMisc();summary();sortOps()}render();
