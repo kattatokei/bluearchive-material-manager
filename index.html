@@ -281,15 +281,15 @@ function scanCropSpec(kind,template=false){
   return {left:.18,right:.18,top:.12,bottom:.30};
 }
 function slotTier(slot){
-  const refW=234,refH=190;
-  const x1=Math.round(slot.width*27/refW),y1=Math.round(slot.height*58/refH);
-  const w=Math.max(2,Math.round(slot.width*20/refW)),hh=Math.max(2,Math.round(slot.height*20/refH));
-  const d=slot.getContext("2d",{willReadFrequently:true}).getImageData(x1,y1,Math.min(w,slot.width-x1),Math.min(hh,slot.height-y1)).data;
-  const rs=[],gs=[],bs=[];for(let i=0;i<d.length;i+=4){rs.push(d[i]);gs.push(d[i+1]);bs.push(d[i+2])}
-  const med=v=>{v.sort((a,b)=>a-b);return v[Math.floor(v.length/2)]||0},rgb=[med(rs),med(gs),med(bs)];
-  const pal={basic:[181,203,218],intermediate:[119,176,253],advanced:[237,158,140],superior:[174,93,253]};
+  const c=document.createElement("canvas");c.width=30;c.height=20;const g=c.getContext("2d",{willReadFrequently:true});
+  const sw=slot.width,sh=slot.height;
+  g.drawImage(slot,sw*.10,sh*.35,sw*.15,sh*.15,0,0,c.width,c.height);
+  const d=g.getImageData(0,0,c.width,c.height).data,rs=[],gs=[],bs=[];
+  for(let i=0;i<d.length;i+=4){rs.push(d[i]);gs.push(d[i+1]);bs.push(d[i+2])}
+  const med=v=>{v.sort((a,b)=>a-b);return v[Math.floor(v.length/2)]||0};
+  const rgb=[med(rs),med(gs),med(bs)],pal={basic:[181,203,218],intermediate:[119,176,253],advanced:[237,158,140],superior:[174,93,253]};
   const ds=Object.entries(pal).map(([k,p])=>[k,Math.hypot(rgb[0]-p[0],rgb[1]-p[1],rgb[2]-p[2])]).sort((a,b)=>a[1]-b[1]);
-  return ds[0][1]<=75&&(ds[1][1]-ds[0][1])>=6?ds[0][0]:null;
+  return ds[0][1]<=78&&(ds[1][1]-ds[0][1])>=5?ds[0][0]:null;
 }
 async function catalogFeatures(kind,onProgress){
   const cat=scanCatalog(kind),usable=cat.filter(x=>x.url);let done=0;
@@ -361,6 +361,78 @@ async function ensureWorker(){
   return scanWorker;
 }
 
+
+const EMP_DIGIT_MEANS={
+"0":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAlZWAFRUAAAAAAAAAFZWV6v//6uqVAAAAAAAAAJXUqqpqav///5UAAAAAACq//6pAABX///+/AAAAAAC/v6pqAAAVqv//vwAAACoq//9qAAAAAKr//+oAAACV//+/VQAAAACq////AAAAlf//vwAAAAAAqv//1AAAAP///2oAAAAAAL///9QAAED//9RAAAAAAAD///9VAACV//9VAAAAAAAA////QAAAlf//QAAAAAAAQP///wAAAJX//wAAAAAAAL//v78AAACV//8AAAAAAAC//79VAAAA////AAAAAAAV//+AFQAAAP///wAAAAAAv/9qAAAAAACV//9qAABVv///AAAAAAAAav//lZWVlf//gAAAAAAAAGr//////////xUAAAAAAAAAatT///+/gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"1":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACN77VgAAAAAAAAAAAAAABrl//9hAAAAAAAAAAAAAAAa5f//YQAAAAAAAAAAAAB75f//9hoAAAAAAAAS/////////+UAAAAAAAAAav////////+eAAAAAAAAAGr/////////ngAAAAAAAAAAAAAAe////2oAAAAAAAAAAAAAAKf/9qcaAAAAAAAAAAAAAACn//anGgAAAAAAAAAAAAAA3P/ccgAAAAAAAAAAAAAJNf//lSwAAAAAAAAAAAAAEmH//2oAAAAAAAAAAAAAABJh//9qAAAAAAAAAAAAAABhyv//GgAAAAAAAAAAAAAAe+X/3AAAAAAAAAAAAAAAAHvl/9wAAAAAAAAAAAAAADXK//+eAAAAAAAAAAAAAACN///tWAAAAAAAAAAAAAAAlf//pxoAAAAAAAAAAAAAAJX//6caAAAAAAAAAAAAAACe//81AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"2":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgICAgICAAAAAAAAAAABAgICAgICAgIAAAAAAAEBAgL+AgIDf34CAAAAAAABAQP//v4CA39//gAAAAAAAgP//gIAAAECA/98AAAAAIP///wAAAAAAgP//AAAAAAC/vwAAAAAAQL///wAAAAAAgEAAAAAAAID//0AAAAAAAAAAAAAAIID//98AAAAAAAAAAAAAgID/v78AAAAAAAAAAAAAIJ///79AAAAAAAAAAAAAQJ+f/4CAAAAAAAAAAACAgP//v4BgAAAAAAAAAACAv///gIAAAAAAAAAAAACA////IAAAAAAAAAAAAACA////gEBAQEBAICAAAAAAv////4BAQEBAQCAgAAAAAP//////////////gAAAAAAgv9+/v9+/v7+/AAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"3":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC4uXV1dRkYAAAAAAAAAAF106P////+iXQAAAAAAAF3o0dGiov///4sAAAAAAHTR/9FGAAD/////AAAAAADR0eiiFwAAov///wAAAAAX//+iAAAAAHTR//8AAAAARqKiXQAAAAD////oAAAAAAAAAAAAAAAA////XQAAAAAAAAAAAAB0////dAAAAAAAAAAALv////+5XQAAAAAAAAAAAAC56P///+hGAAAAAAAAAAAAXYui////XQAAAAAAAAAAAAAAAKL//7kAAAAAAAAAAAAAAACi///RAAAAuf/RAAAAAAAA////ogAAAP//0QAAAAAARv//0S4AAADR//+LLgAAi///dBcAAAAA0f//i4tdXej//xcXAAAAAF3//////////3QAAAAAAAAALtH/////uS4AAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"4":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAF1dXQAAAAAAAAAAAAAAAF1dXV0AAAAAAAAAAAAAAADR////AAAAAAAAAAAAAF3R/////wAAAAAAAAAAAF25/////+gAAAAAAAAAAF1dXaL////oAAAAAAAAAACioqKi////ogAAAAAAAEZd/6JdAP///10AAAAAAABd/3R0AEb///8AAAAAAAAAXf90dABG////AAAAAAAAXejRAAAAXf/o6AAAAABdXdGiAAAAXf//ubkAAABdubmiAAAAAF3//y4uAAAAi///XQAAAACL//8uLgAAAP////////////////8XAAD/////////////////XQAA/////////////////3QAAAAAAAAAAC6L//+5AAAAAAAAAAAAAAAXdP//AAAAAAAAAAAAAAAARqL/6AAAAAAAAAAAAAAAAEai/+gAAAAAAAAAAAAAAAAui/9dAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"5":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgv7+/v7+/nwAAAAAAAAD///////////8AAAAAAGBg//8gACAgIAAAAAAAAABgYP/fAAAAAAAAAAAAAAAAv7//IAAAAAAAAAAAAAAAQP//vwAAAAAAAAAAAAAAAED//58AAAAAAAAAAAAAAAC//////////7+/AAAAAABA/////9///////4AAAAAAQP+/vwAAACD///+/AAAAAED/v78AAAAg////vwAAAAAAAAAAAAAAAL///78AAAAAAAAAAAAAAAC///+fAAAAQN8AAAAAAABA////QAAAAP//gAAAAAAAv/+/vwAAAAD///8AAAAAv///ICAAAAAA////AAAAAL///yAgAAAAAGD//////////yAAAAAAAAAAIP//////YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"6":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABoaMzMzGhoAAAAAAAAAADNm5v////9MMwAAAAAAADPM///MzOb//0wAAAAAAICy//8zAADm////AAAAAACysv/MAAAAzP///wAAAABM///MAAAAAICAzJkAAAAz///mTAAAAAAAABoAAAAAgP//5gAAGhoAAAAAAAAAAOb//+bm/////0waAAAAABr//////+bm/////0wAAACA///msgAAADP///9MAAAAgP//5rIAAAAz////TAAAAJn//wAAAAAAAP///0wAAADm/8wAAAAAAAD///9MAAAA//9MAAAAAACy////MwAAAP//zAAAAAAA5v+ZZgAAAADm//8zGgAz5v//AAAAAAAAzP//TEwzTP//5gAAAAAAADP/////////5hoAAAAAAAAAGsz/////ZgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"7":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG2AgICAgICAgIBbAAAApLbb29vb29vb29vbpAAAAABbbVtbW1ttkv////8AAAAAEiQSEgASJJL///+kAAAAAAAAAAAAAADI///bAAAAAAAAAAAAAABJ//9bAAAAAAAAAAAAABIS//8AAAAAAAAAAAAAAAA3kv+AAAAAAAAAAAAAAAAA//+2AAAAAAAAAAAAAAAA7f/tAAAAAAAAAAAAAAAStv//pAAAAAAAAAAAAAAAErb/WwAAAAAAAAAAAAAAAP//bQAAAAAAAAAAAAAAAEn//20AAAAAAAAAAAAAAIDb//8AAAAAAAAAAAAAAAD//+1JAAAAAAAAAAAAAACS//+kAAAAAAAAAAAAAAAApP//EgAAAAAAAAAAAAAAAP///xIAAAAAAAAAAAAAAAD//6QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"8":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABcXLi4uLi4AAAAAAAAAAC4uuf//6OhGLgAAAAAAAC6i///R0dH//10AAAAAAIu5//9GABfR///oAAAAAACiuf/RFwAX0f//6AAAAAAA///oAAAAAF2L//8AAAAAF////wAAAAC50f/oAAAAABf///8AAAAA6P//LgAAAAAA0f//0S50////RgAAAAAAANH///////+5iwAAAAAAF+j////R0f////8uAAAAAC7//9HRubnR6P//LgAAAC7////RAAAAF9H//9EAAABG//8uAAAAAADR///oAAAA0f/oAAAAAAAA6P//ogAAAP//6AAAAAAALv///y4AAADR//9GFwAALv//XS4AAAAA0f//RkYuLl3//y4uAAAAAEb//////////6IAAAAAAAAALuj/////6BcAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"9":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgQEBAEBAAAAAAAAAAAECA//////9QQAAAAAAAAED///+/v+///0AAAAAAAL////9AAADv//+/AAAAAAD//++/AAAAv///vwAAABCP//+/AAAAAIC///8AAABA////UAAAAABwr///AAAAQP///yAAAAAAj8//3wAAAJ////8AAAAAAN///78AAACf////UAAAAL////9wAAAAMO/////Pz///////MAAAAAC/////39//7////wAAAAAAQL+/v7+/gL///+8AAAAAAAAAAAAAAAC///9wAAAAABAAAAAAAABQ///fIAAAAM//jwAAAAAAz/9wMAAAAAD///8wAABg3/+vAAAAAAAA////QEBAgP//cAAAAAAAAJ//////////nwAAAAAAAAAAcP/////fQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+};
+let empDigitDecoded=null;
+function empiricalDigitMeans(){
+  if(empDigitDecoded)return empDigitDecoded;
+  empDigitDecoded={};
+  for(const [d,s] of Object.entries(EMP_DIGIT_MEANS)){
+    const bin=atob(s),a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);empDigitDecoded[d]=a;
+  }
+  return empDigitDecoded;
+}
+function connectedComponents(mask,w,h){
+  const seen=new Uint8Array(mask.length),out=[],dirs=[-1,1,-w,w,-w-1,-w+1,w-1,w+1];
+  for(let p=0;p<mask.length;p++){
+    if(!mask[p]||seen[p])continue;
+    const stack=[p];seen[p]=1;const pts=[];let minx=w,miny=h,maxx=0,maxy=0;
+    while(stack.length){
+      const q=stack.pop(),x=q%w,y=Math.floor(q/w);pts.push(q);minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y);
+      for(const d of dirs){const n=q+d;if(n<0||n>=mask.length||seen[n]||!mask[n])continue;const nx=n%w,ny=Math.floor(n/w);if(Math.abs(nx-x)>1||Math.abs(ny-y)>1)continue;seen[n]=1;stack.push(n)}
+    }
+    out.push({pts,minx,miny,maxx,maxy,w:maxx-minx+1,h:maxy-miny+1,area:pts.length});
+  }
+  return out;
+}
+function normalizeDigitComponent(comp,mask,w,h){
+  const srcW=comp.w,srcH=comp.h,tw=16,th=24,scale=Math.min(14/srcW,22/srcH),nw=Math.max(1,Math.round(srcW*scale)),nh=Math.max(1,Math.round(srcH*scale));
+  const src=new Uint8Array(srcW*srcH);
+  for(const p of comp.pts){const x=p%w-comp.minx,y=Math.floor(p/w)-comp.miny;src[y*srcW+x]=1}
+  const out=new Uint8Array(tw*th),ox=Math.floor((tw-nw)/2),oy=th-nh-1;
+  for(let yy=0;yy<nh;yy++)for(let xx=0;xx<nw;xx++){
+    const sx=Math.min(srcW-1,Math.floor(xx*srcW/nw)),sy=Math.min(srcH-1,Math.floor(yy*srcH/nh));
+    if(src[sy*srcW+sx])out[(oy+yy)*tw+ox+xx]=255;
+  }
+  return out;
+}
+function classifyEmpiricalDigit(norm){
+  const means=empiricalDigitMeans();let best=null,second=null;
+  for(const [d,m] of Object.entries(means)){
+    let diff=0;for(let i=0;i<norm.length;i++)diff+=Math.abs(norm[i]-m[i]);
+    const score=1-diff/(norm.length*255),r={digit:d,score};
+    if(!best||score>best.score){second=best;best=r}else if(!second||score>second.score)second=r;
+  }
+  return {...best,margin:best.score-(second?.score||0)};
+}
+function readConnectedCount(slot){
+  const sw=slot.width,sh=slot.height,sx=Math.round(sw*.45),sy=Math.round(sh*.65),cw=sw-sx,ch=sh-sy;
+  if(cw<10||ch<10)return null;
+  const d=slot.getContext("2d",{willReadFrequently:true}).getImageData(sx,sy,cw,ch).data,mask=new Uint8Array(cw*ch);
+  for(let i=0,p=0;i<d.length;i+=4,p++){const lum=.299*d[i]+.587*d[i+1]+.114*d[i+2];mask[p]=lum<150?1:0}
+  const comps=connectedComponents(mask,cw,ch),digits=[];
+  for(const c of comps){
+    if(c.area<20||c.h<10||c.w<4||c.w>15||c.miny<10||c.minx<4)continue;
+    const norm=normalizeDigitComponent(c,mask,cw,ch),r=classifyEmpiricalDigit(norm);
+    if(r.score>=.82)digits.push({x:c.minx,...r});
+  }
+  digits.sort((a,b)=>a.x-b.x);
+  if(!digits.length||digits.length>6)return null;
+  const value=Number(digits.map(x=>x.digit).join(""));
+  if(!Number.isFinite(value))return null;
+  return {value,conf:Math.min(...digits.map(x=>x.score))*100,text:String(value),margin:Math.min(...digits.map(x=>x.margin))};
+}
 async function readAllSlotCounts(base){
   const worker=await ensureWorker(),cellW=520,cellH=120,scale=6;
   const comp=document.createElement("canvas");comp.width=cellW;comp.height=cellH*SCAN_SLOTS.length;
@@ -485,15 +557,11 @@ async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
     const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
     if(kind==="reports") return {rows:await analyzeReports(base,fileIndex),base};
-    const counts=await readAllSlotCounts(base);
+    const counts=(kind==="notes"||kind==="bd")?null:await readAllSlotCounts(base);
     const indexes=(kind==="notes"||kind==="bd")?Array.from({length:SCAN_SLOTS.length},(_,i)=>i):[...counts.keys()];
     for(const i of indexes){
       const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-      let count=counts.get(i);
-      if(!count&&(kind==="notes"||kind==="bd")){
-        const q=await ocrSlotVariant(slot,.12,.61,155);
-        if(q.value!==null&&q.value>=0&&q.value<=999999)count={value:q.value,conf:q.conf,text:q.text};
-      }
+      let count=(kind==="notes"||kind==="bd")?readConnectedCount(slot):counts.get(i);
       if(!count||count.value<0||count.value>999999)continue;
       const m=matchCell(slot,cat,kind);if(!m.best)continue;
       const [ct0,cc0]=confInfo(kind,m.score,m.margin);
