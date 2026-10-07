@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.0";
+const APP_VERSION="0.9.1";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -216,170 +216,7 @@ const SCAN_SLOTS=Array.from({length:20},(_,i)=>{
 });
 const V7ROOT="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/";
 const NOTE_HASH_BANK={"hyakkiyako.basic":"x/mPfH/H/k/A+A+A8A4A4A9A","hyakkiyako.intermediate":"j+Oe+P+O/E/A/A+I6E4E4A4A","hyakkiyako.advanced":"P/5/8/888c8A8A8w8MoIoAwA","hyakkiyako.superior":"/83+z/57544A5A5g44ywwAQA","redwinter.basic":"MfOf/g/x+7+bmBwA4AwHgPgG","redwinter.intermediate":"+A+A+/50545g9g9g4w4A/A/A","redwinter.advanced":"sA8Y9+79z5/A7I7AxgwA+A/E","redwinter.superior":"4D7x/8/2/j+w8Q+AmAAA8A8Y","trinity.basic":"//zz4D4TzBoAoAwB6H6HB35+","trinity.intermediate":"3/HP4OgukGygygkGouoOHu38","trinity.advanced":"nPcC/g/A+A8g+A/A/A5A8Hfn","trinity.superior":"/e4E/A/A+A5A8A+A+Q2E4P/P","gehenna.basic":"/b+P2AzAwA4AgEwE/m/j/w/4","gehenna.intermediate":"9n8/sAsAAB4BAZAZ+f/P/B/4","gehenna.advanced":"7f7+wAYAADgDAnA38/8/+E/w","gehenna.superior":"Py+g8g8A8AgAgA+A/4/4/8f/","abydos.basic":"eB+E+w/Q+A+g+A+Q8w848g8H","abydos.intermediate":"9D8Q9A9A8B4A8D9o7o7w7H4e","abydos.advanced":"8P4h2g+B4H0BwG3Q/wvDueo4","abydos.superior":"88rGpQ8GwP4DwY9IfjeeY4Tx","millennium.basic":"+4/4/I+I8I4IwI+I+I+I+I+I","millennium.intermediate":"/4/w+Q8R4RwRwR8R8R8R8R8R","millennium.advanced":"3g/g9g5ixihixm5mxmxHxHxn","millennium.superior":"/g/A/M3I2ImImMmMmMmOmPnP","arius.basic":"//+//HDjASA8A2B+DxzA7Azg","arius.intermediate":"8t78/P8A4A4A4A4D7D5y5z4D","arius.advanced":"5/v4+e4A4BwBwDwH2O3kzm4G","arius.superior":"///x/8wMgHgHgPAecauQucgI","shanhaijing.basic":"P8/G/D/g/AtQxxGjsQ0QwHxH","shanhaijing.intermediate":"/x+I4E+G8HQvDzbz5gogg8k8","shanhaijing.superior":"B8H4fw/g+A+A/A8w/B/B+A+B","valkyrie.basic":"jnOE/E/g/g8g8g8g+g/g/A/A","valkyrie.intermediate":"OY+M8N+B+B+B/A/A/A+A/A/A","valkyrie.advanced":"c4484/8f8H8H8E+A8A8A8A+A","valkyrie.superior":"7w74x85+4f5P5D4I4A5A4g8A","highlander.basic":"znvk/g/g/A+g8g5g5w9g8A+A","highlander.intermediate":"nP/I/B/I+A/G/BzGzg7A4A8A","highlander.advanced":"O/8U+H+h8A+c+UeM/A8A0A6A","highlander.superior":"/+548f9H8D8w9I8w8A4A4AoQ","wildhunt.basic":"ABABACATdHdv/+/8/h+H8eQ8","wildhunt.intermediate":"wAYA4AwAwow9x////874/geD","wildhunt.advanced":"AAwAwAgQh0h/j////+3w/B8H","wildhunt.superior":"gAgAgABBDIPvP//+/8/k+P4P","odyssey.basic":"xvyf8f4P4H4D8D8A+A8A8A/A","odyssey.intermediate":"j9v+4/g/wfwP4H4E8A4A0A+A","odyssey.advanced":"HAfA/A9A/g/g/w/w/w/gdgcA","odyssey.superior":"eF+B+B+A/A/A/g/g/g/A/A4Q","secret.superior":"fn7P8H4B8A487czCzGzExwwQ"};
-const DIGIT_EXEMPLARS={"0":["AAAAGAAYAf4DBgMGDgIMAhwCHAIcAhAGcAZwBnAEcBxwHGAccBhwIHAgH8AOAAAA","AAAAAAAAAAAA/AD8AQYGBg4GDgYIBggGGAQQDBAMEAwQDHAIcDhwOHBwH8APAAAA","AAAAAAAgACAB/gIGAgYOAgwCHAIcAhACEAYQBnAGcARgHGAcYBhgOGA4cOAfwAAA","AAAAAAH8AfwDBg4GDgYMAhwCEAYQBhAGcAZwBnAEYBxgGGAYYBhwIHAgfcAfAAAA"],"1":["AAAAIAAgAGAD4APgD+AAQABAAcABwAHAAcABgAGAA4ADgAOAAgACAAIADgAOAAAA","AAAAEAAQAHAAcA/wAHAAcABgAGAAYADgAOAA4ADgAOAAgAOAA4ADgAMAAwADAAAA","AAAOEA4QADAA4ADgA+AP4ADgAOAAwADAAcABwAHAAQABAAMAAwADAAMAAgACAAAA","AAAAcABwAOAH4AfgH+AAgACAAIADgAOAA4ADAAMAAwAHAAcABwAHAAcABAAEAAAA"],"2":["AAAAAAAAAAAAAHAYcBhh/AMGBgYGBgAGAAYABAAIADAA4AMAAwAGAAgAGAB/8AAA","AAAAAAAAAABg/mD+AQYGBg4GDgYABgAEAAwAeAB4AMAHAA4AGAAYAHAAf/h/8AAA","AAAAAAAAAAAAAAAAAAAB/gH+AwYCAgYCAAYABAAIADAAMADgAwAGAAgAGAB/8AAA","AAAAAAAAAAAAAAA4ADgB/AMGBgYEBgAGAAYADAAYADABwAMAAwAMABgAGAB/4AAA"],"3":["AAAAAAAAAABg/GD8BwYGBg4GDgYABAAIAPAAOAA4AAwADGAIcAhwCHA4H/APgAAA","AABgGGAYAf4CBgIGDgIMAgAGAAYAHAD4ADwAPAAEAAQABGAcYBxwOHA4f+ACAAAA","AAAAAAAAAAAAeAB4AbwGBg4GDgYIBAAMADgA8ADwADgACAAIYAhgCGA4cHB/wAAA","AAAAAAAAAAAB/AH8BwwOBggECAQADAAIAPAA+AD4ADgACGAIYDhgOHAweMAfgAAA"],"4":["AAAAAAAEAAQAHgA8ADwA3AEcAhwCHAAcDBgMGBA4YDhw/HD8f/wA4ADgAOAAwAAA","AAAAAAAAAAB/BH8Efg4YPABMAEwAjAEMAAgGCAYICDgQOHh4H/wf/ABwAHAAQAAA","AAAAAAACAAIAHgAeAB4ABgDGAQQBBAIcDBwMHBAcEBh//H/8H/wAOAA4ACAA4AAA","AAAAAAAeAB4APgDEAMQABAEcAhwCHAwYEBgQGGA4cDx//H/8ACAA4ADgAOAAwAAA"],"5":["AAAAAAAAAAAB/gH+AQAGAAYABgAOAA7wD3gIDAgMAAwADAAIcDhwOHAwf8APgAAA","AAAAAAAAAAAAAAP+A/4CAAIABAAEAAXwBfAOOAgYABgAGAAYABhwEHAwHeAGAAAA","AAAAAAAAAAAAAAH+Af4BAAYABgAGAAYAD/gOPA48AAwADAAMAAgACHA4cHAfwAAA","AAAAAAAAAAAB/gH+BgAGAA4ADgAIAA/wHngQOBA4AAgACAA4YDBgMHBwf8AOAAAA"],"6":["AAAAAAAAADgAOAD+AQYGAg4ADgAIABjwHzgYDBgMcAxwDHAIcDhwOHBwH8AHAAAA","AAAAAAH+Af4DBg4CDgIMABwAEPgQ+H88cBxwHHAcYBxgHGAcYBhgOGA4f+AfAAAA","AAAAAAAAAAAAOAA4AM4BBgYCBgIOAAgAGPgePB48GAwQDBAMcAhwCHA4GHAfwAAA","AAAAAAA4ADgB/gIGAgYMAhwAEAAQABH4fjx+PHAccBxgHGAcYBhgOGA4cCB/wAAA"],"7":["AAAAAAAAAAAP/g/+AAwACAAwADAAcADAAIABAAEABwAOAAgAGAAYABgAcABgAAAA","AAAAAA/+D/4AHgAcABwAOAAgAMAAwAEAAgACAA4ADAAcABwAEABwAHAAYABgAAAA","AAAAAAAAAAAAAA/+D/4ADAAIADAAMABAAMAAgACAAQAHAAYACAAIABgAGABwAAAA","AAAAAAAAH/4f/gAEABgAGAAgAOAA4AHAAQACAAIADgAMAAwAHAAQABAAcABgAAAA"],"8":["AAAAGAAYAf4DBgMGDgIMAgwGDAYOHAP4DDwMPBAccBxwHGAcYBxwOHA4f+APAAAA","AAAAAAAAAAAA/gD+AYYHBgYGBgYGBgcMB/gPOA84GAwQDHAMcAhwCHA4HvAPgAAA","AAAAAAA8ADwB3gICAgIOAgwCDgYOBgIYA/gD+BwcEARwBHAEYBxgGGAYcDh/4AAA","AAAAAAAAADAAMAH8BwYOBg4EDgQODAY4B/AOOA44EAhwCHAIcDhwOHBwf8APAAAA"],"9":["AAAAAAAAADAAMAH8BwYGAg4CDgIIBggGDg4OPA48B8wADAAIEDgQOHBwH8APAAAA","AAAAAAD8APwD3g4CDgIMAhwCHAIcAhwGHB4cHh4+AwQAHAAcABhgOGA4cOB/wAAA","AAAAAAAAAAAAeAB4Ac4HBgYCBgIOAg4CDgYODg4ODz4HhAAMAAgACHA4cHAfwAAA","AAAAAAAAAAAAcABwAfwHBA4GDgYIBhgGGAQYDBgMDnwHjAAIADgAOGAwcEB/gAAA"]};
-const V6="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v6/templates/inventory_detail/";
-const V7EQ="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/templates/inventory/equipment/";
-const schoolAsset={abydos:"Abydos",gehenna:"Gehenna",trinity:"Trinity",millennium:"Millennium",shanhaijing:"Shanhaijing",hyakkiyako:"Hyakkiyako",redwinter:"RedWinter",valkyrie:"Valkyrie",arius:"Arius",highlander:"Highlander",wildhunt:"Wildhunt"};
-const opAsset={antikythera:"Antikythera",voynich:"Voynich",wolfsegg:"Wolfsegg",ether:"Ether",crystalhaniwa:"CrystalHaniwa",nimrud:"Nimrud",nebra:"Nebra",phaistos:"Phaistos",mandragora:"Mandragora",rohonc:"Rohonc",totempole:"TotemPole",ancientbattery:"Baghdad",mysterystone:"WinniStone",discocolgante:"DiscoColgante",hairgrowingdoll:"Kikuko",ancientmedal:"AtlantisMedal",goldenfleece:"GoldenFleece",dodecahedron:"RomanDice",goldshuttle:"Quimbaya",ancientrocket:"Rocket"};
-const eqAsset={hat:"Hat",gloves:"Gloves",shoes:"Shoes",bag:"Bag",badge:"Badge",hairpin:"Hairpin",charm:"Charm",watch:"Watch",necklace:"Necklace"};
-const tierFileIndex={basic:0,intermediate:1,advanced:2,superior:3};
-function scanCatalog(kind){
-  const a=[];
-  const add=(key,label,url,tier=null)=>a.push({key,label,url,tier});
-  const v7=p=>V7ROOT+"templates/inventory/"+p;
-  if(kind==="bd"){
-    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("bd."+k+"."+tk,l+" "+tl,schoolAsset[k]?v7("skill_db/Item_Icon_Material_ExSkill_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png"):null,tk)));
-  }else if(kind==="notes"){
-    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("notes."+k+"."+tk,l+" "+tl,schoolAsset[k]?v7("skill_book/Item_Icon_SkillBook_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png"):null,tk)));add("simple.secretNotes","秘伝ノート",v7("skill_book/Item_Icon_SkillBook_Ultimate_Piece.png"),"superior");
-  }else if(kind==="ooparts"){
-    ops.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("ooparts."+k+"."+tk,l+" "+tl,v7("ooparts/Item_Icon_Material_"+opAsset[k]+"_"+tierFileIndex[tk]+".png"),tk)));
-  }else if(kind==="equipment"){
-    eq.forEach(([k,l])=>{
-      const A=eqAsset[k];
-      add("equipment."+k+".universal",l+" 万能設計図",v7("equipment/Equipment_Icon_"+A+"_Useall_Piece.png"));
-      for(let t=1;t<=10;t++) add("equipment."+k+".tier"+t,l+" T"+t,v7("equipment/Equipment_Icon_"+A+"_Tier"+t+(t===1?"":"_Piece")+".png"));
-    });
-  }else if(kind==="reports"){
-    tiers.forEach(([tk,tl])=>add("reports."+tk,tl+"レポート",V6+"activity_reports/Item_Icon_ExpItem_"+tierFileIndex[tk]+".png",tk));
-  }else if(kind==="stonesweapon"){
-    tiers.forEach(([tk,tl])=>add("stones."+tk,tl+"強化珠",V6+"equipment/Equipment_Icon_Exp_"+tierFileIndex[tk]+".png",tk));
-    const wg={spring:"A",hammer:"B",barrel:"C",firingpin:"Z"};
-    weaponGroups.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("weapon."+k+"."+tk,l+" "+tl,V6+"equipment/Equipment_Icon_WeaponExpGrowth"+wg[k]+"_"+tierFileIndex[tk]+".png",tk)));
-  }else if(kind==="wbsecret"){
-    add("wb.hp","WB・HP",V6+"ooparts/Item_Icon_WorkBook_PotentialMaxHP.png");
-    add("wb.atk","WB・攻撃",V6+"ooparts/Item_Icon_WorkBook_PotentialAttack.png");
-    add("wb.heal","WB・治癒",V6+"ooparts/Item_Icon_WorkBook_PotentialHealPower.png");
-    add("simple.secretNotes","秘伝ノート",v7("skill_book/Item_Icon_SkillBook_Ultimate_Piece.png"));
-  }
-  add("simple.credits","クレジット",null);
-  return a;
-}
-function loadImg(src){
-  return new Promise((resolve,reject)=>{const i=new Image();i.crossOrigin="anonymous";i.onload=()=>resolve(i);i.onerror=reject;i.src=src});
-}
-function sourceFeature(src,mode="cell",cropSpec=null){
-  const z=48,c=document.createElement("canvas");c.width=z;c.height=z;const g=c.getContext("2d",{willReadFrequently:true});
-  const sw=src.naturalWidth||src.width,sh=src.naturalHeight||src.height;
-  let l=.15,r=.15,t=.15,b=.15;
-  if(cropSpec){l=cropSpec.left;r=cropSpec.right;t=cropSpec.top;b=cropSpec.bottom}
-  g.drawImage(src,sw*l,sh*t,sw*(1-l-r),sh*(1-t-b),0,0,z,z);
-  return g.getImageData(0,0,z,z).data;
-}
-function simFeature(a,b){
-  let diff=0,n=0,sa=0,sb=0,lumA=[],lumB=[];
-  const len=Math.min(a.length,b.length);
-  for(let i=0;i<len;i+=4){
-    diff+=Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]);n+=3;
-    const la=.299*a[i]+.587*a[i+1]+.114*a[i+2],lb=.299*b[i]+.587*b[i+1]+.114*b[i+2];
-    lumA.push(la);lumB.push(lb);sa+=la;sb+=lb;
-  }
-  if(!lumA.length)return 0;
-  const ma=sa/lumA.length,mb=sb/lumB.length;let cov=0,va=0,vb=0;
-  for(let i=0;i<lumA.length;i++){const da=lumA[i]-ma,db=lumB[i]-mb;cov+=da*db;va+=da*da;vb+=db*db}
-  const ncc=(va>0&&vb>0)?cov/Math.sqrt(va*vb):0;
-  const nccScore=Math.max(0,Math.min(1,(ncc+1)/2));
-  const diffScore=Math.max(0,1-diff/(n*255));
-  return Math.max(0,Math.min(1,.62*nccScore+.38*diffScore));
-}
-function scanCropSpec(kind,template=false){
-  if(kind==="notes")return template?{left:.348,right:.4097,top:.2541,bottom:.442}:{left:.3547,right:.4103,top:.2632,bottom:.4474};
-  if(kind==="bd")return template?{left:.295,right:.34,top:.24,bottom:.34}:{left:.30,right:.34,top:.25,bottom:.35};
-  return {left:.18,right:.18,top:.12,bottom:.30};
-}
-function slotTier(slot){
-  const c=document.createElement("canvas");c.width=30;c.height=20;const g=c.getContext("2d",{willReadFrequently:true});
-  const sw=slot.width,sh=slot.height;
-  g.drawImage(slot,sw*.10,sh*.35,sw*.15,sh*.15,0,0,c.width,c.height);
-  const d=g.getImageData(0,0,c.width,c.height).data,rs=[],gs=[],bs=[];
-  for(let i=0;i<d.length;i+=4){rs.push(d[i]);gs.push(d[i+1]);bs.push(d[i+2])}
-  const med=v=>{v.sort((a,b)=>a-b);return v[Math.floor(v.length/2)]||0};
-  const rgb=[med(rs),med(gs),med(bs)],pal={basic:[181,203,218],intermediate:[119,176,253],advanced:[237,158,140],superior:[174,93,253]};
-  const ds=Object.entries(pal).map(([k,p])=>[k,Math.hypot(rgb[0]-p[0],rgb[1]-p[1],rgb[2]-p[2])]).sort((a,b)=>a[1]-b[1]);
-  return ds[0][1]<=78&&(ds[1][1]-ds[0][1])>=5?ds[0][0]:null;
-}
-async function catalogFeatures(kind,onProgress){
-  const cat=scanCatalog(kind),usable=cat.filter(x=>x.url);let done=0;
-  for(const it of usable){
-    if(!templateCache.has(it.url)){
-      try{const img=await loadImg(it.url);templateCache.set(it.url,sourceFeature(img,"template",scanCropSpec(kind,true)))}catch{templateCache.set(it.url,null)}
-    }
-    done++;if(onProgress)onProgress(done,usable.length);
-  }
-  return cat;
-}
-let digitTemplates=null;
-async function ensureDigitTemplates(){
-  if(digitTemplates)return digitTemplates;
-  digitTemplates={};
-  for(let d=0;d<=9;d++){
-    const img=await loadImg(V7ROOT+"templates/inventory_count/"+d+".png");
-    const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext("2d").drawImage(img,0,0);
-    const data=c.getContext("2d").getImageData(0,0,c.width,c.height).data,mask=[];
-    for(let i=0;i<data.length;i+=4)mask.push((.299*data[i]+.587*data[i+1]+.114*data[i+2])>=127?1:0);
-    digitTemplates[d]={w:c.width,h:c.height,mask};
-  }
-  return digitTemplates;
-}
-function binaryIou(mask,w,h,tmpl){
-  let inter=0,uni=0;
-  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
-    const a=mask[y*w+x],tx=Math.min(tmpl.w-1,Math.floor(x*tmpl.w/w)),ty=Math.min(tmpl.h-1,Math.floor(y*tmpl.h/h)),b=tmpl.mask[ty*tmpl.w+tx];
-    if(a&&b)inter++;if(a||b)uni++;
-  }
-  return uni?inter/uni:0;
-}
-async function readSlotCount(slot){
-  const tm=await ensureDigitTemplates(),digits=[],scores=[],margins=[];
-  const ctx=slot.getContext("2d",{willReadFrequently:true});
-  for(let pos=0;pos<6;pos++){
-    const x1=Math.round(slot.width*(55+23*pos)/234),y1=Math.round(slot.height*144/190),x2=Math.round(slot.width*(77+23*pos)/234),y2=Math.round(slot.height*178/190);
-    const w=Math.max(1,x2-x1),hh=Math.max(1,y2-y1),data=ctx.getImageData(x1,y1,w,hh).data,mask=[];let ink=0;
-    for(let i=0;i<data.length;i+=4){const dd=(data[i]-45)**2+(data[i+1]-70)**2+(data[i+2]-99)**2<=12**2?1:0;mask.push(dd);ink+=dd}
-    if(ink<Math.max(2,Math.round(w*hh*.015)))break;
-    const ranked=[];for(let d=0;d<=9;d++)ranked.push([binaryIou(mask,w,hh,tm[d]),d]);ranked.sort((a,b)=>b[0]-a[0]);
-    digits.push(String(ranked[0][1]));scores.push(ranked[0][0]);margins.push(ranked[0][0]-ranked[1][0]);
-  }
-  if(!digits.length)return null;
-  const score=Math.min(...scores),margin=Math.min(...margins);
-  return score>=.70&&margin>=.04?{value:Number(digits.join("")),score,margin}:null;
-}
-function makeCanvasFromImage(img){
-  const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext("2d").drawImage(img,0,0);return c;
-}
-function cropCanvas(base,x,y,w,h){
-  const c=document.createElement("canvas");c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));c.getContext("2d").drawImage(base,x,y,w,h,0,0,c.width,c.height);return c;
-}
-function parseQtyText(t){
-  t=String(t||"").replace(/[Oo]/g,"0").replace(/\s/g,"").replace(/,/g,"");
-  const m=t.match(/[xX×]?(\d+(?:\.\d+)?)([kK])?/);if(!m)return null;
-  let v=Number(m[1]);if(!Number.isFinite(v))return null;if(m[2])v*=1000;return Math.round(v);
-}
-async function ensureTesseract(){
-  if(window.Tesseract)return;
-  scanStatus.textContent="所持数の数字を読み取る準備をしています…";
-  await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});
-}
-async function ensureWorker(){
-  await ensureTesseract();
-  if(scanWorker)return scanWorker;
-  scanWorker=await Tesseract.createWorker("eng",1,{logger:m=>{if(m.status==="recognizing text")scanStatus.textContent="所持数を読み取り中… "+Math.round((m.progress||0)*100)+"%"}});
-  await scanWorker.setParameters({tessedit_char_whitelist:"0123456789xXkK,×",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
-  return scanWorker;
-}
-
-
-const EMP_DIGIT_MEANS={
-"0":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAlZWAFRUAAAAAAAAAFZWV6v//6uqVAAAAAAAAAJXUqqpqav///5UAAAAAACq//6pAABX///+/AAAAAAC/v6pqAAAVqv//vwAAACoq//9qAAAAAKr//+oAAACV//+/VQAAAACq////AAAAlf//vwAAAAAAqv//1AAAAP///2oAAAAAAL///9QAAED//9RAAAAAAAD///9VAACV//9VAAAAAAAA////QAAAlf//QAAAAAAAQP///wAAAJX//wAAAAAAAL//v78AAACV//8AAAAAAAC//79VAAAA////AAAAAAAV//+AFQAAAP///wAAAAAAv/9qAAAAAACV//9qAABVv///AAAAAAAAav//lZWVlf//gAAAAAAAAGr//////////xUAAAAAAAAAatT///+/gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"1":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACN77VgAAAAAAAAAAAAAABrl//9hAAAAAAAAAAAAAAAa5f//YQAAAAAAAAAAAAB75f//9hoAAAAAAAAS/////////+UAAAAAAAAAav////////+eAAAAAAAAAGr/////////ngAAAAAAAAAAAAAAe////2oAAAAAAAAAAAAAAKf/9qcaAAAAAAAAAAAAAACn//anGgAAAAAAAAAAAAAA3P/ccgAAAAAAAAAAAAAJNf//lSwAAAAAAAAAAAAAEmH//2oAAAAAAAAAAAAAABJh//9qAAAAAAAAAAAAAABhyv//GgAAAAAAAAAAAAAAe+X/3AAAAAAAAAAAAAAAAHvl/9wAAAAAAAAAAAAAADXK//+eAAAAAAAAAAAAAACN///tWAAAAAAAAAAAAAAAlf//pxoAAAAAAAAAAAAAAJX//6caAAAAAAAAAAAAAACe//81AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"2":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgICAgICAAAAAAAAAAABAgICAgICAgIAAAAAAAEBAgL+AgIDf34CAAAAAAABAQP//v4CA39//gAAAAAAAgP//gIAAAECA/98AAAAAIP///wAAAAAAgP//AAAAAAC/vwAAAAAAQL///wAAAAAAgEAAAAAAAID//0AAAAAAAAAAAAAAIID//98AAAAAAAAAAAAAgID/v78AAAAAAAAAAAAAIJ///79AAAAAAAAAAAAAQJ+f/4CAAAAAAAAAAACAgP//v4BgAAAAAAAAAACAv///gIAAAAAAAAAAAACA////IAAAAAAAAAAAAACA////gEBAQEBAICAAAAAAv////4BAQEBAQCAgAAAAAP//////////////gAAAAAAgv9+/v9+/v7+/AAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"3":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC4uXV1dRkYAAAAAAAAAAF106P////+iXQAAAAAAAF3o0dGiov///4sAAAAAAHTR/9FGAAD/////AAAAAADR0eiiFwAAov///wAAAAAX//+iAAAAAHTR//8AAAAARqKiXQAAAAD////oAAAAAAAAAAAAAAAA////XQAAAAAAAAAAAAB0////dAAAAAAAAAAALv////+5XQAAAAAAAAAAAAC56P///+hGAAAAAAAAAAAAXYui////XQAAAAAAAAAAAAAAAKL//7kAAAAAAAAAAAAAAACi///RAAAAuf/RAAAAAAAA////ogAAAP//0QAAAAAARv//0S4AAADR//+LLgAAi///dBcAAAAA0f//i4tdXej//xcXAAAAAF3//////////3QAAAAAAAAALtH/////uS4AAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"4":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAF1dXQAAAAAAAAAAAAAAAF1dXV0AAAAAAAAAAAAAAADR////AAAAAAAAAAAAAF3R/////wAAAAAAAAAAAF25/////+gAAAAAAAAAAF1dXaL////oAAAAAAAAAACioqKi////ogAAAAAAAEZd/6JdAP///10AAAAAAABd/3R0AEb///8AAAAAAAAAXf90dABG////AAAAAAAAXejRAAAAXf/o6AAAAABdXdGiAAAAXf//ubkAAABdubmiAAAAAF3//y4uAAAAi///XQAAAACL//8uLgAAAP////////////////8XAAD/////////////////XQAA/////////////////3QAAAAAAAAAAC6L//+5AAAAAAAAAAAAAAAXdP//AAAAAAAAAAAAAAAARqL/6AAAAAAAAAAAAAAAAEai/+gAAAAAAAAAAAAAAAAui/9dAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"5":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgv7+/v7+/nwAAAAAAAAD///////////8AAAAAAGBg//8gACAgIAAAAAAAAABgYP/fAAAAAAAAAAAAAAAAv7//IAAAAAAAAAAAAAAAQP//vwAAAAAAAAAAAAAAAED//58AAAAAAAAAAAAAAAC//////////7+/AAAAAABA/////9///////4AAAAAAQP+/vwAAACD///+/AAAAAED/v78AAAAg////vwAAAAAAAAAAAAAAAL///78AAAAAAAAAAAAAAAC///+fAAAAQN8AAAAAAABA////QAAAAP//gAAAAAAAv/+/vwAAAAD///8AAAAAv///ICAAAAAA////AAAAAL///yAgAAAAAGD//////////yAAAAAAAAAAIP//////YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"6":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABoaMzMzGhoAAAAAAAAAADNm5v////9MMwAAAAAAADPM///MzOb//0wAAAAAAICy//8zAADm////AAAAAACysv/MAAAAzP///wAAAABM///MAAAAAICAzJkAAAAz///mTAAAAAAAABoAAAAAgP//5gAAGhoAAAAAAAAAAOb//+bm/////0waAAAAABr//////+bm/////0wAAACA///msgAAADP///9MAAAAgP//5rIAAAAz////TAAAAJn//wAAAAAAAP///0wAAADm/8wAAAAAAAD///9MAAAA//9MAAAAAACy////MwAAAP//zAAAAAAA5v+ZZgAAAADm//8zGgAz5v//AAAAAAAAzP//TEwzTP//5gAAAAAAADP/////////5hoAAAAAAAAAGsz/////ZgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"7":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG2AgICAgICAgIBbAAAApLbb29vb29vb29vbpAAAAABbbVtbW1ttkv////8AAAAAEiQSEgASJJL///+kAAAAAAAAAAAAAADI///bAAAAAAAAAAAAAABJ//9bAAAAAAAAAAAAABIS//8AAAAAAAAAAAAAAAA3kv+AAAAAAAAAAAAAAAAA//+2AAAAAAAAAAAAAAAA7f/tAAAAAAAAAAAAAAAStv//pAAAAAAAAAAAAAAAErb/WwAAAAAAAAAAAAAAAP//bQAAAAAAAAAAAAAAAEn//20AAAAAAAAAAAAAAIDb//8AAAAAAAAAAAAAAAD//+1JAAAAAAAAAAAAAACS//+kAAAAAAAAAAAAAAAApP//EgAAAAAAAAAAAAAAAP///xIAAAAAAAAAAAAAAAD//6QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"8":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABcXLi4uLi4AAAAAAAAAAC4uuf//6OhGLgAAAAAAAC6i///R0dH//10AAAAAAIu5//9GABfR///oAAAAAACiuf/RFwAX0f//6AAAAAAA///oAAAAAF2L//8AAAAAF////wAAAAC50f/oAAAAABf///8AAAAA6P//LgAAAAAA0f//0S50////RgAAAAAAANH///////+5iwAAAAAAF+j////R0f////8uAAAAAC7//9HRubnR6P//LgAAAC7////RAAAAF9H//9EAAABG//8uAAAAAADR///oAAAA0f/oAAAAAAAA6P//ogAAAP//6AAAAAAALv///y4AAADR//9GFwAALv//XS4AAAAA0f//RkYuLl3//y4uAAAAAEb//////////6IAAAAAAAAALuj/////6BcAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
-"9":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgQEBAEBAAAAAAAAAAAECA//////9QQAAAAAAAAED///+/v+///0AAAAAAAL////9AAADv//+/AAAAAAD//++/AAAAv///vwAAABCP//+/AAAAAIC///8AAABA////UAAAAABwr///AAAAQP///yAAAAAAj8//3wAAAJ////8AAAAAAN///78AAACf////UAAAAL////9wAAAAMO/////Pz///////MAAAAAC/////39//7////wAAAAAAQL+/v7+/gL///+8AAAAAAAAAAAAAAAC///9wAAAAABAAAAAAAABQ///fIAAAAM//jwAAAAAAz/9wMAAAAAD///8wAABg3/+vAAAAAAAA////QEBAgP//cAAAAAAAAJ//////////nwAAAAAAAAAAcP/////fQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-};
+const DIGIT_EXEMPLARS={"0":["AAAAAAAAAHgAeAH8Bw4OBg4GDgYYBhgEGAxwDHAMcAxwCHA4cDBwMHBwH8AGAAAA","AAAAAAH+Af4DBg4GDgYMBhwGEAYQBnAGcAZwBnAEcBxgHGAcYDhwIHAgfeAfAAAA","AAAAAAAAAAAA/AD8BwYGBg4GDgYOBhgGGAQYDBgMcAxwDHAIcDhwOHBwH8APgAAA","AAAA/AD8Af4DBgMGDgIMAhwCHAIcBnAGcAZwBnAccBxwHGAccDhw4HDgf8AOAAAA"],"1":["AAAAEAAQADAA8ADwD+AP4ADgAOAA4ADAAcABwAHAAcABwAEAAwADAAMAAwACAAAA","AAAAcABwAOAH4AfgH+AAgACAA4ADgAOAA4ADgAOAAwAHAAcABwAHAAcABAAcAAAA","AAAAIAAgACAAYABgD+AP4AHAAcABwAHAAYABgAOAA4ADgAOAA4AOAA4ADgAMAAAA","AAAAEAAQAHAA4ADgH+AD4APgAOAAgACAA4ADgAOAA4ADAAMABwAHAAcABwAcAAAA"],"2":["AAAAAAAAAAAAAHg4eDhx/gMGBgYGBgAGAAYADAAcADAB4AMAAwAOABwAGAB/+AAA","AAAAAAAAAAAAOAA4Af4DBgIGBgYABgAGAAYADAA4AOADwAPABgAMABwAf/gc8AAA","AAAAAAAAAAB4EHgQcf5jBgIGBgZkBmQGAAYADAA4AOADwAPABgAMABwAf/gf8AAA","AAAAAAAAAAAAAHD4cPhh3gMGBgYEBgAEAAQADAAYAPABwAcABwAMABgAfAB/8AAA"],"3":["AAAAAAAAcHhweGH+BwYGBg4GDgYABAAIAPgAeAB4AAwADHAMcDhwOHA4f/APgAAA","AAAAAAAAAAAA+AD4AbwHBg4GDgYIBAAMADgA8ADwADgADAAIcDhwOHA4cHB/wAAA","AAAAAAAAAPgA+AH8BwYOBggECAQADAA4APAAeAB4AAwACHA4cDhwOHBwf8AGAAAA","AAAAAAAAAAAB/AH8Bw4OBg4GDgYADAAIAPAA+AD4ADgADGAIcDhwOHBwefAfgAAA"],"4":["AAAABgAGAB4APgA+AD4AxAEcARwCHAwcEBgQGHA4cDxwPH/8APgA4ADgAOAAwAAA","AAAAAAAAAAAABgAGAD4APABMAEwAjAEMBggOOA44CDgQOH/8f/x//ABwAHAAQAAA","AAAAAAAAfwZ/Bn4OeDwATACMAIwBDAcMBjgIOAg4EDh+/H/8AHAAcABwAEAAQAAA","AAAAAAAGAAYAHgA+AD4AJgDGAQQBBAIcDBwMHBAcEBx//n/+f/wAOAA4ACAA4AAA"],"5":["AAAAAAAAAAAAAAP+A/4CAAYABAAEAA/wD/AOOAgYABgAGAAYABhwEHgwH+AHAAAA","AAAAAAAAAABh/mH+BwAGAA4ADgAOAA/4HngYDBgMAAwADAA4cDhwOHBwf8APAAAA","AAAAAAAAAAAB/gH+AQAGAAYABgAOAA/4DjwIDAgMAAwADAAMcDhwOHhwH8AGAAAA","AAAAAAAAAAAAAAH+Af4DAAIABgAEAAfwB/AOOAwYAAwACAAYABhwGBgwH+APAAAA"],"6":["AAAAAAAAAHgAeAD+BwYGBg4ADgAIABj4HzwYDBgMeAxwDHAIcDhwOHBwH8APAAAA","AAAAAAAAAAAAOAA4AfwDDgYEDAAMAAwACfAeOBwYGBgQGBAYcBhwMBgwH+AHAAAA","AAAAAAAAAAAAfAB8Ac4HBgYCBgIOAAgAGfgePB48GAxwDHAMcAhwCHA4eHAfwAAA","AAAAAAAAAHgAeAH+BwYOBggACAAYABnwHjh4OHg4cDhwOGA4cDBwMHBwH8AGAAAA"],"7":["AAAAAAAAAAAf/h/+AA4ADAA4ADgAcADAAYABAAEABwAOAA4AGAAYABgAcABwAAAA","AAAAAB/+H/4AHgAcABwAOADgAcABwAEAAwADAA4ADAAcABwAEABwAHAAYABgAAAA","AAAAAAAAAAAAAA/+D/4ADgAMCDgIOABwAMAAgACAAYAHAA4ADgAOABgAGABwAAAA","AAAAAAAAAAAf/h/+AAwACAAwADAAQADAAYAHAAcABwAOAAgAGAAYAHAAcABwAAAA"],"8":["AAAAAAAAAHgAeAH8BwYOBg4GDgYODAc4B/AOOA44GDxwDHAIcDhwOHBwf8APAAAA","AAAAAAAAAAAAOAA4AfwDDgYGBgQGDAYMBhgD8A44GBgYCBgIGBhwGBgwH+AHAAAA","AAAAAAAAAAAA/gD+AYYHBgYGBgYGBgcMB/gPOA84GAwYDHAMcAhwCHA4HvAPgAAA","AAAAAAAAAAAAAAH8AfwDDgYGBgQGDAYYBhgH8AY4CBgYGBAYEBhwGHgwH+APwAAA"],"9":["AAAAAAAAAHgAeAH8BwYOBg4CDgIOBg4GDg4PPA88B8wADAA4cDhwOHBwH8APAAAA","AAAAAAAAAAAAAAD4APgD3AYMBgYMBgwEDAQMDAwcD/wDGAAYABgAEHAweOAfwAAA","AAAAAAAAAAAA+AD4B7wOBA4GDgYYBhgGGAwYPBg8H/wHiAA4ADAAMGBwcMB/gAAA","AAAAAAAAAAAAfAB8Ac4HBgYCBgIOAg4GDgYODg4OD/4HjAAMAAgACHA4eHAfwAAA"]}
 let empDigitDecoded=null;
 function empiricalDigitMeans(){
   if(empDigitDecoded)return empDigitDecoded;
@@ -416,53 +253,29 @@ function matchNoteHash(slot,tier,cat){
 function bitIoU(a,b){let inter=0,uni=0;for(let i=0;i<a.length;i++){if(a[i]&&b[i])inter++;if(a[i]||b[i])uni++;}return uni?inter/uni:0}
 function classifyDigitEmpirical(norm){
   let best={digit:null,score:-1},second={score:-1};
-  for(const [d,arr] of Object.entries(DIGIT_EXEMPLARS_DECODED))for(const ex of arr){
-    const s=bitIoU(norm,ex);if(s>best.score){second=best;best={digit:d,score:s}}else if(s>second.score)second={digit:d,score:s};
+  for(const [d,arr] of Object.entries(DIGIT_EXEMPLARS_DECODED)){
+    let classBest=-1;
+    for(const ex of arr)classBest=Math.max(classBest,bitIoU(norm,ex));
+    if(classBest>best.score){second=best;best={digit:d,score:classBest}}
+    else if(classBest>second.score)second={digit:d,score:classBest};
   }
   return {...best,margin:best.score-second.score};
 }
-function connectedComponents(mask,w,h){
-  const seen=new Uint8Array(mask.length),out=[],dirs=[-1,1,-w,w,-w-1,-w+1,w-1,w+1];
-  for(let p=0;p<mask.length;p++){
-    if(!mask[p]||seen[p])continue;
-    const stack=[p];seen[p]=1;const pts=[];let minx=w,miny=h,maxx=0,maxy=0;
-    while(stack.length){
-      const q=stack.pop(),x=q%w,y=Math.floor(q/w);pts.push(q);minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y);
-      for(const d of dirs){const n=q+d;if(n<0||n>=mask.length||seen[n]||!mask[n])continue;const nx=n%w,ny=Math.floor(n/w);if(Math.abs(nx-x)>1||Math.abs(ny-y)>1)continue;seen[n]=1;stack.push(n)}
-    }
-    out.push({pts,minx,miny,maxx,maxy,w:maxx-minx+1,h:maxy-miny+1,area:pts.length});
-  }
-  return out;
-}
-function normalizeDigitComponent(comp,mask,w,h){
-  const srcW=comp.w,srcH=comp.h,tw=16,th=24,scale=Math.min(14/srcW,22/srcH),nw=Math.max(1,Math.round(srcW*scale)),nh=Math.max(1,Math.round(srcH*scale));
-  const src=new Uint8Array(srcW*srcH);
-  for(const p of comp.pts){const x=p%w-comp.minx,y=Math.floor(p/w)-comp.miny;src[y*srcW+x]=1}
-  const out=new Uint8Array(tw*th),ox=Math.floor((tw-nw)/2),oy=th-nh-1;
-  for(let yy=0;yy<nh;yy++)for(let xx=0;xx<nw;xx++){
-    const sx=Math.min(srcW-1,Math.floor(xx*srcW/nw)),sy=Math.min(srcH-1,Math.floor(yy*srcH/nh));
-    if(src[sy*srcW+sx])out[(oy+yy)*tw+ox+xx]=255;
-  }
-  return out;
-}
-function classifyEmpiricalDigit(norm){return classifyDigitEmpirical(norm)}
 function readConnectedCount(slot){
   const sw=slot.width,sh=slot.height,d=slot.getContext("2d",{willReadFrequently:true}).getImageData(0,0,sw,sh).data,mask=new Uint8Array(sw*sh);
   for(let p=0,i=0;i<d.length;i+=4,p++){
-    const dr=d[i]-45,dg=d[i+1]-70,db=d[i+2]-99;
-    mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
-    const y=Math.floor(p/sw),x=p%sw;
-    if(y<sh*.76||x<sw*.35)mask[p]=0;
+    const dr=d[i]-56,dg=d[i+1]-72,db=d[i+2]-88;
+    mask[p]=(dr*dr+dg*dg+db*db)<=65*65?1:0;
+    const y=Math.floor(p/sw);if(y<sh*.72)mask[p]=0;
   }
-  // 数字本体は高さ14〜16px前後。左の "x" は低く、カード斜線は横長なので除外できる。
   const comps=connectedComponents(mask,sw,sh)
-    .filter(c=>c.area>=18 && c.h>=Math.max(13,sh*.13) && c.w>=4 && c.w<=14 && c.miny>=sh*.76)
+    .filter(c=>c.area>=18 && c.h>=Math.max(12,sh*.125) && c.w>=4 && c.w<=16 && c.miny>=sh*.72)
     .sort((a,b)=>a.minx-b.minx);
   if(!comps.length||comps.length>6)return null;
   const digits=[],scores=[],margins=[];
   for(const c of comps){
-    const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyEmpiricalDigit(norm);
-    if(!r.digit||r.score<.22)return null;
+    const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyDigitEmpirical(norm);
+    if(!r.digit||r.score<.28)return null;
     digits.push(r.digit);scores.push(r.score);margins.push(r.margin);
   }
   const value=Number(digits.join(""));if(!Number.isFinite(value))return null;
@@ -594,15 +407,25 @@ async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
     const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
     if(kind==="reports") return {rows:await analyzeReports(base,fileIndex),base};
-    const tight=(kind==="notes"||kind==="bd"),counts=await readAllSlotCounts(base,tight);
-    const indexes=[...counts.keys()];
-    for(const i of indexes){
-      const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-      const count=counts.get(i);if(!count||count.value<0||count.value>999999)continue;
-      const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
-      const [ct0,cc0]=confInfo(kind,m.score,m.margin);
-      const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
-      rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
+    if(kind==="notes"||kind==="bd"){
+      for(let i=0;i<SCAN_SLOTS.length;i++){
+        const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
+        const count=readConnectedCount(slot);if(!count||count.value<0||count.value>999999)continue;
+        const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
+        const [ct0,cc0]=confInfo(kind,m.score,m.margin);
+        const countWeak=count.conf<50,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
+        rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
+      }
+    }else{
+      const counts=await readAllSlotCounts(base,false);
+      for(const [i,count] of counts.entries()){
+        if(!count||count.value<0||count.value>999999)continue;
+        const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
+        const m=matchCell(slot,cat,kind);if(!m.best)continue;
+        const [ct0,cc0]=confInfo(kind,m.score,m.margin);
+        const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
+        rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
+      }
     }
     return {rows,base};
   }finally{URL.revokeObjectURL(url)}
