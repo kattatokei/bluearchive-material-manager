@@ -388,10 +388,65 @@ async function recognizeCredit(base){
 function confInfo(score,margin){
   if(score>=.80&&margin>=.03)return ["高","high"];if(score>=.68&&margin>=.015)return ["中","mid"];return ["要確認","low"];
 }
+
+async function ocrSlotVariant(slot,left,top,threshold){
+  const sx=Math.round(slot.width*left),sy=Math.round(slot.height*top),sw=Math.max(1,slot.width-sx),sh=Math.max(1,slot.height-sy);
+  const raw=slot.getContext("2d",{willReadFrequently:true}).getImageData(sx,sy,sw,sh);
+  const c=document.createElement("canvas"),scale=6;c.width=sw*scale;c.height=sh*scale;
+  const small=document.createElement("canvas");small.width=sw;small.height=sh;const sg=small.getContext("2d",{willReadFrequently:true});
+  const out=sg.createImageData(sw,sh);
+  for(let p=0;p<raw.data.length;p+=4){
+    const lum=.299*raw.data[p]+.587*raw.data[p+1]+.114*raw.data[p+2],v=lum>=threshold?255:0;
+    out.data[p]=out.data[p+1]=out.data[p+2]=v;out.data[p+3]=255;
+  }
+  sg.putImageData(out,0,0);
+  c.getContext("2d").drawImage(small,0,0,c.width,c.height);
+  const worker=await ensureWorker();
+  await worker.setParameters({tessedit_char_whitelist:"0123456789xXkK",tessedit_pageseg_mode:"7",preserve_interword_spaces:"1"});
+  const res=await worker.recognize(c);
+  const words=(res.data.words||[]).filter(w=>String(w.text||"").trim());
+  const text=words.map(w=>w.text).join("");
+  const value=parseQtyText(text);
+  const confs=words.map(w=>Number(w.confidence)||0);
+  const conf=confs.length?Math.min(...confs):0;
+  const digits=(text.match(/\d/g)||[]).length;
+  return {value,conf,text,digits};
+}
+async function readSlotCountRobust(slot){
+  const specs=[[.20,.62,140],[.20,.65,160],[.25,.62,140],[.20,.68,140]];
+  const out=[];
+  for(const [l,t,thr] of specs){
+    const r=await ocrSlotVariant(slot,l,t,thr);
+    if(r.value!==null&&r.value>=0&&r.value<=999999)out.push(r);
+  }
+  if(!out.length)return null;
+  out.sort((a,b)=>{
+    const sa=a.conf+a.digits*6,sb=b.conf+b.digits*6;
+    if(sb!==sa)return sb-sa;
+    if(b.digits!==a.digits)return b.digits-a.digits;
+    return b.conf-a.conf;
+  });
+  return out[0];
+}
+async function analyzeReports(base,fileIndex){
+  const rows=[],keys=["basic","intermediate","advanced","superior"];
+  for(let i=0;i<4;i++){
+    const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
+    const count=await readSlotCountRobust(slot);if(!count)continue;
+    const k=keys[i],labels={basic:"初級レポート",intermediate:"中級レポート",advanced:"上級レポート",superior:"最上級レポート"};
+    const cc=count.conf>=35?"high":count.conf>=15?"mid":"low";
+    const ct=cc==="high"?"高":cc==="mid"?"中":"要確認";
+    rows.push({key:"reports."+k,label:labels[k],count:count.value,confidence:ct,confClass:cc,score:1,margin:1,candidates:[],source:fileIndex+1,row:0,col:i});
+  }
+  return rows;
+}
 async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
-    const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[],counts=await readAllSlotCounts(base);
+    const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
+    if(kind==="reports") return {rows:await analyzeReports(base,fileIndex),base};
+    const counts=await readAllSlotCounts(base);
     for(const [i,count] of counts.entries()){
+      if(count.value<0||count.value>999999)continue;
       const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
       const m=matchCell(slot,cat,kind);if(!m.best)continue;
       const [ct0,cc0]=confInfo(m.score,m.margin);
@@ -442,7 +497,7 @@ scanAnalyzeBtn.onclick=async()=>{
     for(let i=0;i<scanFiles.length;i++){scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" を解析しています…";const r=await analyzeOne(scanFiles[i],i,kind,cat);rows.push(...r.rows);lastBase=r.base}
     if(lastBase){scanStatus.textContent="クレジットを読み取っています…";const cr=await recognizeCredit(lastBase);if(cr!==null)rows.push({key:"simple.credits",label:"クレジット",count:cr,confidence:"高",confClass:"high",source:scanFiles.length,candidates:[]})}
     scanRows=dedupeRows(rows);renderScanRows(kind);
-    scanStatus.textContent=scanRows.length+"件の候補を検出しました。赤い「要確認」を中心に確認してから一括反映してください。";
+    scanStatus.textContent=scanRows.length+"件の候補を検出しました。レポートは4枠を個別OCR、その他はアイコン照合＋所持数読取です。赤い「要確認」を中心に確認してください。";
   }catch(e){console.error(e);scanStatus.textContent="解析に失敗しました。通信状況を確認して再試行してください。";}finally{scanAnalyzeBtn.disabled=false}
 };
 scanApplyBtn.onclick=()=>{
