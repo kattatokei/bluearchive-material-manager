@@ -211,6 +211,8 @@ const SCAN_SLOTS=Array.from({length:20},(_,i)=>{
   return [x1,y1,x1+.0705,y1+.136];
 });
 const V7ROOT="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/";
+const NOTE_HASH_BANK={"hyakkiyako.basic":"x/mPfH/H/k/A+A+A8A4A4A9A","hyakkiyako.intermediate":"j+Oe+P+O/E/A/A+I6E4E4A4A","hyakkiyako.advanced":"P/5/8/888c8A8A8w8MoIoAwA","hyakkiyako.superior":"/83+z/57544A5A5g44ywwAQA","redwinter.basic":"MfOf/g/x+7+bmBwA4AwHgPgG","redwinter.intermediate":"+A+A+/50545g9g9g4w4A/A/A","redwinter.advanced":"sA8Y9+79z5/A7I7AxgwA+A/E","redwinter.superior":"4D7x/8/2/j+w8Q+AmAAA8A8Y","trinity.basic":"//zz4D4TzBoAoAwB6H6HB35+","trinity.intermediate":"3/HP4OgukGygygkGouoOHu38","trinity.advanced":"nPcC/g/A+A8g+A/A/A5A8Hfn","trinity.superior":"/e4E/A/A+A5A8A+A+Q2E4P/P","gehenna.basic":"/b+P2AzAwA4AgEwE/m/j/w/4","gehenna.intermediate":"9n8/sAsAAB4BAZAZ+f/P/B/4","gehenna.advanced":"7f7+wAYAADgDAnA38/8/+E/w","gehenna.superior":"Py+g8g8A8AgAgA+A/4/4/8f/","abydos.basic":"eB+E+w/Q+A+g+A+Q8w848g8H","abydos.intermediate":"9D8Q9A9A8B4A8D9o7o7w7H4e","abydos.advanced":"8P4h2g+B4H0BwG3Q/wvDueo4","abydos.superior":"88rGpQ8GwP4DwY9IfjeeY4Tx","millennium.basic":"+4/4/I+I8I4IwI+I+I+I+I+I","millennium.intermediate":"/4/w+Q8R4RwRwR8R8R8R8R8R","millennium.advanced":"3g/g9g5ixihixm5mxmxHxHxn","millennium.superior":"/g/A/M3I2ImImMmMmMmOmPnP","arius.basic":"//+//HDjASA8A2B+DxzA7Azg","arius.intermediate":"8t78/P8A4A4A4A4D7D5y5z4D","arius.advanced":"5/v4+e4A4BwBwDwH2O3kzm4G","arius.superior":"///x/8wMgHgHgPAecauQucgI","shanhaijing.basic":"P8/G/D/g/AtQxxGjsQ0QwHxH","shanhaijing.intermediate":"/x+I4E+G8HQvDzbz5gogg8k8","shanhaijing.superior":"B8H4fw/g+A+A/A8w/B/B+A+B","valkyrie.basic":"jnOE/E/g/g8g8g8g+g/g/A/A","valkyrie.intermediate":"OY+M8N+B+B+B/A/A/A+A/A/A","valkyrie.advanced":"c4484/8f8H8H8E+A8A8A8A+A","valkyrie.superior":"7w74x85+4f5P5D4I4A5A4g8A","highlander.basic":"znvk/g/g/A+g8g5g5w9g8A+A","highlander.intermediate":"nP/I/B/I+A/G/BzGzg7A4A8A","highlander.advanced":"O/8U+H+h8A+c+UeM/A8A0A6A","highlander.superior":"/+548f9H8D8w9I8w8A4A4AoQ","wildhunt.basic":"ABABACATdHdv/+/8/h+H8eQ8","wildhunt.intermediate":"wAYA4AwAwow9x////874/geD","wildhunt.advanced":"AAwAwAgQh0h/j////+3w/B8H","wildhunt.superior":"gAgAgABBDIPvP//+/8/k+P4P","odyssey.basic":"xvyf8f4P4H4D8D8A+A8A8A/A","odyssey.intermediate":"j9v+4/g/wfwP4H4E8A4A0A+A","odyssey.advanced":"HAfA/A9A/g/g/w/w/w/gdgcA","odyssey.superior":"eF+B+B+A/A/A/g/g/g/A/A4Q","secret.superior":"fn7P8H4B8A487czCzGzExwwQ"};
+const DIGIT_EXEMPLARS={"0":["AAAAGAAYAf4DBgMGDgIMAhwCHAIcAhAGcAZwBnAEcBxwHGAccBhwIHAgH8AOAAAA","AAAAAAAAAAAA/AD8AQYGBg4GDgYIBggGGAQQDBAMEAwQDHAIcDhwOHBwH8APAAAA","AAAAAAAgACAB/gIGAgYOAgwCHAIcAhACEAYQBnAGcARgHGAcYBhgOGA4cOAfwAAA","AAAAAAH8AfwDBg4GDgYMAhwCEAYQBhAGcAZwBnAEYBxgGGAYYBhwIHAgfcAfAAAA"],"1":["AAAAIAAgAGAD4APgD+AAQABAAcABwAHAAcABgAGAA4ADgAOAAgACAAIADgAOAAAA","AAAAEAAQAHAAcA/wAHAAcABgAGAAYADgAOAA4ADgAOAAgAOAA4ADgAMAAwADAAAA","AAAOEA4QADAA4ADgA+AP4ADgAOAAwADAAcABwAHAAQABAAMAAwADAAMAAgACAAAA","AAAAcABwAOAH4AfgH+AAgACAAIADgAOAA4ADAAMAAwAHAAcABwAHAAcABAAEAAAA"],"2":["AAAAAAAAAAAAAHAYcBhh/AMGBgYGBgAGAAYABAAIADAA4AMAAwAGAAgAGAB/8AAA","AAAAAAAAAABg/mD+AQYGBg4GDgYABgAEAAwAeAB4AMAHAA4AGAAYAHAAf/h/8AAA","AAAAAAAAAAAAAAAAAAAB/gH+AwYCAgYCAAYABAAIADAAMADgAwAGAAgAGAB/8AAA","AAAAAAAAAAAAAAA4ADgB/AMGBgYEBgAGAAYADAAYADABwAMAAwAMABgAGAB/4AAA"],"3":["AAAAAAAAAABg/GD8BwYGBg4GDgYABAAIAPAAOAA4AAwADGAIcAhwCHA4H/APgAAA","AABgGGAYAf4CBgIGDgIMAgAGAAYAHAD4ADwAPAAEAAQABGAcYBxwOHA4f+ACAAAA","AAAAAAAAAAAAeAB4AbwGBg4GDgYIBAAMADgA8ADwADgACAAIYAhgCGA4cHB/wAAA","AAAAAAAAAAAB/AH8BwwOBggECAQADAAIAPAA+AD4ADgACGAIYDhgOHAweMAfgAAA"],"4":["AAAAAAAEAAQAHgA8ADwA3AEcAhwCHAAcDBgMGBA4YDhw/HD8f/wA4ADgAOAAwAAA","AAAAAAAAAAB/BH8Efg4YPABMAEwAjAEMAAgGCAYICDgQOHh4H/wf/ABwAHAAQAAA","AAAAAAACAAIAHgAeAB4ABgDGAQQBBAIcDBwMHBAcEBh//H/8H/wAOAA4ACAA4AAA","AAAAAAAeAB4APgDEAMQABAEcAhwCHAwYEBgQGGA4cDx//H/8ACAA4ADgAOAAwAAA"],"5":["AAAAAAAAAAAB/gH+AQAGAAYABgAOAA7wD3gIDAgMAAwADAAIcDhwOHAwf8APgAAA","AAAAAAAAAAAAAAP+A/4CAAIABAAEAAXwBfAOOAgYABgAGAAYABhwEHAwHeAGAAAA","AAAAAAAAAAAAAAH+Af4BAAYABgAGAAYAD/gOPA48AAwADAAMAAgACHA4cHAfwAAA","AAAAAAAAAAAB/gH+BgAGAA4ADgAIAA/wHngQOBA4AAgACAA4YDBgMHBwf8AOAAAA"],"6":["AAAAAAAAADgAOAD+AQYGAg4ADgAIABjwHzgYDBgMcAxwDHAIcDhwOHBwH8AHAAAA","AAAAAAH+Af4DBg4CDgIMABwAEPgQ+H88cBxwHHAcYBxgHGAcYBhgOGA4f+AfAAAA","AAAAAAAAAAAAOAA4AM4BBgYCBgIOAAgAGPgePB48GAwQDBAMcAhwCHA4GHAfwAAA","AAAAAAA4ADgB/gIGAgYMAhwAEAAQABH4fjx+PHAccBxgHGAcYBhgOGA4cCB/wAAA"],"7":["AAAAAAAAAAAP/g/+AAwACAAwADAAcADAAIABAAEABwAOAAgAGAAYABgAcABgAAAA","AAAAAA/+D/4AHgAcABwAOAAgAMAAwAEAAgACAA4ADAAcABwAEABwAHAAYABgAAAA","AAAAAAAAAAAAAA/+D/4ADAAIADAAMABAAMAAgACAAQAHAAYACAAIABgAGABwAAAA","AAAAAAAAH/4f/gAEABgAGAAgAOAA4AHAAQACAAIADgAMAAwAHAAQABAAcABgAAAA"],"8":["AAAAGAAYAf4DBgMGDgIMAgwGDAYOHAP4DDwMPBAccBxwHGAcYBxwOHA4f+APAAAA","AAAAAAAAAAAA/gD+AYYHBgYGBgYGBgcMB/gPOA84GAwQDHAMcAhwCHA4HvAPgAAA","AAAAAAA8ADwB3gICAgIOAgwCDgYOBgIYA/gD+BwcEARwBHAEYBxgGGAYcDh/4AAA","AAAAAAAAADAAMAH8BwYOBg4EDgQODAY4B/AOOA44EAhwCHAIcDhwOHBwf8APAAAA"],"9":["AAAAAAAAADAAMAH8BwYGAg4CDgIIBggGDg4OPA48B8wADAAIEDgQOHBwH8APAAAA","AAAAAAD8APwD3g4CDgIMAhwCHAIcAhwGHB4cHh4+AwQAHAAcABhgOGA4cOB/wAAA","AAAAAAAAAAAAeAB4Ac4HBgYCBgIOAg4CDgYODg4ODz4HhAAMAAgACHA4cHAfwAAA","AAAAAAAAAAAAcABwAfwHBA4GDgYIBhgGGAQYDBgMDnwHjAAIADgAOGAwcEB/gAAA"]};
 const V6="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v6/templates/inventory_detail/";
 const V7EQ="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/templates/inventory/equipment/";
 const schoolAsset={abydos:"Abydos",gehenna:"Gehenna",trinity:"Trinity",millennium:"Millennium",shanhaijing:"Shanhaijing",hyakkiyako:"Hyakkiyako",redwinter:"RedWinter",valkyrie:"Valkyrie",arius:"Arius",highlander:"Highlander",wildhunt:"Wildhunt"};
@@ -224,7 +226,7 @@ function scanCatalog(kind){
   if(kind==="bd"){
     schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("bd."+k+"."+tk,l+" "+tl,schoolAsset[k]?v7("skill_db/Item_Icon_Material_ExSkill_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png"):null,tk)));
   }else if(kind==="notes"){
-    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("notes."+k+"."+tk,l+" "+tl,schoolAsset[k]?v7("skill_book/Item_Icon_SkillBook_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png"):null,tk)));
+    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("notes."+k+"."+tk,l+" "+tl,schoolAsset[k]?v7("skill_book/Item_Icon_SkillBook_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png"):null,tk)));add("simple.secretNotes","秘伝ノート",v7("skill_book/Item_Icon_SkillBook_Ultimate_Piece.png"),"superior");
   }else if(kind==="ooparts"){
     ops.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("ooparts."+k+"."+tk,l+" "+tl,v7("ooparts/Item_Icon_Material_"+opAsset[k]+"_"+tierFileIndex[tk]+".png"),tk)));
   }else if(kind==="equipment"){
@@ -383,6 +385,38 @@ function empiricalDigitMeans(){
   }
   return empDigitDecoded;
 }
+
+function b64bytes(s){const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.length;i++)a[i]=b.charCodeAt(i);return a}
+function unpackBitsB64(s,total){const b=b64bytes(s),a=new Uint8Array(total);let p=0;for(let i=0;i<b.length&&p<total;i++)for(let bit=7;bit>=0&&p<total;bit--)a[p++]=(b[i]>>bit)&1;return a}
+const NOTE_HASH_DECODED=Object.fromEntries(Object.entries(NOTE_HASH_BANK).map(([k,v])=>[k,unpackBitsB64(v,144)]));
+const DIGIT_EXEMPLARS_DECODED=Object.fromEntries(Object.entries(DIGIT_EXEMPLARS).map(([k,arr])=>[k,arr.map(v=>unpackBitsB64(v,16*24))]));
+function noteHash(slot){
+  const w=slot.width,h=slot.height,x1=Math.round(w*.35),y1=Math.round(h*.26),x2=Math.round(w*.59),y2=Math.round(h*.55);
+  const c=document.createElement("canvas");c.width=12;c.height=12;const g=c.getContext("2d",{willReadFrequently:true});
+  g.drawImage(slot,x1,y1,Math.max(1,x2-x1),Math.max(1,y2-y1),0,0,12,12);
+  const d=g.getImageData(0,0,12,12).data,vals=[];for(let i=0;i<d.length;i+=4)vals.push(.299*d[i]+.587*d[i+1]+.114*d[i+2]);
+  const sorted=[...vals].sort((a,b)=>a-b),med=sorted[Math.floor(sorted.length/2)],out=new Uint8Array(144);
+  for(let i=0;i<vals.length;i++)out[i]=vals[i]>med?1:0;return out;
+}
+function hammingSim(a,b){let diff=0;for(let i=0;i<a.length;i++)if(a[i]!==b[i])diff++;return 1-diff/a.length}
+function matchNoteHash(slot,tier,cat){
+  if(!tier)return null;const f=noteHash(slot),scores=[];
+  for(const [k,t] of Object.entries(NOTE_HASH_DECODED)){
+    const [school,ktier]=k.split(".");if(ktier!==tier)continue;
+    const key=school==="secret"?"simple.secretNotes":"notes."+school+"."+tier;
+    const item=cat.find(x=>x.key===key);if(!item)continue;scores.push([hammingSim(f,t),item]);
+  }
+  scores.sort((a,b)=>b[0]-a[0]);if(!scores.length)return null;
+  return {best:scores[0][1],candidates:scores.slice(0,5).map(x=>x[1]),score:scores[0][0],margin:scores[0][0]-(scores[1]?.[0]||0),tier};
+}
+function bitIoU(a,b){let inter=0,uni=0;for(let i=0;i<a.length;i++){if(a[i]&&b[i])inter++;if(a[i]||b[i])uni++;}return uni?inter/uni:0}
+function classifyDigitEmpirical(norm){
+  let best={digit:null,score:-1},second={score:-1};
+  for(const [d,arr] of Object.entries(DIGIT_EXEMPLARS_DECODED))for(const ex of arr){
+    const s=bitIoU(norm,ex);if(s>best.score){second=best;best={digit:d,score:s}}else if(s>second.score)second={digit:d,score:s};
+  }
+  return {...best,margin:best.score-second.score};
+}
 function connectedComponents(mask,w,h){
   const seen=new Uint8Array(mask.length),out=[],dirs=[-1,1,-w,w,-w-1,-w+1,w-1,w+1];
   for(let p=0;p<mask.length;p++){
@@ -407,31 +441,22 @@ function normalizeDigitComponent(comp,mask,w,h){
   }
   return out;
 }
-function classifyEmpiricalDigit(norm){
-  const means=empiricalDigitMeans();let best=null,second=null;
-  for(const [d,m] of Object.entries(means)){
-    let diff=0;for(let i=0;i<norm.length;i++)diff+=Math.abs(norm[i]-m[i]);
-    const score=1-diff/(norm.length*255),r={digit:d,score};
-    if(!best||score>best.score){second=best;best=r}else if(!second||score>second.score)second=r;
-  }
-  return {...best,margin:best.score-(second?.score||0)};
-}
+function classifyEmpiricalDigit(norm){return classifyDigitEmpirical(norm)}
 function readConnectedCount(slot){
-  const sw=slot.width,sh=slot.height,sx=Math.round(sw*.45),sy=Math.round(sh*.65),cw=sw-sx,ch=sh-sy;
-  if(cw<10||ch<10)return null;
-  const d=slot.getContext("2d",{willReadFrequently:true}).getImageData(sx,sy,cw,ch).data,mask=new Uint8Array(cw*ch);
-  for(let i=0,p=0;i<d.length;i+=4,p++){const lum=.299*d[i]+.587*d[i+1]+.114*d[i+2];mask[p]=lum<150?1:0}
-  const comps=connectedComponents(mask,cw,ch),digits=[];
-  for(const c of comps){
-    if(c.area<20||c.h<10||c.w<4||c.w>15||c.miny<10||c.minx<4)continue;
-    const norm=normalizeDigitComponent(c,mask,cw,ch),r=classifyEmpiricalDigit(norm);
-    if(r.score>=.82)digits.push({x:c.minx,...r});
+  const sw=slot.width,sh=slot.height,d=slot.getContext("2d",{willReadFrequently:true}).getImageData(0,0,sw,sh).data,mask=new Uint8Array(sw*sh);
+  for(let p=0,i=0;i<d.length;i+=4,p++){
+    const dr=d[i]-45,dg=d[i+1]-70,db=d[i+2]-99;
+    mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
+    const y=Math.floor(p/sw),x=p%sw;if(y<sh*.77||x<sw*.35)mask[p]=0;
   }
-  digits.sort((a,b)=>a.x-b.x);
-  if(!digits.length||digits.length>6)return null;
-  const value=Number(digits.map(x=>x.digit).join(""));
-  if(!Number.isFinite(value))return null;
-  return {value,conf:Math.min(...digits.map(x=>x.score))*100,text:String(value),margin:Math.min(...digits.map(x=>x.margin))};
+  let comps=connectedComponents(mask,sw,sh).filter(c=>c.area>=18&&c.h>=10&&c.w>=4).sort((a,b)=>a.minx-b.minx);
+  if(comps.length<2)return null;
+  comps=comps.slice(1); // leading "x"
+  if(!comps.length||comps.length>6)return null;
+  const digits=[],scores=[],margins=[];
+  for(const c of comps){const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyEmpiricalDigit(norm);if(!r.digit||r.score<.22)return null;digits.push(r.digit);scores.push(r.score);margins.push(r.margin)}
+  const value=Number(digits.join(""));if(!Number.isFinite(value))return null;
+  return {value,conf:Math.min(...scores)*100,text:String(value),margin:Math.min(...margins)};
 }
 async function readAllSlotCounts(base){
   const worker=await ensureWorker(),cellW=520,cellH=120,scale=6;
@@ -563,7 +588,7 @@ async function analyzeOne(file,fileIndex,kind,cat){
       const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
       let count=(kind==="notes"||kind==="bd")?readConnectedCount(slot):counts.get(i);
       if(!count||count.value<0||count.value>999999)continue;
-      const m=matchCell(slot,cat,kind);if(!m.best)continue;
+      const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
       const [ct0,cc0]=confInfo(kind,m.score,m.margin);
       const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
       rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
