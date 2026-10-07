@@ -11,6 +11,15 @@ header{position:sticky;top:0;z-index:10;background:#fffffff2;border-bottom:1px s
 .wrap{max-width:1240px;margin:auto;padding:14px 18px}.title{font-size:22px;font-weight:800;margin-bottom:10px}
 .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.tabs{display:flex;gap:6px;flex-wrap:wrap}.spacer{flex:1}
 button,.filebtn,select,input[type=search]{border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-size:14px}
+.scan-wrap{display:grid;grid-template-columns:minmax(280px,.8fr) minmax(0,1.2fr);gap:14px;align-items:start}
+.scan-panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+.scan-upload{border:2px dashed #bfdbfe;background:#f8fbff;border-radius:14px;padding:18px;text-align:center}
+.scan-upload .filebtn{display:inline-block;margin-top:10px}
+.scan-preview{width:100%;max-height:520px;object-fit:contain;background:#111827;border-radius:12px;display:none}
+.scan-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.scan-status{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.6}
+.scan-results{display:grid;gap:8px}.scan-result{display:grid;grid-template-columns:1fr 120px 90px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.scan-result input{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:right}
 button,.filebtn{cursor:pointer}.tab.active{border-color:var(--blue);background:var(--soft);color:var(--blue);font-weight:700}
 main{max-width:1240px;margin:auto;padding:18px}.section{display:none}.section.active{display:block}
 .note{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.6}
@@ -41,7 +50,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 .summary-item span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#374151}.summary-item strong{font-size:12px;color:var(--blue);white-space:nowrap}
 .summary-card.compact .summary-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.summary-card.compact .summary-item:nth-last-child(2):nth-child(odd){border-bottom:0}
 @media(max-width:900px){.summary-grid{grid-template-columns:1fr}.summary-left{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-oparts{grid-column:auto;grid-row:auto}}
-@media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}.summary-left{grid-template-columns:1fr}}
+@media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}.summary-left{grid-template-columns:1fr}.scan-wrap{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -53,6 +62,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <button class="tab" data-tab="ooparts">オーパーツ</button>
 <button class="tab" data-tab="equipment">装備</button>
 <button class="tab" data-tab="misc">その他</button>
+<button class="tab" data-tab="scan">画像読取</button>
 </div>
 <div class="spacer"></div><button id="exportBtn">JSON書き出し</button><label class="filebtn">JSON読み込み<input id="importFile" type="file" accept=".json,application/json"></label><button id="resetBtn">全データ初期化</button>
 </div></div></header>
@@ -76,6 +86,38 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <section id="misc" class="section">
 <div class="note">レポート・強化珠・固有武器素材は「個数」を入力するとEXPへ自動換算します。固有武器素材は経験値ボーナス適用済み（15 / 75 / 300 / 1,500 EXP）として計算します。</div>
 <div id="miscGrid" class="grid"></div>
+</section>
+
+<section id="scan" class="section">
+<div class="note">ゲーム内の所持素材スクリーンショットから、素材の種類と所持数を読み取って入力する機能です。まず実際のスクショ形式を基準に認識位置を調整します。</div>
+<div class="scan-wrap">
+  <div class="scan-panel">
+    <div class="name" style="margin-bottom:10px">スクリーンショット</div>
+    <div class="scan-upload">
+      <div>素材所持画面の画像を選択</div>
+      <div class="caption">PNG / JPG。複数画面は1枚ずつ読み取る想定。</div>
+      <label class="filebtn">画像を選択<input id="scanFile" type="file" accept="image/*"></label>
+    </div>
+    <div style="margin-top:12px">
+      <label class="caption">画像の種類</label>
+      <select id="scanKind" style="width:100%;margin-top:5px">
+        <option value="auto">自動判定</option>
+        <option value="bd">BD</option>
+        <option value="notes">ノート</option>
+        <option value="ooparts">オーパーツ</option>
+        <option value="equipment">装備</option>
+        <option value="misc">レポート・強化珠・固有武器・WB等</option>
+      </select>
+    </div>
+    <div class="scan-actions"><button id="scanAnalyzeBtn" disabled>画像を解析</button><button id="scanClearBtn">クリア</button></div>
+    <div id="scanStatus" class="scan-status">画像を選択してください。</div>
+  </div>
+  <div class="scan-panel">
+    <img id="scanPreview" class="scan-preview" alt="読取画像プレビュー">
+    <div id="scanEmpty" class="caption" style="padding:40px 10px;text-align:center">ここに画像プレビューと読取候補を表示します。</div>
+    <div id="scanResults" class="scan-results"></div>
+  </div>
+</div>
 </section>
 </main>
 
@@ -150,6 +192,29 @@ opSearch.oninput=sortOps;opSort.onchange=sortOps;
 exportBtn.onclick=()=>{const u=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:"application/json"})),a=document.createElement("a");a.href=u;a.download="bluearchive-materials-v2.json";a.click();URL.revokeObjectURL(u)};
 importFile.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());state=x.version===2?deepMerge(initial(),x):migrateOld(x);save();render()}catch{alert("JSONの読み込みに失敗しました")}e.target.value=""};
 resetBtn.onclick=()=>{if(confirm("入力した素材数をすべて初期化しますか？")){state=initial();save();render()}};
+
+let scanObjectUrl=null;
+scanFile.onchange=e=>{
+  const f=e.target.files[0];
+  if(!f)return;
+  if(scanObjectUrl)URL.revokeObjectURL(scanObjectUrl);
+  scanObjectUrl=URL.createObjectURL(f);
+  scanPreview.src=scanObjectUrl;
+  scanPreview.style.display="block";
+  scanEmpty.style.display="none";
+  scanResults.innerHTML="";
+  scanAnalyzeBtn.disabled=false;
+  scanStatus.textContent="画像を読み込みました。解析を開始できます。";
+};
+scanClearBtn.onclick=()=>{
+  if(scanObjectUrl)URL.revokeObjectURL(scanObjectUrl);
+  scanObjectUrl=null;scanFile.value="";scanPreview.removeAttribute("src");scanPreview.style.display="none";
+  scanEmpty.style.display="block";scanResults.innerHTML="";scanAnalyzeBtn.disabled=true;scanStatus.textContent="画像を選択してください。";
+};
+scanAnalyzeBtn.onclick=()=>{
+  scanStatus.innerHTML="認識機能の土台は準備済みです。<b>実際のゲーム内素材所持画面のスクショを基準に、アイコン位置・数値位置・グリッド幅を調整してから自動入力を有効化します。</b>";
+};
+
 function render(){renderSeries();renderEq();renderMisc();summary();sortOps()}render();
 </script>
 </body></html>
