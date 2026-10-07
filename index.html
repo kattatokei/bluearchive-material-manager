@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.6";
+const APP_VERSION="0.9.7";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -216,7 +216,7 @@ const SCAN_SLOTS=Array.from({length:20},(_,i)=>{
 });
 const V7ROOT="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/";
 const NOTE_HASH_BANK={"hyakkiyako.basic":"x/mPfH/H/k/A+A+A8A4A4A9A","hyakkiyako.intermediate":"j+Oe+P+O/E/A/A+I6E4E4A4A","hyakkiyako.advanced":"P/5/8/888c8A8A8w8MoIoAwA","hyakkiyako.superior":"/83+z/57544A5A5g44ywwAQA","redwinter.basic":"MfOf/g/x+7+bmBwA4AwHgPgG","redwinter.intermediate":"+A+A+/50545g9g9g4w4A/A/A","redwinter.advanced":"sA8Y9+79z5/A7I7AxgwA+A/E","redwinter.superior":"4D7x/8/2/j+w8Q+AmAAA8A8Y","trinity.basic":"//zz4D4TzBoAoAwB6H6HB35+","trinity.intermediate":"3/HP4OgukGygygkGouoOHu38","trinity.advanced":"nPcC/g/A+A8g+A/A/A5A8Hfn","trinity.superior":"/e4E/A/A+A5A8A+A+Q2E4P/P","gehenna.basic":"/b+P2AzAwA4AgEwE/m/j/w/4","gehenna.intermediate":"9n8/sAsAAB4BAZAZ+f/P/B/4","gehenna.advanced":"7f7+wAYAADgDAnA38/8/+E/w","gehenna.superior":"Py+g8g8A8AgAgA+A/4/4/8f/","abydos.basic":"eB+E+w/Q+A+g+A+Q8w848g8H","abydos.intermediate":"9D8Q9A9A8B4A8D9o7o7w7H4e","abydos.advanced":"8P4h2g+B4H0BwG3Q/wvDueo4","abydos.superior":"88rGpQ8GwP4DwY9IfjeeY4Tx","millennium.basic":"+4/4/I+I8I4IwI+I+I+I+I+I","millennium.intermediate":"/4/w+Q8R4RwRwR8R8R8R8R8R","millennium.advanced":"3g/g9g5ixihixm5mxmxHxHxn","millennium.superior":"/g/A/M3I2ImImMmMmMmOmPnP","arius.basic":"//+//HDjASA8A2B+DxzA7Azg","arius.intermediate":"8t78/P8A4A4A4A4D7D5y5z4D","arius.advanced":"5/v4+e4A4BwBwDwH2O3kzm4G","arius.superior":"///x/8wMgHgHgPAecauQucgI","shanhaijing.basic":"P8/G/D/g/AtQxxGjsQ0QwHxH","shanhaijing.intermediate":"/x+I4E+G8HQvDzbz5gogg8k8","shanhaijing.superior":"B8H4fw/g+A+A/A8w/B/B+A+B","valkyrie.basic":"jnOE/E/g/g8g8g8g+g/g/A/A","valkyrie.intermediate":"OY+M8N+B+B+B/A/A/A+A/A/A","valkyrie.advanced":"c4484/8f8H8H8E+A8A8A8A+A","valkyrie.superior":"7w74x85+4f5P5D4I4A5A4g8A","highlander.basic":"znvk/g/g/A+g8g5g5w9g8A+A","highlander.intermediate":"nP/I/B/I+A/G/BzGzg7A4A8A","highlander.advanced":"O/8U+H+h8A+c+UeM/A8A0A6A","highlander.superior":"/+548f9H8D8w9I8w8A4A4AoQ","wildhunt.basic":"ABABACATdHdv/+/8/h+H8eQ8","wildhunt.intermediate":"wAYA4AwAwow9x////874/geD","wildhunt.advanced":"AAwAwAgQh0h/j////+3w/B8H","wildhunt.superior":"gAgAgABBDIPvP//+/8/k+P4P","odyssey.basic":"xvyf8f4P4H4D8D8A+A8A8A/A","odyssey.intermediate":"j9v+4/g/wfwP4H4E8A4A0A+A","odyssey.advanced":"HAfA/A9A/g/g/w/w/w/gdgcA","odyssey.superior":"eF+B+B+A/A/A/g/g/g/A/A4Q","secret.superior":"fn7P8H4B8A487czCzGzExwwQ"};
-const DIGIT_EXEMPLARS={"0":["AAAA/AD8Af4DBgMGDgIMAhwCHAIcBnAGcAZwBnAccBxwHGAccDhw4HDgf8AOAAAA","AAAAAAAAAHAAcAH8BwwOBAgGCAYYBhgEEAxwDHAMcAhwOHA4cHBwcHBAH8APAAAA","AAAAAAAAAHgAeAH8Bw4OBg4GDgYYBhgEGAxwDHAMcAxwCHA4cDBwMHBwH8AGAAAA","AAAA/AD8Af4CBgIGDgYMBhwGHAYQBnAGcAZwBnAEcBxwHGAYcDhw4HDgf8AOAAAA","AAAAAAAAAHgAeAH8BwwOBggGCAYYBhgMEAxwDHAMcAhwOHA4cHBwcHBAf8APAAAA","AAAAGAAYAf4DBgMGDgYMAhwCHAIcBhAGcAZwBnAEcBxwHGAccDhwIHAgf+AfAAAA","AAAAAAAAAAAA/AD8BwYGBg4GDgYOBhgGGAQYDBgMcAxwDHAIcDhwOHBwH8APgAAA","AAAAOAA4Af4DBgMGDgYMAhwCHAIcBnAGcAZwBnAEcBxwHHAccDhw4HDgf8AfAAAA","AAAAAAAAAHgAeAH8BwYGBg4GDgYOBhgGGAQYDBgMcAxwDHA4cDhwOHhwH8APAAAA","AAAAAAAAADAAMAH8Bw4GBg4GDgYOBhgGGAQYDBgMcAxwDHA4cDhwOHBwH8APgAAA","AAAAAAAAAAAB/AH8BwwOBg4GDgYYBhgEEAxwDHAMcAxwOHA4cDBwMHBwf8AfAAAA","AAAAAAH+Af4DBg4GDgYMBhwGEAYQBnAGcAZwBnAEcBxgHGAcYDhwIHAgfeAfAAAA"],"1":["AAAAIAAgAGAB4AHgD8ABwAHAAcABwAHAAcADgAOAA4ADgAOAA4ACAAIADgAOAAAA","AAAAcABwAGAD4APgH+AD4APgAIADgAOAA4ADgAOAAwAHAAcABwAHAAcABAAcAAAA","AAAAEAAQAHAA4ADgH+AD4APgAIADgAOAA4ADgAOAAwAHAAcABwAHAAcABwAcAAAA","AAAAEAAQAHAA4ADgH+AD4APgAOAAgACAA4ADgAOAA4ADAAMABwAHAAcABwAcAAAA","AAAAIAAgACAB4AHgD+AN4AHAAcABwAHAAYABgAOAA4ADgAOAAgAOAA4ADgAMAAAA","AAAAIAAgAGAB4AHgD+ANwAHAAcABwAHAAYABgAOAA4ADgAOAAgAOAA4ADgAMAAAA","AAAAEAAQADAA4ADgD+AP4ADgAOAAwAHAAcABwAHAAQABAAMAAwADAAMADgACAAAA","AAAAEAAQADAA8ADwA+AP4ADgAOAAwADAAcABwAHAAcABwAEAAwADAAMAAwACAAAA","AAAAEAAQADAA8ADwA+AP4ADgAOAA4ADAAcABwAHAAcABwAEAAwADAAMAAwACAAAA","AAAAEAAQADAA8ADwD+AP4ADgAOAAwAHAAcABwAHAAQABAAMAAwADAAMAAgACAAAA","AAAAEAAQADAA4ADgA+AP4ADgAOAA4AHAAcABwAHAAQABAAMAAwADAAMAAgACAAAA","AAAAIAAgAGAP4A/gD+ABwAHAAcABwAHAAcABgAGAA4ADgAOAA4AOAA4ADgAOAAAA","AAAAEAAQADAA8ADwA/AP4ADgAOAA4ADgAcABwAHAAcABwAHAAQADAAMAAwACAAAA","AAAAEAAQAHAH8AfwH/AA4ADgAOAA4ADgAIADgAOAA4ADgAOAA4AHAAcABwAHAAAA","AAAAIAAgAGAP4A/gD+ABwAHAAcABwAHAAcABgAGAA4ADgAOAA4ACAAIADgAOAAAA","AAAAEAAQABAAMAAwA/AP4ADgAOAA4ADgAMAAwAHAAcABwAHAAQADAAMAAwACAAAA","AAAAcABwAOAH4AfgH+AAgACAA4ADgAOAA4ADgAOAAwAHAAcABwAHAAcABAAcAAAA","AAAAEAAQAHAD8APwH/AA4ADgAOAA4ADgAOAAgACAA4ADgAOAA4ADAAMABwAHAAAA","AAAAIAAgACAAYABgD+AP4AHAAcABwAHAAYABgAOAA4ADgAOAA4AOAA4ADgAMAAAA","AAAAIAAgACAAYABgD+AP4AHAAcABwAHAAcABwAGAA4ADgAOAA4ACAAIADgAOAAAA","AAAAEAAQADAA8ADwD+AP4ADgAOAA4ADAAcABwAHAAcABwAEAAwADAAMAAwACAAAA","AAAAEAAQADAAMAAwA/AP4ADgAOAA4ADgAMAAwAHAAcABwAHAAQADAAMAAwACAAAA","AAAAEAAQADAA4ADgD+AP4ADAAMABwAHAAcABwAHAAwADAAMAAwADAAMAAgAOAAAA","AAAAEAAQAHAH8AfwH/AA4ADgAOAA4ADgAOAAgACAA4ADgAOAA4AHAAcABwAHAAAA","AAAAcABwAOAH4AfgH+AD4APgA4ADgAOAA4ADgAOABwAHAAcABwAHAAcABAAcAAAA","AAAAEAAQAHAH4AfgH+AA4ADgAOAA4ADgAIADgAOAA4ADAAMAAwAHAAcABwAEAAAA","AAAAIAAgAGAD4APgD+ABwAHAAcABwAHAAcADgAOAA4ADgAOAA4ACAAIADgAOAAAA"],"2":["AAAAAAAAAAAAAAA8ADwB/gMGBgYGBgAGAAYADAAYADABwAcABwAMABgAfAB/+AAA","AAAAAAAAAAAAAAD4APgB3gMGBgYEBgAEAAQADAAYAPABwAcABwAMABgAfAB/8AAA","AAAAAAAAAAAAAAA4ADgB/gMGBgYGBgAGAAYADAAcADAB4AMAAwAOABwAGAB/+AAA","AAAAAAAAAAAAAAA4ADgB/gMGBgYGBgAGAAYABAAcADAB4AMAAwAGABwAGAB/+AAA","AAAAAAAAAAAAAAA4ADgB/gMGBgYGBgAGAAYADAAYADAB4AMAAwAOABgAeAB/8AAA","AAAAAAAAAAAAOAA4Af4DBgIGBgYABgAGAAYADAA4AOADwAPABgAMABwAf/gc8AAA","AAAAAAAAAAAAAAA4ADgB/gMGBgYGBgAGAAYADgAMADgB4AMAAwAGAAwAHAB/+AAA","AAAAAAAAAAAAEAAQAf4DBgIGBgYEBgQGAAYADAA4AOADwAPABgAMABwAf/gf8AAA"],"3":["AAAAAAAAAAAA+AD4AbwHBg4GDgYIBAAMADgA8ADwADgADAAIcDhwOHA4cHB/wAAA","AAAAAAAAAHgAeAH+BwYOBgAGAAYADAA4APgAOAA4AAwADHAMcDhwOHhwH8AGAAAA","AAAAAAAAAPgA+AH8BwYOBggECAQADAA4APAAeAB4AAwACHA4cDhwOHBwf8AGAAAA","AAAAAAAAAHwAfAH+BwYHBgYGBgYABgAMAPgAPAA8AAwADHAMcAhwCHg4H/AHAAAA","AAAAAAAAAPgA+AH8Bw4OBggECAQADAA4AfAAeAB4ADgACGA4YDhgOHBwf8AOAAAA","AAAAAAAAAHgAeAH+BwYGBg4GDgYABAAIAPgAeAB4AAwADHAMcDhwOHB4H/AHAAAA","AAAAAAAAAHwAfAH+BwYHBgYGBgYABgAMAPgAPAA8AAwADHAMcAxwDHg4H/AHAAAA","AAAAAAAAADwAPAD+AYYHAgYGBgYABgAMAPgAPAA8AAwADBAMcAxwDHg4H/AHgAAA","AAAAAAAAAAAB/AH8BwYGBg4GDgYABAAMAPgAeAB4AAwADHAMcDhwOHA4f/AfgAAA","AAAAAAAAAHgAeAH+BwYGBg4GDgYABAAIAPgAeAB4AAwADHAMcDhwOHA4f/APgAAA","AAAAAAAAAAAB/AH8Bw4OBg4GDgYADAAIAPAA+AD4ADgADGAIcDhwOHBwefAfgAAA"],"4":["AAAAAAAAAAAABgAGAD4APABMAEwAjAEMBggIOAg4CDgQOH/8H/wf/ABwAHAAQAAA","AAAAAAAGAAYAHgA+AD4AJgDGAQQBBAIcDBwMHBAcEBx//n/+f/wAOAA4ACAA4AAA","AAAAAAAAAAYABgAOADwATACMAIwBDAcMBggIOAg4EDh//B/8AHAAcABwAHAAQAAA","AAAABgAGAB4APgA+ANwBHAIcAhwCHAwYEDgQOGA4f/x//H/8AOAA4ADgAOAAwAAA","AAAAAAAAAAAABgAGAD4APABMAEwAjAEMBggOOA44CDgQOH/8f/x//ABwAHAAQAAA","AAAABgAGAB4APgA+ANwBHAMcAxwCHAwYEDgQOGA4f/x//H/8AOAA4ADgAOAAwAAA","AAAABgAGAB4APgA+AP4AxAEcARwCHAwcEBgQGHA4f/x//H/8ADgA4ADgAOAAwAAA","AAAAAgACAB4APgA+AP4AxgEcARwCHAwcEBgQGHA4cDxwPH/8APgA4ADgAOAAwAAA","AAAABgAGAB4APgA+APwBBAEcARwCHAwcEDgQOHA4cfxx/H/8AOAA4ADgAOAAwAAA","AAAAAAAAAAYABgAOADwATACMAIwBDAcMBjgIOAg4EDh+/H/8AHAAcABwAEAAQAAA","AAAABgAGAB4APgA+AD4AxAEcARwCHAwcEBgQGHA4cDxwPH/8APgA4ADgAOAAwAAA","AAAAAAAGAAYAHgA+AD4AxgEGAhwCHAIcDBwMHBAccDx//n/+ADgAIAAgAOAA4AAA","AAAAAgACAAYAHgAeAD4AxgEEAQQCHA4cDBwMHBAccDxwPH/+ADgAIAAgAOAA4AAA","AAAAAAAeAB4APgA+AD4AxgEcAhwCHAwcEBgQGBAYcDx//H/8APgA4ADgAOAA4AAA"],"5":["AAAAAAAAAAAB/gH+AQAGAAYABgAOAA/4DjwIDAgMAAwADAAMcDhwOHhwH8AGAAAA","AAAAAAAAAAAAAAP+A/4DAAIABgAEAAfwB/AOOAgcAAwACBAYEBhwGBgwH+AHAAAA","AAAAAAAAAAAAAAP+A/4CAAYABAAEAA/wD/AOOAgYABgAGAAYABhwEHgwH+AHAAAA","AAAAAAAAAAAAAAP+A/4CAAYABgAEAA/wD/AOOAgYABgAGBAYEBhwGHgwH+AGAAAA","AAAAAAAAAAAAAAH+Af4DAAIABgAEAAfwB/AOOAwYAAwACAAYABhwGBgwH+APAAAA","AAAAAAAAAAAB/gH+BwAGAA4ADgAOAA/wD3gYPBg8AAwADAAIcDhwOHBwf8APAAAA","AAAAAAAAAAAAAAP+A/4DAAYABAAEAA3wDfAP+AgYABgAGAAYABhwEHAwH+APAAAA","AAAAAAAAAAAB/gH+BwAGAA4ADgAOAA/4HngYDBgMAAwADAA4cDhwOHBwf8APAAAA","AAAAAAAAAAAAAAP+A/4CAAYABAAEAA/wD/AO+AgYABgAGAAYABhwMHAwH+APAAAA","AAAAAAAAAAAAAAP+A/4DAAYABAAEAA3wDfAP+AgYABgAGAAYABhwGHAwH+APAAAA","AAAAAAAAAAAAAAP+A/4CAAYABAAMAA3wDfAP+AgYABgAGAAYABhwMHAwH+APAAAA","AAAAAAAAAAAB/gH+BwAGAAYABgAOAA/4D/wYDBgMAAwADAAMcDhwOHB4f8AfgAAA"],"6":["AAAAAAAAAAAAfAB8Ac4HBgYCBgIOAAgAGfgePB48GAxwDHAMcAhwCHA4eHAfwAAA","AAAAAAAAAHgAeAH+BwYOBggACAAYABnwHjh4OHg4cDhwOGA4cDBwMHBwH8AGAAAA","AAAAAAAAAHwAfAH+BwYGAg4ADgAIABj4HjwYDBgMGAxwDHAIcDhwOBhwH8AGAAAA","AAAAAAAAAHwAfAH+BwYOBg4ADgAYABn4Hjx4DHgMcAxwDHA4cDhwOHhwH8AGAAAA","AAAAAAAAAHwAfAD+AYYHAg4ADgAOABj4HzwYDBgMGAwQDHAMcDhwOBg4H/APgAAA","AAAAAAAAAAAAOAA4AfwDDgYEDAAMAAwACfAeOBwYGBgQGBAYcBhwMBgwH+AHAAAA","AAAAAAAAAHgAeAD+BwYGBg4ADgAIABj4HzwYDBgMeAxwDHAIcDhwOHBwH8APAAAA","AAAAAAAAAAAAAAH8AfwDDgYEBAAMAAnwCfAf+BwYGBgYGHAYcBhwMBgwH+APAAAA","AAAAAAAAADwAPAD+AYYHAg4ADgAOAAj4H7weDB4MGAwQDHAMcDhwOBg4H/APgAAA","AAAAAAAAADAAMAH8BwYOBg4ADgAYABjwH/h4OHg4cAxwCHA4cDhwOHBwf8APgAAA"],"7":["AAAAAAAAAAAAAA/+D/4ADAAIADAAMABAAMABgAGABwAHAA4ADgAOABgAEABwAAAA","AAAAAAAAAAAAAA/+D/4ADAAIADAAMABwAMABgAGAAQAHAA4ACAAIABgAGABwAAAA","AAAAAAAAAAAAAA/+D/4ADgAMADgAOABwAMAAgACAAYAHAA4ADgAOABgAGABwAAAA","AAAAAAAAAAAf/h/+AA4ACAAwADAAcADAAYABAAEABwAOAAgAGAAYABgAcABgAAAA","AAAAAB/+H/4AHgAcABwAOADgAcABwAEAAwADAA4ADAAcABwAEABwAHAAYABgAAAA","AAAAAAAAAAAf/h/+AAwACAAwADAAcADAAYABAAEABwAOAAgAGAAYABgAcABgAAAA","AAAAAAAAAAAP/g/+AA4ADAAwADAAcADAAYABAAEABwAOAA4AGAAYABgAcABgAAAA","AAAAAAAAAAAP/g/+AA4ADAA4ADgAcABAAIABgAGABwAGAA4ACAAIABgAEABwAAAA","AAAAAAAAAAAP/g/+AA4ADAA4ADgAcADAAIABAAEABwAGAA4AGAAYABgAcABwAAAA","AAAAAAAAAAAf/h/+AA4ADAA4ADgAcADAAYABAAEABwAOAA4AGAAYABgAcABwAAAA","AAAAAAAAAAAP/g/+AA4ADAA4ADgAMABAAMABgAGABwAGAA4ACAAIABgAGABwAAAA","AAAAAAAAAAAf/h/+AAwACAAwADAAQADAAYAHAAcABwAOAAgAGAAYAHAAcABwAAAA"],"8":["AAAAAAAAAPgA+AH8Bw4OBggECAQODAcwB/AYOBg4cDhwCGA4cDhwOHBwf8AGAAAA","AAAAAAAAAHwAfAH+BwYHBgYGBgYGBAcIB/gOPA48GAwQDHAMcDhwOHh4H/AHAAAA","AAAAAAAAAAAAOAA4AfwDDgYGBgQGDAYMBhgD8A44GBgYCBgIGBhwGBgwH+AHAAAA","AAAAAAAAADAAMAH8Bw4OBg4GDgYODA44B/AOeA54GDhwDHAIcDhwOHBwf8AfgAAA","AAAAAAAAAAAAAAH8AfwDDgYGBgQGDAYYBhgH8AY4CBgYGBAYEBhwGHgwH+APwAAA","AAAAAAAAAAAB/AH8Bw4OBg4EDgQODA44B/AOeA54EDhwCHA4YDhgOHBwf8AfgAAA","AAAAAAAAAHgAeAH8BwYOBg4GDgYODAc4B/AOOA44GDxwDHAIcDhwOHBwf8APAAAA","AAAAAAAAAAAAMAAwAfwDDgYGBAQGDAYMBhgH8A44GBgYGBgYEBhwGHgwH+APAAAA","AAAAAAAAAHgAeAH8Bw4OBg4EDgQODA84B/AeeB54EDhwCGA4YDhgOHBwf8AfAAAA","AAAAAAAAADAAMAD+BwYHBgYGBgYGBgcMB/gPOA84GAwQDHAMcAhwCHA4H/APgAAA","AAAAAAAAAAAA/gD+AYYHBgYGBgYGBgcMB/gPOA84GAwYDHAMcAhwCHA4HvAPgAAA"],"9":["AAAAAAAAAAAAAAD4APgD3AYMBgYMBgwEDAQMDAwcD/wDGAAYABgAEHAweOAfwAAA","AAAAAAAAAAAA+AD4B7wOBA4GDgYYBhgGGAwYPBg8H/wHiAA4ADAAMGBwcMB/gAAA","AAAAAAAAAAAAfAB8Ac4HBgYCBgIOAg4GDgYODg4OD/4HjAAMAAgACHA4eHAfwAAA","AAAAAAAAAHgAeAH+BwYGAg4CDgIOBg4GDg4Pfg9+B8wADAAIcDhwOHhwH8AGAAAA","AAAAAAAAAPgA+AH8BwYOBggGCAYYBhgMGAwf/B/8D4wACAA4cHBwcHBAf4AOAAAA","AAAAAAAAAHgAeAH8BwYOBg4GDgYOBg4GDg4PfA98B8wADAA4cDhwOHBwH8AOAAAA","AAAAAAAAAHgAeAH8BwYOBg4GDgYOBhgGHgwPfA98D8wADAA4cDhwOHBwf8APAAAA","AAAAAAAAAHgAeAH+BwYHAg4CDgIOBg4GDg4PPg8+B8wADAAIEDgQOHBwH8APAAAA","AAAAAAAAAHgAeAH+B4YHAg4CDgIOAg4GDg4PPg8+B8wADAAMEDgQOHBwH8APgAAA","AAAAAAAAAHAAcAH8BwYOBggGCAYYBhgGGAwefB58D8wACAA4YDBgMHBwf8AfAAAA","AAAAAAAAAAAB/AH8BwYOBg4CDgIOBg4GDg4OPA48D8wADAAIEDgQOHBwf8AfgAAA","AAAAAAAAADAAMAH8Bw4OBggGCAYYBhgGGAwePB48D8wADAA4YDBgMHBwf8AfAAAA","AAAAAAAAAHgAeAH+BwYHAg4CDgIOBg4GDg4PPg8+B8wADAAIcDhwOHBwH8APAAAA","AAAAAAAAAHgAeAH+BwYHAg4CDgIOAg4GDg4PPg8+B8wADAAIEDgQOHBwH8APAAAA","AAAAAAAAAPgA+AH8BwYOBggGCAYYBhgOGAwffB98D4wACAA4cDBwMHBwf4APAAAA","AAAAAAAAAHgAeAH8BwYOBg4CDgIOBg4GDg4PPA88B8wADAA4cDhwOHBwH8APAAAA","AAAAAAAAAHgAeAH8Bw4OBggGCAYYBhgGGAwefB58D8wACAA4cDBwMHBwf8AfAAAA","AAAAAAAAAAAAIAAgAfwDDAYGDAYMBgwGDAwMDA48B9gAGAAYABgQMHggH8APAAAA"]};
+const DIGIT_EXEMPLARS={"0":["AAAAGAAYAf4DBgMGDgIMAhwCHAIcAhAGcAZwBnAEcBxwHGAccBhwIHAgH8AOAAAA","AAAAAAAAAAAA/AD8AQYGBg4GDgYIBggGGAQQDBAMEAwQDHAIcDhwOHBwH8APAAAA","AAAAAAAgACAB/gIGAgYOAgwCHAIcAhACEAYQBnAGcARgHGAcYBhgOGA4cOAfwAAA","AAAAAAH8AfwDBg4GDgYMAhwCEAYQBhAGcAZwBnAEYBxgGGAYYBhwIHAgfcAfAAAA"],"1":["AAAAIAAgAGAD4APgD+AAQABAAcABwAHAAcABgAGAA4ADgAOAAgACAAIADgAOAAAA","AAAAEAAQAHAAcA/wAHAAcABgAGAAYADgAOAA4ADgAOAAgAOAA4ADgAMAAwADAAAA","AAAOEA4QADAA4ADgA+AP4ADgAOAAwADAAcABwAHAAQABAAMAAwADAAMAAgACAAAA","AAAAcABwAOAH4AfgH+AAgACAAIADgAOAA4ADAAMAAwAHAAcABwAHAAcABAAEAAAA"],"2":["AAAAAAAAAAAAAHAYcBhh/AMGBgYGBgAGAAYABAAIADAA4AMAAwAGAAgAGAB/8AAA","AAAAAAAAAABg/mD+AQYGBg4GDgYABgAEAAwAeAB4AMAHAA4AGAAYAHAAf/h/8AAA","AAAAAAAAAAAAAAAAAAAB/gH+AwYCAgYCAAYABAAIADAAMADgAwAGAAgAGAB/8AAA","AAAAAAAAAAAAAAA4ADgB/AMGBgYEBgAGAAYADAAYADABwAMAAwAMABgAGAB/4AAA"],"3":["AAAAAAAAAABg/GD8BwYGBg4GDgYABAAIAPAAOAA4AAwADGAIcAhwCHA4H/APgAAA","AABgGGAYAf4CBgIGDgIMAgAGAAYAHAD4ADwAPAAEAAQABGAcYBxwOHA4f+ACAAAA","AAAAAAAAAAAAeAB4AbwGBg4GDgYIBAAMADgA8ADwADgACAAIYAhgCGA4cHB/wAAA","AAAAAAAAAAAB/AH8BwwOBggECAQADAAIAPAA+AD4ADgACGAIYDhgOHAweMAfgAAA"],"4":["AAAAAAAEAAQAHgA8ADwA3AEcAhwCHAAcDBgMGBA4YDhw/HD8f/wA4ADgAOAAwAAA","AAAAAAAAAAB/BH8Efg4YPABMAEwAjAEMAAgGCAYICDgQOHh4H/wf/ABwAHAAQAAA","AAAAAAACAAIAHgAeAB4ABgDGAQQBBAIcDBwMHBAcEBh//H/8H/wAOAA4ACAA4AAA","AAAAAAAeAB4APgDEAMQABAEcAhwCHAwYEBgQGGA4cDx//H/8ACAA4ADgAOAAwAAA"],"5":["AAAAAAAAAAAB/gH+AQAGAAYABgAOAA7wD3gIDAgMAAwADAAIcDhwOHAwf8APgAAA","AAAAAAAAAAAAAAP+A/4CAAIABAAEAAXwBfAOOAgYABgAGAAYABhwEHAwHeAGAAAA","AAAAAAAAAAAAAAH+Af4BAAYABgAGAAYAD/gOPA48AAwADAAMAAgACHA4cHAfwAAA","AAAAAAAAAAAB/gH+BgAGAA4ADgAIAA/wHngQOBA4AAgACAA4YDBgMHBwf8AOAAAA"],"6":["AAAAAAAAADgAOAD+AQYGAg4ADgAIABjwHzgYDBgMcAxwDHAIcDhwOHBwH8AHAAAA","AAAAAAH+Af4DBg4CDgIMABwAEPgQ+H88cBxwHHAcYBxgHGAcYBhgOGA4f+AfAAAA","AAAAAAAAAAAAOAA4AM4BBgYCBgIOAAgAGPgePB48GAwQDBAMcAhwCHA4GHAfwAAA","AAAAAAA4ADgB/gIGAgYMAhwAEAAQABH4fjx+PHAccBxgHGAcYBhgOGA4cCB/wAAA"],"7":["AAAAAAAAAAAP/g/+AAwACAAwADAAcADAAIABAAEABwAOAAgAGAAYABgAcABgAAAA","AAAAAA/+D/4AHgAcABwAOAAgAMAAwAEAAgACAA4ADAAcABwAEABwAHAAYABgAAAA","AAAAAAAAAAAAAA/+D/4ADAAIADAAMABAAMAAgACAAQAHAAYACAAIABgAGABwAAAA","AAAAAAAAH/4f/gAEABgAGAAgAOAA4AHAAQACAAIADgAMAAwAHAAQABAAcABgAAAA"],"8":["AAAAGAAYAf4DBgMGDgIMAgwGDAYOHAP4DDwMPBAccBxwHGAcYBxwOHA4f+APAAAA","AAAAAAAAAAAA/gD+AYYHBgYGBgYGBgcMB/gPOA84GAwQDHAMcAhwCHA4HvAPgAAA","AAAAAAA8ADwB3gICAgIOAgwCDgYOBgIYA/gD+BwcEARwBHAEYBxgGGAYcDh/4AAA","AAAAAAAAADAAMAH8BwYOBg4EDgQODAY4B/AOOA44EAhwCHAIcDhwOHBwf8APAAAA"],"9":["AAAAAAAAADAAMAH8BwYGAg4CDgIIBggGDg4OPA48B8wADAAIEDgQOHBwH8APAAAA","AAAAAAD8APwD3g4CDgIMAhwCHAIcAhwGHB4cHh4+AwQAHAAcABhgOGA4cOB/wAAA","AAAAAAAAAAAAeAB4Ac4HBgYCBgIOAg4CDgYODg4ODz4HhAAMAAgACHA4cHAfwAAA","AAAAAAAAAAAAcABwAfwHBA4GDgYIBhgGGAQYDBgMDnwHjAAIADgAOGAwcEB/gAAA"]};
 const V6="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v6/templates/inventory_detail/";
 const V7EQ="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/templates/inventory/equipment/";
 const schoolAsset={abydos:"Abydos",gehenna:"Gehenna",trinity:"Trinity",millennium:"Millennium",shanhaijing:"Shanhaijing",hyakkiyako:"Hyakkiyako",redwinter:"RedWinter",valkyrie:"Valkyrie",arius:"Arius",highlander:"Highlander",wildhunt:"Wildhunt"};
@@ -368,7 +368,18 @@ async function ensureWorker(){
 }
 
 
-
+const EMP_DIGIT_MEANS={
+"0":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEBAlZWAFRUAAAAAAAAAFZWV6v//6uqVAAAAAAAAAJXUqqpqav///5UAAAAAACq//6pAABX///+/AAAAAAC/v6pqAAAVqv//vwAAACoq//9qAAAAAKr//+oAAACV//+/VQAAAACq////AAAAlf//vwAAAAAAqv//1AAAAP///2oAAAAAAL///9QAAED//9RAAAAAAAD///9VAACV//9VAAAAAAAA////QAAAlf//QAAAAAAAQP///wAAAJX//wAAAAAAAL//v78AAACV//8AAAAAAAC//79VAAAA////AAAAAAAV//+AFQAAAP///wAAAAAAv/9qAAAAAACV//9qAABVv///AAAAAAAAav//lZWVlf//gAAAAAAAAGr//////////xUAAAAAAAAAatT///+/gAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"1":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACN77VgAAAAAAAAAAAAAABrl//9hAAAAAAAAAAAAAAAa5f//YQAAAAAAAAAAAAB75f//9hoAAAAAAAAS/////////+UAAAAAAAAAav////////+eAAAAAAAAAGr/////////ngAAAAAAAAAAAAAAe////2oAAAAAAAAAAAAAAKf/9qcaAAAAAAAAAAAAAACn//anGgAAAAAAAAAAAAAA3P/ccgAAAAAAAAAAAAAJNf//lSwAAAAAAAAAAAAAEmH//2oAAAAAAAAAAAAAABJh//9qAAAAAAAAAAAAAABhyv//GgAAAAAAAAAAAAAAe+X/3AAAAAAAAAAAAAAAAHvl/9wAAAAAAAAAAAAAADXK//+eAAAAAAAAAAAAAACN///tWAAAAAAAAAAAAAAAlf//pxoAAAAAAAAAAAAAAJX//6caAAAAAAAAAAAAAACe//81AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"2":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgICAgICAAAAAAAAAAABAgICAgICAgIAAAAAAAEBAgL+AgIDf34CAAAAAAABAQP//v4CA39//gAAAAAAAgP//gIAAAECA/98AAAAAIP///wAAAAAAgP//AAAAAAC/vwAAAAAAQL///wAAAAAAgEAAAAAAAID//0AAAAAAAAAAAAAAIID//98AAAAAAAAAAAAAgID/v78AAAAAAAAAAAAAIJ///79AAAAAAAAAAAAAQJ+f/4CAAAAAAAAAAACAgP//v4BgAAAAAAAAAACAv///gIAAAAAAAAAAAACA////IAAAAAAAAAAAAACA////gEBAQEBAICAAAAAAv////4BAQEBAQCAgAAAAAP//////////////gAAAAAAgv9+/v9+/v7+/AAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"3":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAC4uXV1dRkYAAAAAAAAAAF106P////+iXQAAAAAAAF3o0dGiov///4sAAAAAAHTR/9FGAAD/////AAAAAADR0eiiFwAAov///wAAAAAX//+iAAAAAHTR//8AAAAARqKiXQAAAAD////oAAAAAAAAAAAAAAAA////XQAAAAAAAAAAAAB0////dAAAAAAAAAAALv////+5XQAAAAAAAAAAAAC56P///+hGAAAAAAAAAAAAXYui////XQAAAAAAAAAAAAAAAKL//7kAAAAAAAAAAAAAAACi///RAAAAuf/RAAAAAAAA////ogAAAP//0QAAAAAARv//0S4AAADR//+LLgAAi///dBcAAAAA0f//i4tdXej//xcXAAAAAF3//////////3QAAAAAAAAALtH/////uS4AAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"4":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAF1dXQAAAAAAAAAAAAAAAF1dXV0AAAAAAAAAAAAAAADR////AAAAAAAAAAAAAF3R/////wAAAAAAAAAAAF25/////+gAAAAAAAAAAF1dXaL////oAAAAAAAAAACioqKi////ogAAAAAAAEZd/6JdAP///10AAAAAAABd/3R0AEb///8AAAAAAAAAXf90dABG////AAAAAAAAXejRAAAAXf/o6AAAAABdXdGiAAAAXf//ubkAAABdubmiAAAAAF3//y4uAAAAi///XQAAAACL//8uLgAAAP////////////////8XAAD/////////////////XQAA/////////////////3QAAAAAAAAAAC6L//+5AAAAAAAAAAAAAAAXdP//AAAAAAAAAAAAAAAARqL/6AAAAAAAAAAAAAAAAEai/+gAAAAAAAAAAAAAAAAui/9dAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"5":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABgv7+/v7+/nwAAAAAAAAD///////////8AAAAAAGBg//8gACAgIAAAAAAAAABgYP/fAAAAAAAAAAAAAAAAv7//IAAAAAAAAAAAAAAAQP//vwAAAAAAAAAAAAAAAED//58AAAAAAAAAAAAAAAC//////////7+/AAAAAABA/////9///////4AAAAAAQP+/vwAAACD///+/AAAAAED/v78AAAAg////vwAAAAAAAAAAAAAAAL///78AAAAAAAAAAAAAAAC///+fAAAAQN8AAAAAAABA////QAAAAP//gAAAAAAAv/+/vwAAAAD///8AAAAAv///ICAAAAAA////AAAAAL///yAgAAAAAGD//////////yAAAAAAAAAAIP//////YAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"6":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABoaMzMzGhoAAAAAAAAAADNm5v////9MMwAAAAAAADPM///MzOb//0wAAAAAAICy//8zAADm////AAAAAACysv/MAAAAzP///wAAAABM///MAAAAAICAzJkAAAAz///mTAAAAAAAABoAAAAAgP//5gAAGhoAAAAAAAAAAOb//+bm/////0waAAAAABr//////+bm/////0wAAACA///msgAAADP///9MAAAAgP//5rIAAAAz////TAAAAJn//wAAAAAAAP///0wAAADm/8wAAAAAAAD///9MAAAA//9MAAAAAACy////MwAAAP//zAAAAAAA5v+ZZgAAAADm//8zGgAz5v//AAAAAAAAzP//TEwzTP//5gAAAAAAADP/////////5hoAAAAAAAAAGsz/////ZgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"7":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAG2AgICAgICAgIBbAAAApLbb29vb29vb29vbpAAAAABbbVtbW1ttkv////8AAAAAEiQSEgASJJL///+kAAAAAAAAAAAAAADI///bAAAAAAAAAAAAAABJ//9bAAAAAAAAAAAAABIS//8AAAAAAAAAAAAAAAA3kv+AAAAAAAAAAAAAAAAA//+2AAAAAAAAAAAAAAAA7f/tAAAAAAAAAAAAAAAStv//pAAAAAAAAAAAAAAAErb/WwAAAAAAAAAAAAAAAP//bQAAAAAAAAAAAAAAAEn//20AAAAAAAAAAAAAAIDb//8AAAAAAAAAAAAAAAD//+1JAAAAAAAAAAAAAACS//+kAAAAAAAAAAAAAAAApP//EgAAAAAAAAAAAAAAAP///xIAAAAAAAAAAAAAAAD//6QAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"8":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABcXLi4uLi4AAAAAAAAAAC4uuf//6OhGLgAAAAAAAC6i///R0dH//10AAAAAAIu5//9GABfR///oAAAAAACiuf/RFwAX0f//6AAAAAAA///oAAAAAF2L//8AAAAAF////wAAAAC50f/oAAAAABf///8AAAAA6P//LgAAAAAA0f//0S50////RgAAAAAAANH///////+5iwAAAAAAF+j////R0f////8uAAAAAC7//9HRubnR6P//LgAAAC7////RAAAAF9H//9EAAABG//8uAAAAAADR///oAAAA0f/oAAAAAAAA6P//ogAAAP//6AAAAAAALv///y4AAADR//9GFwAALv//XS4AAAAA0f//RkYuLl3//y4uAAAAAEb//////////6IAAAAAAAAALuj/////6BcAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+"9":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAgQEBAEBAAAAAAAAAAAECA//////9QQAAAAAAAAED///+/v+///0AAAAAAAL////9AAADv//+/AAAAAAD//++/AAAAv///vwAAABCP//+/AAAAAIC///8AAABA////UAAAAABwr///AAAAQP///yAAAAAAj8//3wAAAJ////8AAAAAAN///78AAACf////UAAAAL////9wAAAAMO/////Pz///////MAAAAAC/////39//7////wAAAAAAQL+/v7+/gL///+8AAAAAAAAAAAAAAAC///9wAAAAABAAAAAAAABQ///fIAAAAM//jwAAAAAAz/9wMAAAAAD///8wAABg3/+vAAAAAAAA////QEBAgP//cAAAAAAAAJ//////////nwAAAAAAAAAAcP/////fQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+};
 let empDigitDecoded=null;
 function empiricalDigitMeans(){
   if(empDigitDecoded)return empDigitDecoded;
@@ -383,40 +394,6 @@ function b64bytes(s){const b=atob(s),a=new Uint8Array(b.length);for(let i=0;i<b.
 function unpackBitsB64(s,total){const b=b64bytes(s),a=new Uint8Array(total);let p=0;for(let i=0;i<b.length&&p<total;i++)for(let bit=7;bit>=0&&p<total;bit--)a[p++]=(b[i]>>bit)&1;return a}
 const NOTE_HASH_DECODED=Object.fromEntries(Object.entries(NOTE_HASH_BANK).map(([k,v])=>[k,unpackBitsB64(v,144)]));
 const DIGIT_EXEMPLARS_DECODED=Object.fromEntries(Object.entries(DIGIT_EXEMPLARS).map(([k,arr])=>[k,arr.map(v=>unpackBitsB64(v,16*24))]));
-
-function connectedComponents(mask,w,h){
-  const seen=new Uint8Array(mask.length),out=[];
-  const dirs=[[-1,-1],[0,-1],[1,-1],[-1,0],[1,0],[-1,1],[0,1],[1,1]];
-  for(let p=0;p<mask.length;p++){
-    if(!mask[p]||seen[p])continue;
-    const stack=[p];seen[p]=1;const pts=[];let minx=w,miny=h,maxx=0,maxy=0;
-    while(stack.length){
-      const q=stack.pop(),x=q%w,y=Math.floor(q/w);pts.push(q);
-      if(x<minx)minx=x;if(x>maxx)maxx=x;if(y<miny)miny=y;if(y>maxy)maxy=y;
-      for(const [dx,dy] of dirs){
-        const nx=x+dx,ny=y+dy;if(nx<0||nx>=w||ny<0||ny>=h)continue;
-        const n=ny*w+nx;if(seen[n]||!mask[n])continue;seen[n]=1;stack.push(n);
-      }
-    }
-    out.push({pts,minx,miny,maxx,maxy,w:maxx-minx+1,h:maxy-miny+1,area:pts.length});
-  }
-  return out;
-}
-function normalizeDigitComponent(comp,mask,w,h){
-  const srcW=comp.w,srcH=comp.h,tw=16,th=24,scale=Math.min(14/srcW,22/srcH),nw=Math.max(1,Math.round(srcW*scale)),nh=Math.max(1,Math.round(srcH*scale));
-  const src=new Uint8Array(srcW*srcH);
-  for(const p of comp.pts){
-    const x=p%w-comp.minx,y=Math.floor(p/w)-comp.miny;
-    if(x>=0&&x<srcW&&y>=0&&y<srcH)src[y*srcW+x]=1;
-  }
-  const out=new Uint8Array(tw*th),ox=Math.floor((tw-nw)/2),oy=th-nh-1;
-  for(let yy=0;yy<nh;yy++)for(let xx=0;xx<nw;xx++){
-    const sx=Math.min(srcW-1,Math.floor(xx*srcW/nw)),sy=Math.min(srcH-1,Math.floor(yy*srcH/nh));
-    if(src[sy*srcW+sx])out[(oy+yy)*tw+ox+xx]=1;
-  }
-  return out;
-}
-
 function noteHash(slot){
   const w=slot.width,h=slot.height,x1=Math.round(w*.35),y1=Math.round(h*.26),x2=Math.round(w*.59),y2=Math.round(h*.55);
   const c=document.createElement("canvas");c.width=12;c.height=12;const g=c.getContext("2d",{willReadFrequently:true});
@@ -439,55 +416,71 @@ function matchNoteHash(slot,tier,cat){
 function bitIoU(a,b){let inter=0,uni=0;for(let i=0;i<a.length;i++){if(a[i]&&b[i])inter++;if(a[i]||b[i])uni++;}return uni?inter/uni:0}
 function classifyDigitEmpirical(norm){
   let best={digit:null,score:-1},second={score:-1};
-  for(const [d,arr] of Object.entries(DIGIT_EXEMPLARS_DECODED)){
-    let classBest=-1;
-    for(const ex of arr)classBest=Math.max(classBest,bitIoU(norm,ex));
-    if(classBest>best.score){second=best;best={digit:d,score:classBest}}
-    else if(classBest>second.score)second={digit:d,score:classBest};
+  for(const [d,arr] of Object.entries(DIGIT_EXEMPLARS_DECODED))for(const ex of arr){
+    const s=bitIoU(norm,ex);if(s>best.score){second=best;best={digit:d,score:s}}else if(s>second.score)second={digit:d,score:s};
   }
   return {...best,margin:best.score-second.score};
 }
+function connectedComponents(mask,w,h){
+  const seen=new Uint8Array(mask.length),out=[],dirs=[-1,1,-w,w,-w-1,-w+1,w-1,w+1];
+  for(let p=0;p<mask.length;p++){
+    if(!mask[p]||seen[p])continue;
+    const stack=[p];seen[p]=1;const pts=[];let minx=w,miny=h,maxx=0,maxy=0;
+    while(stack.length){
+      const q=stack.pop(),x=q%w,y=Math.floor(q/w);pts.push(q);minx=Math.min(minx,x);maxx=Math.max(maxx,x);miny=Math.min(miny,y);maxy=Math.max(maxy,y);
+      for(const d of dirs){const n=q+d;if(n<0||n>=mask.length||seen[n]||!mask[n])continue;const nx=n%w,ny=Math.floor(n/w);if(Math.abs(nx-x)>1||Math.abs(ny-y)>1)continue;seen[n]=1;stack.push(n)}
+    }
+    out.push({pts,minx,miny,maxx,maxy,w:maxx-minx+1,h:maxy-miny+1,area:pts.length});
+  }
+  return out;
+}
+function normalizeDigitComponent(comp,mask,w,h){
+  const srcW=comp.w,srcH=comp.h,tw=16,th=24,scale=Math.min(14/srcW,22/srcH),nw=Math.max(1,Math.round(srcW*scale)),nh=Math.max(1,Math.round(srcH*scale));
+  const src=new Uint8Array(srcW*srcH);
+  for(const p of comp.pts){const x=p%w-comp.minx,y=Math.floor(p/w)-comp.miny;src[y*srcW+x]=1}
+  const out=new Uint8Array(tw*th),ox=Math.floor((tw-nw)/2),oy=th-nh-1;
+  for(let yy=0;yy<nh;yy++)for(let xx=0;xx<nw;xx++){
+    const sx=Math.min(srcW-1,Math.floor(xx*srcW/nw)),sy=Math.min(srcH-1,Math.floor(yy*srcH/nh));
+    if(src[sy*srcW+sx])out[(oy+yy)*tw+ox+xx]=255;
+  }
+  return out;
+}
+function classifyEmpiricalDigit(norm){return classifyDigitEmpirical(norm)}
 function readConnectedCount(slot){
   const sw=slot.width,sh=slot.height,d=slot.getContext("2d",{willReadFrequently:true}).getImageData(0,0,sw,sh).data,mask=new Uint8Array(sw*sh);
   for(let p=0,i=0;i<d.length;i+=4,p++){
-    const dr=d[i]-56,dg=d[i+1]-72,db=d[i+2]-88;
-    mask[p]=(dr*dr+dg*dg+db*db)<=65*65?1:0;
-    const y=Math.floor(p/sw);if(y<sh*.72)mask[p]=0;
+    const dr=d[i]-45,dg=d[i+1]-70,db=d[i+2]-99;
+    mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
+    const y=Math.floor(p/sw),x=p%sw;if(y<sh*.77||x<sw*.35)mask[p]=0;
   }
-  const comps=connectedComponents(mask,sw,sh)
-    .filter(c=>c.area>=18 && c.h>=13 && c.w>=4 && c.w<=16 && c.miny>=sh*.72)
-    .sort((a,b)=>a.minx-b.minx);
+  let comps=connectedComponents(mask,sw,sh).filter(c=>c.area>=18&&c.h>=10&&c.w>=4).sort((a,b)=>a.minx-b.minx);
+  if(comps.length<2)return null;
+  comps=comps.slice(1); // leading "x"
   if(!comps.length||comps.length>6)return null;
   const digits=[],scores=[],margins=[];
-  for(const c of comps){
-    const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyDigitEmpirical(norm);
-    if(!r.digit||r.score<.28)return null;
-    digits.push(r.digit);scores.push(r.score);margins.push(r.margin);
-  }
+  for(const c of comps){const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyEmpiricalDigit(norm);if(!r.digit||r.score<.22)return null;digits.push(r.digit);scores.push(r.score);margins.push(r.margin)}
   const value=Number(digits.join(""));if(!Number.isFinite(value))return null;
   return {value,conf:Math.min(...scores)*100,text:String(value),margin:Math.min(...margins)};
 }
-async function readAllSlotCounts(base,tight=false){
-  const worker=await ensureWorker(),cellW=420,cellH=110,scale=7;
+async function readAllSlotCounts(base){
+  const worker=await ensureWorker(),cellW=520,cellH=120,scale=6;
   const comp=document.createElement("canvas");comp.width=cellW;comp.height=cellH*SCAN_SLOTS.length;
   const cg=comp.getContext("2d",{willReadFrequently:true});cg.fillStyle="#fff";cg.fillRect(0,0,comp.width,comp.height);
   for(let i=0;i<SCAN_SLOTS.length;i++){
     const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-    // Note/BD: count is right-aligned. Starting at 58% cleanly removes the "x".
-    const left=tight?.58:.52,top=tight?.68:.66;
-    const sx=Math.round(slot.width*left),sy=Math.round(slot.height*top),sw=Math.max(1,slot.width-sx),sh=Math.max(1,slot.height-sy);
+    const sx=Math.round(slot.width*.12),sy=Math.round(slot.height*.61),sw=Math.max(1,slot.width-sx),sh=Math.max(1,slot.height-sy);
     const raw=slot.getContext("2d",{willReadFrequently:true}).getImageData(sx,sy,sw,sh);
     const small=document.createElement("canvas");small.width=sw;small.height=sh;const sg=small.getContext("2d",{willReadFrequently:true});
     const out=sg.createImageData(sw,sh);
     for(let p=0;p<raw.data.length;p+=4){
-      const lum=.299*raw.data[p]+.587*raw.data[p+1]+.114*raw.data[p+2],v=lum<175?0:255;
+      const lum=.299*raw.data[p]+.587*raw.data[p+1]+.114*raw.data[p+2],v=lum<165?0:255;
       out.data[p]=out.data[p+1]=out.data[p+2]=v;out.data[p+3]=255;
     }
     sg.putImageData(out,0,0);
     const dw=sw*scale,dh=sh*scale,dy=i*cellH+Math.max(2,Math.floor((cellH-dh)/2));
-    cg.drawImage(small,18,dy,dw,dh);
+    cg.drawImage(small,20,dy,dw,dh);
   }
-  await worker.setParameters({tessedit_char_whitelist:"0123456789kK",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
+  await worker.setParameters({tessedit_char_whitelist:"0123456789xXkK",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
   const res=await worker.recognize(comp),map=new Map();
   for(const w of res.data.words||[]){
     const q=parseQtyText(w.text);if(q===null||q>999999)continue;
@@ -593,25 +586,16 @@ async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
     const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
     if(kind==="reports") return {rows:await analyzeReports(base,fileIndex),base};
-    if(kind==="notes"||kind==="bd"){
-      for(let i=0;i<SCAN_SLOTS.length;i++){
-        const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-        const count=readConnectedCount(slot);
-        const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
-        if(!count||count.value<0||count.value>999999){rows.push({key:m.best.key,label:m.best.label,count:"",confidence:"要確認",confClass:"low",score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});continue;}const [ct0,cc0]=confInfo(kind,m.score,m.margin);
-        const countWeak=count.conf<50,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
-        rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
-      }
-    }else{
-      const counts=await readAllSlotCounts(base,false);
-      for(const [i,count] of counts.entries()){
-        if(!count||count.value<0||count.value>999999)continue;
-        const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-        const m=matchCell(slot,cat,kind);if(!m.best)continue;
-        const [ct0,cc0]=confInfo(kind,m.score,m.margin);
-        const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
-        rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
-      }
+    const counts=(kind==="notes"||kind==="bd")?null:await readAllSlotCounts(base);
+    const indexes=(kind==="notes"||kind==="bd")?Array.from({length:SCAN_SLOTS.length},(_,i)=>i):[...counts.keys()];
+    for(const i of indexes){
+      const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
+      let count=(kind==="notes"||kind==="bd")?readConnectedCount(slot):counts.get(i);
+      if(!count||count.value<0||count.value>999999)continue;
+      const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
+      const [ct0,cc0]=confInfo(kind,m.score,m.margin);
+      const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
+      rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
     }
     return {rows,base};
   }finally{URL.revokeObjectURL(url)}
@@ -668,30 +652,18 @@ scanAnalyzeBtn.onclick=async()=>{
   const kind=scanKind.value;
   try{
     scanStatus.textContent="認識用アイコンを準備しています…";
-    const cat=kind==="notes"?scanCatalog(kind):await catalogFeatures(kind,(d,t)=>scanStatus.textContent="認識用アイコンを準備しています… "+d+"/"+t);
+    const cat=await catalogFeatures(kind,(d,t)=>scanStatus.textContent="認識用アイコンを準備しています… "+d+"/"+t);
     let rows=[],lastBase=null;
     for(let i=0;i<scanFiles.length;i++){scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" を解析しています…";const r=await analyzeOne(scanFiles[i],i,kind,cat);rows.push(...r.rows);lastBase=r.base}
-    if(lastBase){
-      try{
-        scanStatus.textContent="クレジットを読み取っています…";
-        const cr=await recognizeCredit(lastBase);
-        if(cr!==null)rows.push({key:"simple.credits",label:"クレジット",count:cr,confidence:"高",confClass:"high",source:scanFiles.length,candidates:[]});
-      }catch(creditErr){
-        console.warn("credit OCR skipped",creditErr);
-      }
-    }
+    if(lastBase){scanStatus.textContent="クレジットを読み取っています…";const cr=await recognizeCredit(lastBase);if(cr!==null)rows.push({key:"simple.credits",label:"クレジット",count:cr,confidence:"高",confClass:"high",source:scanFiles.length,candidates:[]})}
     scanRows=dedupeRows(rows);renderScanRows(kind);
     scanStatus.textContent=scanRows.length+"件の候補を検出しました。レポートは4枠を個別OCR、その他はアイコン照合＋所持数読取です。赤い「要確認」を中心に確認してください。";
-  }catch(e){
-    console.error(e);
-    const msg=(e&&e.message)?e.message:String(e);
-    scanStatus.textContent="解析エラー: "+msg;
-  }finally{scanAnalyzeBtn.disabled=false}
+  }catch(e){console.error(e);scanStatus.textContent="解析に失敗しました。通信状況を確認して再試行してください。";}finally{scanAnalyzeBtn.disabled=false}
 };
 function scanCopyText(){
   const kindLabel=scanKind.selectedOptions[0]?.textContent||scanKind.value;
   const lines=["【ブルアカ素材 画像読取結果】","種類: "+kindLabel,"画像数: "+scanFiles.length,""];
-  scanRows.forEach((r,i)=>lines.push((i+1)+". "+r.label+" = "+(r.count===""?"?":n(r.count))+" / 判定:"+r.confidence+(r.source?" / 画像"+r.source:"")));
+  scanRows.forEach((r,i)=>lines.push((i+1)+". "+r.label+" = "+n(r.count)+" / 判定:"+r.confidence+(r.source?" / 画像"+r.source:"")));
   return lines.join("\n");
 }
 scanCopyBtn.onclick=async()=>{
@@ -708,7 +680,7 @@ scanCopyBtn.onclick=async()=>{
 };
 scanApplyBtn.onclick=()=>{
   if(!scanRows.length)return;if(!confirm(scanRows.length+"件を所持数へ反映しますか？"))return;
-  const ready=scanRows.filter(r=>r.count!=="");ready.forEach(r=>applyScanKey(r.key,n(r.count)));save();render();scanStatus.textContent=ready.length+"件を反映しました。未読取は反映していません。";scanApplyBtn.disabled=true;
+  scanRows.forEach(r=>applyScanKey(r.key,n(r.count)));save();render();scanStatus.textContent=scanRows.length+"件を反映しました。";scanApplyBtn.disabled=true;
 };
 
 function render(){renderSeries();renderEq();renderMisc();summary();sortOps()}render();
