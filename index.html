@@ -18,8 +18,11 @@ button,.filebtn,select,input[type=search]{border:1px solid var(--line);backgroun
 .scan-preview{width:100%;max-height:520px;object-fit:contain;background:#111827;border-radius:12px;display:none}
 .scan-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .scan-status{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.6}
-.scan-results{display:grid;gap:8px}.scan-result{display:grid;grid-template-columns:1fr 120px 90px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
-.scan-result input{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:right}
+.scan-results{display:grid;gap:8px}.scan-result{display:grid;grid-template-columns:minmax(200px,1fr) 110px 82px 72px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.scan-result input,.scan-result select{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;background:#fff}
+.scan-result input{text-align:right}.scan-result .conf{text-align:center;font-size:11px;font-weight:700;border-radius:999px;padding:4px 6px}.conf.high{background:#dcfce7;color:#047857}.conf.mid{background:#fef3c7;color:#a16207}.conf.low{background:#fee2e2;color:#b91c1c}
+.scan-summary{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}.scan-summary .pill{font-size:12px}
+.scan-debug{margin-top:8px;font-size:11px;color:var(--muted)}
 button,.filebtn{cursor:pointer}.tab.active{border-color:var(--blue);background:var(--soft);color:var(--blue);font-weight:700}
 main{max-width:1240px;margin:auto;padding:18px}.section{display:none}.section.active{display:block}
 .note{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--muted);font-size:13px;margin-bottom:14px;line-height:1.6}
@@ -50,7 +53,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 .summary-item span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#374151}.summary-item strong{font-size:12px;color:var(--blue);white-space:nowrap}
 .summary-card.compact .summary-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.summary-card.compact .summary-item:nth-last-child(2):nth-child(odd){border-bottom:0}
 @media(max-width:900px){.summary-grid{grid-template-columns:1fr}.summary-left{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-oparts{grid-column:auto;grid-row:auto}}
-@media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}.summary-left{grid-template-columns:1fr}.scan-wrap{grid-template-columns:1fr}}
+@media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}.summary-left{grid-template-columns:1fr}.scan-wrap{grid-template-columns:1fr}.scan-result{grid-template-columns:1fr 90px}.scan-result .conf,.scan-result .src{display:none}}
 </style>
 </head>
 <body>
@@ -89,32 +92,33 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </section>
 
 <section id="scan" class="section">
-<div class="note">ゲーム内の所持素材スクリーンショットから、素材の種類と所持数を読み取って入力する機能です。まず実際のスクショ形式を基準に認識位置を調整します。</div>
+<div class="note">同じカテゴリのスクショをまとめて選択できます。今回もらったゲーム画面の配置を基準に、右側5列グリッドのアイコン照合＋数字OCRで候補を出します。反映前に必ず一覧で確認できます。カケラは読取対象外です。</div>
 <div class="scan-wrap">
   <div class="scan-panel">
     <div class="name" style="margin-bottom:10px">スクリーンショット</div>
     <div class="scan-upload">
       <div>素材所持画面の画像を選択</div>
-      <div class="caption">PNG / JPG。複数画面は1枚ずつ読み取る想定。</div>
-      <label class="filebtn">画像を選択<input id="scanFile" type="file" accept="image/*"></label>
+      <div class="caption">PNG / JPG。スクロールした複数枚も同時選択可。重複は後ろの画像を優先します。</div>
+      <label class="filebtn">画像を選択<input id="scanFile" type="file" accept="image/*" multiple></label>
     </div>
     <div style="margin-top:12px">
       <label class="caption">画像の種類</label>
       <select id="scanKind" style="width:100%;margin-top:5px">
-        <option value="auto">自動判定</option>
+        <option value="equipment">装備・万能設計図</option>
         <option value="bd">BD</option>
         <option value="notes">ノート</option>
         <option value="ooparts">オーパーツ</option>
-        <option value="equipment">装備</option>
-        <option value="misc">レポート・強化珠・固有武器・WB等</option>
+        <option value="misc">レポート・強化珠・固有武器素材・WB・秘伝ノート</option>
       </select>
     </div>
-    <div class="scan-actions"><button id="scanAnalyzeBtn" disabled>画像を解析</button><button id="scanClearBtn">クリア</button></div>
+    <div class="scan-actions"><button id="scanAnalyzeBtn" disabled>画像を解析</button><button id="scanApplyBtn" disabled>確認した内容を一括反映</button><button id="scanClearBtn">クリア</button></div>
     <div id="scanStatus" class="scan-status">画像を選択してください。</div>
+    <div class="scan-debug">クレジットは最後に選択した画像の上部表示を読み取ります。オデュッセイアは現在テンプレート不足のため自動判定が弱く、候補一覧で手動選択できるようにしています。</div>
   </div>
   <div class="scan-panel">
     <img id="scanPreview" class="scan-preview" alt="読取画像プレビュー">
     <div id="scanEmpty" class="caption" style="padding:40px 10px;text-align:center">ここに画像プレビューと読取候補を表示します。</div>
+    <div id="scanSummary" class="scan-summary"></div>
     <div id="scanResults" class="scan-results"></div>
   </div>
 </div>
@@ -193,26 +197,185 @@ exportBtn.onclick=()=>{const u=URL.createObjectURL(new Blob([JSON.stringify(stat
 importFile.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());state=x.version===2?deepMerge(initial(),x):migrateOld(x);save();render()}catch{alert("JSONの読み込みに失敗しました")}e.target.value=""};
 resetBtn.onclick=()=>{if(confirm("入力した素材数をすべて初期化しますか？")){state=initial();save();render()}};
 
-let scanObjectUrl=null;
+let scanObjectUrl=null,scanFiles=[],scanRows=[],scanWorker=null,templateCache=new Map();
+const SCAN_GRID={x:.533,y:.224,stepX:.0734,stepY:.1455,w:.0705,h:.136,cols:5,rows:5};
+const V6="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v6/templates/inventory_detail/";
+const V7EQ="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/templates/inventory/equipment/";
+const schoolAsset={abydos:"Abydos",gehenna:"Gehenna",trinity:"Trinity",millennium:"Millennium",shanhaijing:"Shanhaijing",hyakkiyako:"Hyakkiyako",redwinter:"RedWinter",valkyrie:"Valkyrie",arius:"Arius",highlander:"Highlander",wildhunt:"Wildhunt"};
+const opAsset={antikythera:"Antikythera",voynich:"Voynich",wolfsegg:"Wolfsegg",ether:"Ether",crystalhaniwa:"CrystalHaniwa",nimrud:"Nimrud",nebra:"Nebra",phaistos:"Phaistos",mandragora:"Mandragora",rohonc:"Rohonc",totempole:"TotemPole",ancientbattery:"Baghdad",mysterystone:"WinniStone",discocolgante:"DiscoColgante",hairgrowingdoll:"Kikuko",ancientmedal:"AtlantisMedal",goldenfleece:"GoldenFleece",dodecahedron:"RomanDice",goldshuttle:"Quimbaya",ancientrocket:"Rocket"};
+const eqAsset={hat:"Hat",gloves:"Gloves",shoes:"Shoes",bag:"Bag",badge:"Badge",hairpin:"Hairpin",charm:"Charm",watch:"Watch",necklace:"Necklace"};
+const tierFileIndex={basic:0,intermediate:1,advanced:2,superior:3};
+function scanCatalog(kind){
+  const a=[];
+  const add=(key,label,url)=>a.push({key,label,url});
+  if(kind==="bd"){
+    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("bd."+k+"."+tk,l+" "+tl,schoolAsset[k]?V6+"tactical_bd/Item_Icon_Material_ExSkill_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png":null)));
+  }else if(kind==="notes"){
+    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("notes."+k+"."+tk,l+" "+tl,schoolAsset[k]?V6+"tech_notes/Item_Icon_SkillBook_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png":null)));
+  }else if(kind==="ooparts"){
+    ops.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("ooparts."+k+"."+tk,l+" "+tl,V6+"ooparts/Item_Icon_Material_"+opAsset[k]+"_"+tierFileIndex[tk]+".png")));
+  }else if(kind==="equipment"){
+    eq.forEach(([k,l])=>{
+      const A=eqAsset[k];
+      add("equipment."+k+".universal",l+" 万能設計図",V7EQ+"Equipment_Icon_"+A+"_Useall_Piece.png");
+      for(let t=1;t<=10;t++) add("equipment."+k+".tier"+t,l+" T"+t,V7EQ+"Equipment_Icon_"+A+"_Tier"+t+(t===1?"":"_Piece")+".png");
+    });
+  }else{
+    tiers.forEach(([tk,tl])=>add("reports."+tk,tl+"レポート",V6+"activity_reports/Item_Icon_ExpItem_"+tierFileIndex[tk]+".png"));
+    tiers.forEach(([tk,tl])=>add("stones."+tk,tl+"強化珠",V6+"equipment/Equipment_Icon_Exp_"+tierFileIndex[tk]+".png"));
+    const wg={spring:"A",hammer:"B",barrel:"C",firingpin:"Z"};
+    weaponGroups.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("weapon."+k+"."+tk,l+" "+tl,V6+"equipment/Equipment_Icon_WeaponExpGrowth"+wg[k]+"_"+tierFileIndex[tk]+".png")));
+    add("wb.hp","WB・HP",V6+"ooparts/Item_Icon_WorkBook_PotentialMaxHP.png");
+    add("wb.atk","WB・攻撃",V6+"ooparts/Item_Icon_WorkBook_PotentialAttack.png");
+    add("wb.heal","WB・治癒",V6+"ooparts/Item_Icon_WorkBook_PotentialHealPower.png");
+    add("simple.secretNotes","秘伝ノート",V6+"tech_notes/Item_Icon_SkillBook_Ultimate_Piece.png");
+  }
+  return a;
+}
+function loadImg(src){
+  return new Promise((resolve,reject)=>{const i=new Image();i.crossOrigin="anonymous";i.onload=()=>resolve(i);i.onerror=reject;i.src=src});
+}
+function sourceFeature(src,mode="cell"){
+  const c=document.createElement("canvas"),z=24;c.width=z;c.height=z;const g=c.getContext("2d",{willReadFrequently:true});
+  const sw=src.naturalWidth||src.width,sh=src.naturalHeight||src.height;
+  const sx=sw*.12,sy=sh*.04,cw=sw*.76,ch=sh*.70;
+  g.drawImage(src,sx,sy,cw,ch,0,0,z,z);
+  const d=g.getImageData(0,0,z,z).data,v=[];let mean=0;
+  for(let y=1;y<z-1;y++)for(let x=1;x<z-1;x++){
+    const p=(y*z+x)*4,l=.299*d[p]+.587*d[p+1]+.114*d[p+2];
+    const pr=(y*z+x+1)*4,pd=((y+1)*z+x)*4;
+    const lr=.299*d[pr]+.587*d[pr+1]+.114*d[pr+2],ld=.299*d[pd]+.587*d[pd+1]+.114*d[pd+2];
+    const e=(Math.abs(lr-l)+Math.abs(ld-l))/2;v.push(e);mean+=e;
+  }
+  mean/=v.length;let ss=0;for(let i=0;i<v.length;i++){v[i]-=mean;ss+=v[i]*v[i]}const s=Math.sqrt(ss)||1;for(let i=0;i<v.length;i++)v[i]/=s;return v;
+}
+function simFeature(a,b){let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s}
+async function catalogFeatures(kind,onProgress){
+  const cat=scanCatalog(kind),usable=cat.filter(x=>x.url);let done=0;
+  for(const it of usable){
+    if(!templateCache.has(it.url)){
+      try{const img=await loadImg(it.url);templateCache.set(it.url,sourceFeature(img,"template"))}catch{templateCache.set(it.url,null)}
+    }
+    done++;if(onProgress)onProgress(done,usable.length);
+  }
+  return cat;
+}
+function makeCanvasFromImage(img){
+  const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext("2d").drawImage(img,0,0);return c;
+}
+function cropCanvas(base,x,y,w,h){
+  const c=document.createElement("canvas");c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));c.getContext("2d").drawImage(base,x,y,w,h,0,0,c.width,c.height);return c;
+}
+function parseQtyText(t){
+  t=String(t||"").replace(/[Oo]/g,"0").replace(/\s/g,"").replace(/,/g,"");
+  const m=t.match(/[xX×]?(\d+(?:\.\d+)?)([kK])?/);if(!m)return null;
+  let v=Number(m[1]);if(!Number.isFinite(v))return null;if(m[2])v*=1000;return Math.round(v);
+}
+async function ensureTesseract(){
+  if(window.Tesseract)return;
+  scanStatus.textContent="数字読取ライブラリを読み込んでいます…";
+  await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});
+}
+async function ensureWorker(){
+  await ensureTesseract();
+  if(scanWorker)return scanWorker;
+  scanWorker=await Tesseract.createWorker("eng",1,{logger:m=>{if(m.status==="recognizing text")scanStatus.textContent="数字を読み取り中… "+Math.round((m.progress||0)*100)+"%"}});
+  await scanWorker.setParameters({tessedit_char_whitelist:"0123456789xXkK,×",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
+  return scanWorker;
+}
+function detectQuantities(words,imgW,imgH){
+  const out=[];
+  for(const w of words||[]){
+    const q=parseQtyText(w.text);if(q===null)continue;
+    const cx=(w.bbox.x0+w.bbox.x1)/2,cy=(w.bbox.y0+w.bbox.y1)/2;
+    const nx=cx/imgW,ny=cy/imgH;
+    const col=Math.round((nx-SCAN_GRID.x-SCAN_GRID.w*.52)/SCAN_GRID.stepX);
+    const row=Math.round((ny-SCAN_GRID.y-SCAN_GRID.h*.82)/SCAN_GRID.stepY);
+    if(col<0||col>=5||row<0||row>=5)continue;
+    const expectedX=SCAN_GRID.x+col*SCAN_GRID.stepX+SCAN_GRID.w*.52,expectedY=SCAN_GRID.y+row*SCAN_GRID.stepY+SCAN_GRID.h*.82;
+    if(Math.abs(nx-expectedX)>.045||Math.abs(ny-expectedY)>.06)continue;
+    out.push({row,col,count:q,ocr:w.text,ocrConf:w.confidence||0});
+  }
+  const best=new Map();for(const x of out){const k=x.row+"-"+x.col;if(!best.has(k)||x.ocrConf>best.get(k).ocrConf)best.set(k,x)}return [...best.values()];
+}
+function matchCell(base,row,col,cat){
+  const x=base.width*(SCAN_GRID.x+col*SCAN_GRID.stepX),y=base.height*(SCAN_GRID.y+row*SCAN_GRID.stepY),w=base.width*SCAN_GRID.w,h=base.height*SCAN_GRID.h;
+  const cell=cropCanvas(base,x,y,w,h),f=sourceFeature(cell),scores=[];
+  for(const it of cat){if(!it.url)continue;const tf=templateCache.get(it.url);if(tf)scores.push([simFeature(f,tf),it])}
+  scores.sort((a,b)=>b[0]-a[0]);const a=scores[0],b=scores[1];if(!a)return {best:null,candidates:[],score:0,margin:0};
+  return {best:a[1],candidates:scores.slice(0,5).map(x=>x[1]),score:a[0],margin:a[0]-(b?b[0]:0)};
+}
+async function recognizeCredit(base){
+  const c=cropCanvas(base,base.width*.525,0,base.width*.17,base.height*.085),w=await ensureWorker();
+  const r=await w.recognize(c);const vals=(r.data.words||[]).map(x=>parseQtyText(x.text)).filter(x=>x!==null&&x>10000);
+  return vals.length?Math.max(...vals):null;
+}
+function confInfo(score,margin){
+  if(score>.44&&margin>.055)return ["高","high"];if(score>.28&&margin>.022)return ["中","mid"];return ["要確認","low"];
+}
+async function analyzeOne(file,fileIndex,kind,cat){
+  const url=URL.createObjectURL(file);try{
+    const img=await loadImg(url),base=makeCanvasFromImage(img),worker=await ensureWorker();
+    const gx=base.width*.515,gy=base.height*.195,gw=base.width*.405,gh=base.height*.755;
+    const grid=cropCanvas(base,gx,gy,gw,gh),ocr=await worker.recognize(grid);
+    // translate OCR bboxes back to full-image coordinates
+    const words=(ocr.data.words||[]).map(w=>({text:w.text,confidence:w.confidence,bbox:{x0:w.bbox.x0+gx,x1:w.bbox.x1+gx,y0:w.bbox.y0+gy,y1:w.bbox.y1+gy}}));
+    const qs=detectQuantities(words,base.width,base.height),rows=[];
+    for(const q of qs){
+      const m=matchCell(base,q.row,q.col,cat);if(!m.best)continue;
+      const [ct,cc]=confInfo(m.score,m.margin);
+      rows.push({key:m.best.key,label:m.best.label,count:q.count,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:q.row,col:q.col});
+    }
+    return {rows,base};
+  }finally{URL.revokeObjectURL(url)}
+}
+function dedupeRows(rows){
+  const m=new Map();for(const r of rows){const old=m.get(r.key);if(!old||r.source>=old.source)m.set(r.key,r)}return [...m.values()];
+}
+function allOptionsHtml(cat,selected){
+  return cat.map(x=>'<option value="'+x.key+'"'+(x.key===selected?' selected':'')+'>'+x.label+'</option>').join("");
+}
+function renderScanRows(kind){
+  const cat=scanCatalog(kind);scanResults.innerHTML=scanRows.map((r,i)=>'<div class="scan-result" data-i="'+i+'"><select data-sel>'+allOptionsHtml(cat,r.key)+'</select><input data-count type="number" min="0" value="'+r.count+'"><span class="conf '+r.confClass+'">'+r.confidence+'</span><span class="src muted">'+(r.source?"画像"+r.source:"")+'</span></div>').join("");
+  scanResults.querySelectorAll(".scan-result").forEach(el=>{const i=+el.dataset.i;el.querySelector("[data-sel]").onchange=e=>{scanRows[i].key=e.target.value;scanRows[i].label=e.target.selectedOptions[0].textContent;scanRows[i].confidence="手動";scanRows[i].confClass="mid";el.querySelector(".conf").textContent="手動";el.querySelector(".conf").className="conf mid"};el.querySelector("[data-count]").oninput=e=>scanRows[i].count=n(e.target.value)});
+  const hi=scanRows.filter(x=>x.confClass==="high").length,lo=scanRows.filter(x=>x.confClass==="low").length;
+  scanSummary.innerHTML='<span class="pill">'+scanRows.length+'件検出</span><span class="pill">高信頼 '+hi+'</span><span class="pill">要確認 '+lo+'</span>';
+  scanApplyBtn.disabled=!scanRows.length;
+}
+function applyScanKey(key,val){
+  const p=key.split(".");
+  if(["bd","notes","ooparts"].includes(p[0]))state[p[0]][p[1]][p[2]]=val;
+  else if(p[0]==="equipment"){if(p[2]==="universal")state.equipment[p[1]].universal=val;else state.equipment[p[1]].tiers[Number(p[2].replace("tier",""))]=val}
+  else if(p[0]==="reports")state.reports[p[1]]=val;
+  else if(p[0]==="stones")state.stones[p[1]]=val;
+  else if(p[0]==="weapon")state.weapon[p[1]][p[2]]=val;
+  else if(p[0]==="wb")state.wb[p[1]]=val;
+  else if(p[0]==="simple")state.simple[p[1]]=val;
+}
 scanFile.onchange=e=>{
-  const f=e.target.files[0];
-  if(!f)return;
-  if(scanObjectUrl)URL.revokeObjectURL(scanObjectUrl);
-  scanObjectUrl=URL.createObjectURL(f);
-  scanPreview.src=scanObjectUrl;
-  scanPreview.style.display="block";
-  scanEmpty.style.display="none";
-  scanResults.innerHTML="";
-  scanAnalyzeBtn.disabled=false;
-  scanStatus.textContent="画像を読み込みました。解析を開始できます。";
+  scanFiles=[...e.target.files];if(!scanFiles.length)return;
+  if(scanObjectUrl)URL.revokeObjectURL(scanObjectUrl);scanObjectUrl=URL.createObjectURL(scanFiles[0]);scanPreview.src=scanObjectUrl;scanPreview.style.display="block";scanEmpty.style.display="none";
+  scanRows=[];scanResults.innerHTML="";scanSummary.innerHTML="";scanAnalyzeBtn.disabled=false;scanApplyBtn.disabled=true;scanStatus.textContent=scanFiles.length+"枚読み込みました。画像の種類を確認して解析してください。";
 };
 scanClearBtn.onclick=()=>{
-  if(scanObjectUrl)URL.revokeObjectURL(scanObjectUrl);
-  scanObjectUrl=null;scanFile.value="";scanPreview.removeAttribute("src");scanPreview.style.display="none";
-  scanEmpty.style.display="block";scanResults.innerHTML="";scanAnalyzeBtn.disabled=true;scanStatus.textContent="画像を選択してください。";
+  if(scanObjectUrl)URL.revokeObjectURL(scanObjectUrl);scanObjectUrl=null;scanFiles=[];scanRows=[];scanFile.value="";scanPreview.removeAttribute("src");scanPreview.style.display="none";scanEmpty.style.display="block";scanResults.innerHTML="";scanSummary.innerHTML="";scanAnalyzeBtn.disabled=true;scanApplyBtn.disabled=true;scanStatus.textContent="画像を選択してください。";
 };
-scanAnalyzeBtn.onclick=()=>{
-  scanStatus.innerHTML="認識機能の土台は準備済みです。<b>実際のゲーム内素材所持画面のスクショを基準に、アイコン位置・数値位置・グリッド幅を調整してから自動入力を有効化します。</b>";
+scanAnalyzeBtn.onclick=async()=>{
+  if(!scanFiles.length)return;scanAnalyzeBtn.disabled=true;scanApplyBtn.disabled=true;scanRows=[];scanResults.innerHTML="";scanSummary.innerHTML="";
+  const kind=scanKind.value;
+  try{
+    scanStatus.textContent="認識用アイコンを準備しています…";
+    const cat=await catalogFeatures(kind,(d,t)=>scanStatus.textContent="認識用アイコンを準備しています… "+d+"/"+t);
+    let rows=[],lastBase=null;
+    for(let i=0;i<scanFiles.length;i++){scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" を解析しています…";const r=await analyzeOne(scanFiles[i],i,kind,cat);rows.push(...r.rows);lastBase=r.base}
+    if(lastBase){scanStatus.textContent="クレジットを読み取っています…";const cr=await recognizeCredit(lastBase);if(cr!==null)rows.push({key:"simple.credits",label:"クレジット",count:cr,confidence:"高",confClass:"high",source:scanFiles.length,candidates:[]})}
+    scanRows=dedupeRows(rows);renderScanRows(kind);
+    scanStatus.textContent=scanRows.length+"件の候補を検出しました。赤い「要確認」を中心に確認してから一括反映してください。";
+  }catch(e){console.error(e);scanStatus.textContent="解析に失敗しました。通信状況を確認して再試行してください。";}finally{scanAnalyzeBtn.disabled=false}
+};
+scanApplyBtn.onclick=()=>{
+  if(!scanRows.length)return;if(!confirm(scanRows.length+"件を所持数へ反映しますか？"))return;
+  scanRows.forEach(r=>applyScanKey(r.key,n(r.count)));save();render();scanStatus.textContent=scanRows.length+"件を反映しました。";scanApplyBtn.disabled=true;
 };
 
 function render(){renderSeries();renderEq();renderMisc();summary();sortOps()}render();
