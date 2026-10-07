@@ -32,13 +32,16 @@ main{max-width:1240px;margin:auto;padding:18px}.section{display:none}.section.ac
 .subgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.subbox{border:1px solid var(--line);border-radius:12px;padding:10px}.subbox label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}.subbox input{width:100%;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:right}
 table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{font-size:12px;color:var(--muted)}th:last-child,td:last-child{text-align:right}
 input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius:999px;background:#f3f4f6;color:var(--muted)}
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.summary-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(300px,1fr);gap:10px;align-items:start}
+.summary-left{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
+.summary-oparts{grid-column:2;grid-row:1}
 .summary-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 12px;box-shadow:0 1px 5px #00000008}
 .summary-title{font-size:13px;font-weight:800;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
 .summary-list{display:grid;gap:0}.summary-item{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:4px 0;font-size:12px;border-bottom:1px solid #f1f5f9}.summary-item:last-child{border-bottom:0}
 .summary-item span:first-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#374151}.summary-item strong{font-size:12px;color:var(--blue);white-space:nowrap}
 .summary-card.compact .summary-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.summary-card.compact .summary-item:nth-last-child(2):nth-child(odd){border-bottom:0}
-@media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}}
+@media(max-width:900px){.summary-grid{grid-template-columns:1fr}.summary-left{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-oparts{grid-column:auto;grid-row:auto}}
+@media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}.summary-left{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -79,7 +82,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <script>
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
 const tiers=[["basic","初級"],["intermediate","中級"],["advanced","上級"],["superior","最上級"]];
-const schools=[["abydos","アビドス"],["gehenna","ゲヘナ"],["trinity","トリニティ"],["millennium","ミレニアム"],["shanhaijing","山海経"],["hyakkiyako","百鬼夜行"],["redwinter","レッドウィンター"],["valkyrie","ヴァルキューレ"],["arius","アリウス"],["highlander","ハイランダー"],["wildhunt","ワイルドハント"]];
+const schools=[["abydos","アビドス"],["gehenna","ゲヘナ"],["trinity","トリニティ"],["millennium","ミレニアム"],["shanhaijing","山海経"],["hyakkiyako","百鬼夜行"],["redwinter","レッドウィンター"],["valkyrie","ヴァルキューレ"],["arius","アリウス"],["highlander","ハイランダー"],["wildhunt","ワイルドハント"],["odyssey","オデュッセイア"]];
 const ops=[["antikythera","アンティキティラ装置"],["voynich","ヴォイニッチ手稿"],["wolfsegg","ヴォルフスエック"],["ether","エーテル"],["crystalhaniwa","水晶埴輪"],["nimrud","ニムルドレンズ"],["nebra","ネブラディスク"],["phaistos","ファイストス円盤"],["mandragora","マンドレイク"],["rohonc","レヒニッツ写本"],["totempole","トーテムポール"],["ancientbattery","古代の電池"],["mysterystone","ミステリーストーン"],["discocolgante","円盤型ペンダント"],["hairgrowingdoll","髪伸び人形"],["ancientmedal","古代文明のメダル"],["goldenfleece","黄金の糸"],["dodecahedron","中空十二面体"],["goldshuttle","黄金シャトル"],["ancientrocket","古代ロケット"]];
 const eq=[["hat","帽子"],["gloves","グローブ"],["shoes","シューズ"],["bag","バッグ"],["badge","バッジ"],["hairpin","ヘアピン"],["charm","お守り"],["watch","腕時計"],["necklace","ネックレス"]];
 const weaponGroups=[["spring","スプリング","images/weapon/spring_superior.png"],["hammer","ハンマー","images/weapon/hammer_superior.png"],["barrel","銃身","images/weapon/barrel_superior.png"],["firingpin","撃針","images/weapon/firingpin_superior.png"]];
@@ -117,12 +120,11 @@ miscGrid.append(expCard("強化珠","images/misc/enhancement_superior.png",state
 weaponGroups.forEach(([k,l,img])=>miscGrid.append(expCard("固有武器素材・"+l,img,state.weapon[k],weaponExp,weaponTarget,"経験値ボーナス適用済み／固有武器Lv1→50")));
 const wb=document.createElement("div");wb.className="card";wb.innerHTML='<div class="imgline"><img class="icon" src="images/misc/wb.png" alt="WB"><div><div class="name">WB</div><div class="caption">代表画像1枚／各種類70冊＝1人分</div></div></div><div class="subgrid"><div class="subbox"><label>HP</label><input data-wb="hp" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="hp"></strong></div></div><div class="subbox"><label>攻撃</label><input data-wb="atk" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="atk"></strong></div></div><div class="subbox"><label>治癒</label><input data-wb="heal" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="heal"></strong></div></div></div>';
 ["hp","atk","heal"].forEach(k=>{const x=wb.querySelector('[data-wb="'+k+'"]');x.value=state.wb[k]||"";const up=()=>wb.querySelector('[data-r="'+k+'"]').textContent=fr(n(state.wb[k])/70);x.oninput=()=>{state.wb[k]=n(x.value);save();up()};up()});miscGrid.append(wb);
-[["credits","クレジット",simpleBase.credits],["secretNotes","秘伝ノート",simpleBase.secretNotes],["eligma","カケラ",simpleBase.eligma]].forEach(([k,l,b])=>{const c=document.createElement("div");c.className="mini";c.innerHTML='<div class="name">'+l+'</div><input type="number" min="0"><div class="meta"><span>1人分：'+b.toLocaleString()+'</span><strong></strong></div>';const x=c.querySelector("input"),o=c.querySelector("strong");x.value=state.simple[k]||"";const up=()=>o.textContent=fr(n(state.simple[k])/b);x.oninput=()=>{state.simple[k]=n(x.value);save();up()};up();miscGrid.append(c)})}
+[["credits","クレジット",simpleBase.credits,"images/misc/credit.png"],["secretNotes","秘伝ノート",simpleBase.secretNotes,"images/misc/secret_note.png"],["eligma","カケラ",simpleBase.eligma,null]].forEach(([k,l,b,img])=>{const c=document.createElement("div");c.className="mini";c.innerHTML=(img?'<div class="imgline"><img class="icon" src="'+img+'" alt="'+l+'"><div class="name">'+l+'</div></div>':'<div class="name">'+l+'</div>')+'<input type="number" min="0"><div class="meta"><span>1人分：'+b.toLocaleString()+'</span><strong></strong></div>';const x=c.querySelector("input"),o=c.querySelector("strong");x.value=state.simple[k]||"";const up=()=>o.textContent=fr(n(state.simple[k])/b);x.oninput=()=>{state.simple[k]=n(x.value);save();up()};up();miscGrid.append(c)})}
 function summary(){
-const groups=[
+const leftGroups=[
 ["BD",schools.map(([k,l])=>[l,fr(smin(state.bd[k],base.bd))]),true],
 ["ノート",schools.map(([k,l])=>[l,fr(smin(state.notes[k],base.notes))]),true],
-["オーパーツ",ops.map(([k,l])=>[l,fr(smin(state.ooparts[k],base.ooparts))]),false],
 ["装備",eq.map(([k,l])=>[l,maxEquipPeople(k)+"人"]),true],
 ["育成素材",[
 ["レポート",fr(expOf(state.reports,reportExp)/reportTarget)],
@@ -138,7 +140,9 @@ const groups=[
 ["治癒",fr(n(state.wb.heal)/70)]
 ],false]
 ];
-summaryGrid.innerHTML=groups.map(([title,items,compact])=>'<div class="summary-card'+(compact?' compact':'')+'"><div class="summary-title"><span>'+title+'</span><span class="pill">'+items.length+'種</span></div><div class="summary-list">'+items.map(([a,b])=>'<div class="summary-item"><span>'+a+'</span><strong>'+b+'</strong></div>').join("")+'</div></div>').join("");
+const card=([title,items,compact],extra="")=>'<div class="summary-card '+extra+(compact?' compact':'')+'"><div class="summary-title"><span>'+title+'</span><span class="pill">'+items.length+'種</span></div><div class="summary-list">'+items.map(([a,b])=>'<div class="summary-item"><span>'+a+'</span><strong>'+b+'</strong></div>').join("")+'</div></div>';
+const opGroup=["オーパーツ",ops.map(([k,l])=>[l,fr(smin(state.ooparts[k],base.ooparts))]),false];
+summaryGrid.innerHTML='<div class="summary-left">'+leftGroups.map(g=>card(g)).join("")+'</div>'+card(opGroup,"summary-oparts");
 }
 function sortOps(){const q=opSearch.value.trim().toLowerCase(),s=opSort.value,c=[...opGrid.children];c.forEach(x=>x.style.display=x.dataset.label.toLowerCase().includes(q)?"":"none");c.sort((a,b)=>s==="asc"?+a.dataset.score-+b.dataset.score:s==="desc"?+b.dataset.score-+a.dataset.score:a.dataset.label.localeCompare(b.dataset.label,"ja")).forEach(x=>opGrid.append(x))}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active")});
