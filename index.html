@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.9";
+const APP_VERSION="0.9.10";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -453,10 +453,9 @@ function readConnectedCount(slot){
     mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
     const y=Math.floor(p/sw),x=p%sw;if(y<sh*.77||x<sw*.35)mask[p]=0;
   }
-  let comps=connectedComponents(mask,sw,sh).filter(c=>c.area>=18&&c.h>=10&&c.w>=4).sort((a,b)=>a.minx-b.minx);
+  let comps=connectedComponents(mask,sw,sh).filter(c=>c.area>=18&&c.h>=10&&c.w>=4&&c.w<=16).sort((a,b)=>a.minx-b.minx);
   if(comps.length<2)return null;
   comps=comps.slice(1);
-  while(comps.length>=2&&comps[0].h<=12&&Math.max(...comps.slice(1).map(c=>c.h))>=13)comps.shift();
   if(!comps.length||comps.length>6)return null;
   const digits=[],scores=[],margins=[];
   for(const c of comps){
