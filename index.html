@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.14";
+const APP_VERSION="0.9.15";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -600,6 +600,83 @@ async function analyzeReports(base,fileIndex){
   }
   return rows;
 }
+
+const BD_SCAN_SCHOOL_ORDER=["hyakkiyako","redwinter","trinity","gehenna","abydos","millennium","arius","shanhaijing","valkyrie","highlander","wildhunt","odyssey"];
+function bdCanonicalItems(){
+  const schoolLabel=Object.fromEntries(schools);
+  return BD_SCAN_SCHOOL_ORDER.flatMap(school=>tiers.map(([tier,tierLabel])=>({
+    key:"bd."+school+"."+tier,
+    label:schoolLabel[school]+" "+tierLabel,
+    school,tier
+  })));
+}
+function sameBdObservation(a,b){
+  return !!a&&!!b&&a.tier===b.tier&&a.count===b.count;
+}
+function stitchBdPages(pages){
+  let out=[];
+  for(const page of pages){
+    if(!page.length)continue;
+    if(!out.length){out=[...page];continue}
+    let overlap=0;
+    const max=Math.min(out.length,page.length);
+    // 1件だけ同値は偶然一致しやすいので、2件以上の連続一致だけを重複スクロールとみなす。
+    for(let k=max;k>=2;k--){
+      let ok=true;
+      for(let i=0;i<k;i++){
+        if(!sameBdObservation(out[out.length-k+i],page[i])){ok=false;break}
+      }
+      if(ok){overlap=k;break}
+    }
+    out.push(...page.slice(overlap));
+  }
+  return out;
+}
+async function analyzeBdSequencePage(file,fileIndex){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await loadImg(url),base=makeCanvasFromImage(img),page=[];
+    for(let i=0;i<SCAN_SLOTS.length;i++){
+      const [x1,y1,x2,y2]=SCAN_SLOTS[i];
+      const slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
+      const count=readConnectedCount(slot),tier=slotTier(slot);
+      if(!count||count.value<0||count.value>999999||!tier)continue;
+      page.push({count:count.value,countConf:count.conf,tier,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
+    }
+    return {page,base};
+  }finally{URL.revokeObjectURL(url)}
+}
+function alignBdFullScan(pages){
+  const observed=stitchBdPages(pages),canon=bdCanonicalItems();
+  if(!observed.length)return [];
+  // フルスキャン時は「ゲーム内の固定表示順」を主キーにする。
+  // 0個の素材は一覧に出ないため、tierが飛んだ箇所だけcanonical側をスキップして0個と推定する。
+  const rows=[];
+  let ci=0;
+  for(const o of observed){
+    while(ci<canon.length&&canon[ci].tier!==o.tier){
+      const z=canon[ci++];
+      rows.push({...z,count:0,confidence:"中",confClass:"mid",score:1,margin:1,candidates:[],source:o.source,row:o.row,col:o.col,inferredZero:true});
+    }
+    if(ci>=canon.length)break;
+    const item=canon[ci++];
+    const cc=o.countConf>=45?"high":o.countConf>=22?"mid":"low";
+    rows.push({...item,count:o.count,confidence:cc==="high"?"高":cc==="mid"?"中":"要確認",confClass:cc,score:1,margin:1,candidates:[],source:o.source,row:o.row,col:o.col});
+  }
+  // 最終画像が20枠未満ならリスト末尾まで撮れているとみなし、末尾の非表示0個も補完。
+  const lastPage=pages[pages.length-1]||[];
+  if(lastPage.length<SCAN_SLOTS.length){
+    while(ci<canon.length){
+      const z=canon[ci++];
+      rows.push({...z,count:0,confidence:"中",confClass:"mid",score:1,margin:1,candidates:[],source:pages.length,candidates:[],inferredZero:true});
+    }
+  }
+  return rows;
+}
+function canUseBdFullScan(pages){
+  const stitched=stitchBdPages(pages);
+  return pages.length>=2&&pages[0]?.length===SCAN_SLOTS.length&&stitched.length>=36&&(pages[pages.length-1]?.length||0)<SCAN_SLOTS.length;
+}
 async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
     const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
@@ -672,10 +749,33 @@ scanAnalyzeBtn.onclick=async()=>{
     scanStatus.textContent="認識用アイコンを準備しています…";
     const cat=await catalogFeatures(kind,(d,t)=>scanStatus.textContent="認識用アイコンを準備しています… "+d+"/"+t);
     let rows=[],lastBase=null;
-    for(let i=0;i<scanFiles.length;i++){scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" を解析しています…";const r=await analyzeOne(scanFiles[i],i,kind,cat);rows.push(...r.rows);lastBase=r.base}
+    if(kind==="bd"){
+      const pages=[];
+      for(let i=0;i<scanFiles.length;i++){
+        scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" のBD数量と等級を解析しています…";
+        const r=await analyzeBdSequencePage(scanFiles[i],i);pages.push(r.page);lastBase=r.base;
+      }
+      if(canUseBdFullScan(pages)){
+        rows=alignBdFullScan(pages);
+      }else{
+        // 一部だけの画像など、一覧全体と判断できない場合は従来のアイコン照合へフォールバック。
+        rows=[];
+        for(let i=0;i<scanFiles.length;i++){
+          scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" をアイコン照合しています…";
+          const r=await analyzeOne(scanFiles[i],i,kind,cat);rows.push(...r.rows);lastBase=r.base;
+        }
+      }
+    }else{
+      for(let i=0;i<scanFiles.length;i++){
+        scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" を解析しています…";
+        const r=await analyzeOne(scanFiles[i],i,kind,cat);rows.push(...r.rows);lastBase=r.base;
+      }
+    }
     if(lastBase){scanStatus.textContent="クレジットを読み取っています…";const cr=await recognizeCredit(lastBase);if(cr!==null)rows.push({key:"simple.credits",label:"クレジット",count:cr,confidence:"高",confClass:"high",source:scanFiles.length,candidates:[]})}
     scanRows=dedupeRows(rows);renderScanRows(kind);
-    scanStatus.textContent=scanRows.length+"件の候補を検出しました。レポートは4枠を個別OCR、その他はアイコン照合＋所持数読取です。赤い「要確認」を中心に確認してください。";
+    scanStatus.textContent=kind==="bd"
+      ? scanRows.length+"件を検出しました。BDは一覧全体を撮影した場合、ゲーム内の固定表示順と等級列から学園を確定し、一覧に出ない0個素材も補完します。"
+      : scanRows.length+"件の候補を検出しました。レポートは4枠を個別OCR、その他はアイコン照合＋所持数読取です。赤い「要確認」を中心に確認してください。";
   }catch(e){console.error(e);scanStatus.textContent="解析に失敗しました。通信状況を確認して再試行してください。";}finally{scanAnalyzeBtn.disabled=false}
 };
 function scanCopyText(){
