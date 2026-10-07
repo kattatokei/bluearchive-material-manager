@@ -45,7 +45,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 @media(max-width:900px){.summary-grid{grid-template-columns:1fr}.summary-left{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-oparts{grid-column:auto;grid-row:auto}}
 @media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}.summary-left{grid-template-columns:1fr}}
 
-.goal-denom{font-size:11px;font-weight:600;opacity:.72;margin-left:4px;white-space:nowrap}
+.goal-denom{font-size:11px;font-weight:600;color:var(--muted)!important;opacity:1;margin-left:4px;white-space:nowrap}
 .goalctl{display:flex;align-items:center;gap:6px;margin:7px 0 10px;color:var(--muted);font-size:12px}
 .goalctl input{width:76px;border:1px solid var(--line);border-radius:9px;padding:6px 8px;text-align:right;background:#fff;font-size:13px}
 .goal-unset{color:var(--muted)!important}
@@ -157,7 +157,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.13.3";
+const APP_VERSION="0.13.4";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
