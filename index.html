@@ -174,7 +174,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.10.0";
+const APP_VERSION="0.10.1";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -278,6 +278,10 @@ function gptParseJsonText(text){
   let s=String(text||"").trim();
   s=s.replace(/^\s*```(?:json)?\s*/i,"").replace(/\s*```\s*$/,"").trim();
   try{return JSON.parse(s)}catch{}
+  // "wb": {...} のようにカテゴリ部分だけ貼られた場合も受け付ける。
+  if(/^["'][^"']+["']\s*:/.test(s)){
+    try{return JSON.parse("{"+s+"}")}catch{}
+  }
   const a=s.indexOf("{"),b=s.lastIndexOf("}");
   if(a>=0&&b>a)return JSON.parse(s.slice(a,b+1));
   throw new Error("JSONとして解析できませんでした");
