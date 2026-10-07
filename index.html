@@ -157,7 +157,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.13.2";
+const APP_VERSION="0.13.3";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -221,7 +221,7 @@ function paintGoal(el,value,path){
 function targetText(path){
   const t=targetAt(path);
   if(t<=0)return "未設定";
-  return (Number.isInteger(t)?String(t):String(Math.round(t*100)/100))+"人分";
+  return Number.isInteger(t)?String(t):String(Math.round(t*100)/100);
 }
 function goalDisplayHtml(value,path){return fr(value)+'<span class="goal-denom">/ '+targetText(path)+'</span>'}
 function goalHtml(value,text,path){return '<span class="'+goalClass(value,targetAt(path))+'">'+text+'<span class="goal-denom">/ '+targetText(path)+'</span></span>'}
