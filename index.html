@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.12";
+const APP_VERSION="0.9.13";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -582,26 +582,28 @@ async function analyzeReports(base,fileIndex){
   }
   return rows;
 }
-function expectedCountDigits(slot){
-  const sw=slot.width,sh=slot.height,d=slot.getContext("2d",{willReadFrequently:true}).getImageData(0,0,sw,sh).data,mask=new Uint8Array(sw*sh);
+function noteCountDigitLength(slot){
+  const sw=slot.width,sh=slot.height;
+  const d=slot.getContext("2d",{willReadFrequently:true}).getImageData(0,0,sw,sh).data;
+  const mask=new Uint8Array(sw*sh);
   for(let p=0,i=0;i<d.length;i+=4,p++){
     const dr=d[i]-45,dg=d[i+1]-70,db=d[i+2]-99;
     mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
     const y=Math.floor(p/sw),x=p%sw;
     if(y<sh*.77||x<sw*.35)mask[p]=0;
   }
-  const comps=connectedComponents(mask,sw,sh);
-  const n=comps.filter(c=>c.area>=18&&c.h>=13&&c.w>=4&&c.w<=14).length;
-  return n||null;
+  const digits=connectedComponents(mask,sw,sh)
+    .filter(c=>c.area>=18&&c.h>=13&&c.w>=4&&c.w<=14);
+  return digits.length>=1&&digits.length<=6?digits.length:null;
 }
-function trimCountByGeometry(slot,count){
+function correctNoteCountByLength(slot,count){
   if(!count||count.value==null)return count;
-  const digits=expectedCountDigits(slot);
-  if(!digits)return count;
+  const digitLen=noteCountDigitLength(slot);
+  if(!digitLen)return count;
   const raw=String(count.value);
-  if(raw.length<=digits)return count;
-  const trimmed=raw.slice(-digits);
-  return {...count,value:Number(trimmed),text:trimmed};
+  if(raw.length<=digitLen)return {...count,rawValue:count.value,corrected:false};
+  const fixed=raw.slice(-digitLen);
+  return {...count,value:Number(fixed),text:fixed,rawValue:count.value,corrected:true};
 }
 async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
@@ -613,11 +615,11 @@ async function analyzeOne(file,fileIndex,kind,cat){
       const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
       let count=(kind==="notes"||kind==="bd")?readConnectedCount(slot):counts.get(i);
       if(!count||count.value<0||count.value>999999)continue;
-      if(kind==="notes"||kind==="bd")count=trimCountByGeometry(slot,count);
+      if(kind==="notes"||kind==="bd")count=correctNoteCountByLength(slot,count);
       const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
       const [ct0,cc0]=confInfo(kind,m.score,m.margin);
       const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
-      rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
+      rows.push({key:m.best.key,label:m.best.label,count:count.value,rawCount:count.corrected?count.rawValue:null,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
     }
     return {rows,base};
   }finally{URL.revokeObjectURL(url)}
@@ -685,7 +687,7 @@ scanAnalyzeBtn.onclick=async()=>{
 function scanCopyText(){
   const kindLabel=scanKind.selectedOptions[0]?.textContent||scanKind.value;
   const lines=["【ブルアカ素材 画像読取結果】","種類: "+kindLabel,"画像数: "+scanFiles.length,""];
-  scanRows.forEach((r,i)=>lines.push((i+1)+". "+r.label+" = "+n(r.count)+" / 判定:"+r.confidence+(r.source?" / 画像"+r.source:"")));
+  scanRows.forEach((r,i)=>lines.push((i+1)+". "+r.label+" = "+n(r.count)+(r.rawCount!=null?" (補正前"+r.rawCount+")":"")+" / 判定:"+r.confidence+(r.source?" / 画像"+r.source:"")));
   return lines.join("\n");
 }
 scanCopyBtn.onclick=async()=>{
