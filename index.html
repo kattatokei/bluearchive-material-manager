@@ -464,25 +464,27 @@ function readConnectedCount(slot){
   const value=Number(digits.join(""));if(!Number.isFinite(value))return null;
   return {value,conf:Math.min(...scores)*100,text:String(value),margin:Math.min(...margins)};
 }
-async function readAllSlotCounts(base){
-  const worker=await ensureWorker(),cellW=520,cellH=120,scale=6;
+async function readAllSlotCounts(base,tight=false){
+  const worker=await ensureWorker(),cellW=420,cellH=110,scale=7;
   const comp=document.createElement("canvas");comp.width=cellW;comp.height=cellH*SCAN_SLOTS.length;
   const cg=comp.getContext("2d",{willReadFrequently:true});cg.fillStyle="#fff";cg.fillRect(0,0,comp.width,comp.height);
   for(let i=0;i<SCAN_SLOTS.length;i++){
     const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-    const sx=Math.round(slot.width*.12),sy=Math.round(slot.height*.61),sw=Math.max(1,slot.width-sx),sh=Math.max(1,slot.height-sy);
+    // Note/BD: count is right-aligned. Starting at 58% cleanly removes the "x".
+    const left=tight?.58:.52,top=tight?.68:.66;
+    const sx=Math.round(slot.width*left),sy=Math.round(slot.height*top),sw=Math.max(1,slot.width-sx),sh=Math.max(1,slot.height-sy);
     const raw=slot.getContext("2d",{willReadFrequently:true}).getImageData(sx,sy,sw,sh);
     const small=document.createElement("canvas");small.width=sw;small.height=sh;const sg=small.getContext("2d",{willReadFrequently:true});
     const out=sg.createImageData(sw,sh);
     for(let p=0;p<raw.data.length;p+=4){
-      const lum=.299*raw.data[p]+.587*raw.data[p+1]+.114*raw.data[p+2],v=lum<165?0:255;
+      const lum=.299*raw.data[p]+.587*raw.data[p+1]+.114*raw.data[p+2],v=lum<175?0:255;
       out.data[p]=out.data[p+1]=out.data[p+2]=v;out.data[p+3]=255;
     }
     sg.putImageData(out,0,0);
     const dw=sw*scale,dh=sh*scale,dy=i*cellH+Math.max(2,Math.floor((cellH-dh)/2));
-    cg.drawImage(small,20,dy,dw,dh);
+    cg.drawImage(small,18,dy,dw,dh);
   }
-  await worker.setParameters({tessedit_char_whitelist:"0123456789xXkK",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
+  await worker.setParameters({tessedit_char_whitelist:"0123456789kK",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
   const res=await worker.recognize(comp),map=new Map();
   for(const w of res.data.words||[]){
     const q=parseQtyText(w.text);if(q===null||q>999999)continue;
@@ -588,12 +590,11 @@ async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
     const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
     if(kind==="reports") return {rows:await analyzeReports(base,fileIndex),base};
-    const counts=(kind==="notes"||kind==="bd")?null:await readAllSlotCounts(base);
-    const indexes=(kind==="notes"||kind==="bd")?Array.from({length:SCAN_SLOTS.length},(_,i)=>i):[...counts.keys()];
+    const tight=(kind==="notes"||kind==="bd"),counts=await readAllSlotCounts(base,tight);
+    const indexes=[...counts.keys()];
     for(const i of indexes){
       const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-      let count=(kind==="notes"||kind==="bd")?readConnectedCount(slot):counts.get(i);
-      if(!count||count.value<0||count.value>999999)continue;
+      const count=counts.get(i);if(!count||count.value<0||count.value>999999)continue;
       const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
       const [ct0,cc0]=confInfo(kind,m.score,m.margin);
       const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
