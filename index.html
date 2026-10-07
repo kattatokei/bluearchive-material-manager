@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.16";
+const APP_VERSION="0.9.17";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -602,12 +602,22 @@ async function analyzeReports(base,fileIndex){
 }
 
 const BD_SCAN_SCHOOL_ORDER=["hyakkiyako","redwinter","trinity","gehenna","abydos","millennium","arius","shanhaijing","valkyrie","highlander","wildhunt","odyssey"];
+const OOPARTS_SCAN_ORDER=["nebra","phaistos","wolfsegg","nimrud","mandragora","rohonc","ether","antikythera","voynich","crystalhaniwa","totempole","ancientbattery","goldenfleece","hairgrowingdoll","discocolgante","ancientmedal","dodecahedron","goldshuttle","ancientrocket","mysterystone"];
 function bdCanonicalItems(){
   const schoolLabel=Object.fromEntries(schools);
   return BD_SCAN_SCHOOL_ORDER.flatMap(school=>tiers.map(([tier,tierLabel])=>({
     key:"bd."+school+"."+tier,
     label:schoolLabel[school]+" "+tierLabel,
     school,tier
+  })));
+}
+
+function oopartsCanonicalItems(){
+  const opLabel=Object.fromEntries(ops);
+  return OOPARTS_SCAN_ORDER.flatMap(op=>tiers.map(([tier,tierLabel])=>({
+    key:"ooparts."+op+"."+tier,
+    label:opLabel[op]+" "+tierLabel,
+    op,tier
   })));
 }
 function rgbToHsv(r,g,b){
@@ -684,6 +694,22 @@ async function analyzeBdSequencePage(file,fileIndex){
     return {page,base};
   }finally{URL.revokeObjectURL(url)}
 }
+
+async function analyzeOopartsSequencePage(file,fileIndex){
+  const url=URL.createObjectURL(file);
+  try{
+    const img=await loadImg(url),base=makeCanvasFromImage(img),page=[];
+    for(let i=0;i<SCAN_SLOTS.length;i++){
+      const [x1,y1,x2,y2]=SCAN_SLOTS[i];
+      const slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
+      const count=readConnectedCount(slot);
+      if(!count||count.value<0||count.value>999999)continue;
+      const tier=slotTierByCardColor(slot)||slotTier(slot)||null;
+      page.push({count:count.value,countConf:count.conf,tier,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
+    }
+    return {page,base};
+  }finally{URL.revokeObjectURL(url)}
+}
 function alignBdFullScan(pages){
   const obs=stitchBdPages(pages),canon=bdCanonicalItems();
   if(!obs.length)return [];
@@ -726,6 +752,56 @@ function canUseBdFullScan(pages){
   const stitched=stitchBdPages(pages),first=pages[0]?.length||0,last=pages[pages.length-1]?.length||0;
   // tier判定の成否ではなく数量枠の検出数で「一覧全体」を判定する。
   return pages.length>=2&&first>=18&&stitched.length>=42&&last<20;
+}
+function alignOopartsFullScan(pages){
+  const obs=stitchBdPages(pages),canon=oopartsCanonicalItems();
+  if(!obs.length)return [];
+  const O=obs.length,C=canon.length,INF=1e9;
+  // canonical 80枠に対し、0個で非表示の素材はcanonical側をskip。
+  // 一覧末尾の次カテゴリ（今回の教材など）はobserved側をskipできる。
+  const dp=Array.from({length:O+1},()=>Array(C+1).fill(INF));
+  const prev=Array.from({length:O+1},()=>Array(C+1).fill(null));
+  dp[0][0]=0;
+  for(let i=0;i<=O;i++)for(let j=0;j<=C;j++){
+    const cur=dp[i][j];if(cur>=INF)continue;
+    if(j<C){
+      const skipCanon=1.25;
+      if(cur+skipCanon<dp[i][j+1]){dp[i][j+1]=cur+skipCanon;prev[i][j+1]=[i,j,"skipCanon"]}
+    }
+    if(i<O&&j<C){
+      const t=obs[i].tier,expect=canon[j].tier;
+      const matchCost=!t?0:(t===expect?0:8);
+      if(cur+matchCost<dp[i+1][j+1]){dp[i+1][j+1]=cur+matchCost;prev[i+1][j+1]=[i,j,"match"]}
+    }
+    // canonical末尾以降に写った次カテゴリを捨てる。途中の誤検出は高コスト。
+    if(i<O){
+      const skipObs=(j===C)?0.05:12;
+      if(cur+skipObs<dp[i+1][j]){dp[i+1][j]=cur+skipObs;prev[i+1][j]=[i,j,"skipObs"]}
+    }
+  }
+  if(dp[O][C]>=INF)return [];
+  const actions=[];let i=O,j=C;
+  while(i||j){const p=prev[i][j];if(!p)break;actions.push([p[2],i,j]);[i,j]=[p[0],p[1]]}
+  actions.reverse();
+  const rows=[];let oi=0,ci=0;
+  for(const [act] of actions){
+    if(act==="skipCanon"){
+      const z=canon[ci++];
+      rows.push({...z,count:0,confidence:"中",confClass:"mid",score:1,margin:1,candidates:[],source:pages.length,inferredZero:true});
+    }else if(act==="skipObs"){
+      oi++;
+    }else{
+      const o=obs[oi++],item=canon[ci++];
+      const cc=o.countConf>=45?"high":o.countConf>=22?"mid":"low";
+      rows.push({...item,count:o.count,confidence:cc==="high"?"高":cc==="mid"?"中":"要確認",confClass:cc,score:1,margin:1,candidates:[],source:o.source,row:o.row,col:o.col});
+    }
+  }
+  return rows;
+}
+function canUseOopartsFullScan(pages){
+  const stitched=stitchBdPages(pages),first=pages[0]?.length||0,last=pages[pages.length-1]?.length||0;
+  // 5枚前後で先頭から末尾まで撮ったケースを固定順モードにする。
+  return pages.length>=4&&first>=18&&stitched.length>=75&&last<20;
 }
 async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
@@ -815,6 +891,21 @@ scanAnalyzeBtn.onclick=async()=>{
           const r=await analyzeOne(scanFiles[i],i,kind,cat);rows.push(...r.rows);lastBase=r.base;
         }
       }
+    }else if(kind==="ooparts"){
+      const pages=[];
+      for(let i=0;i<scanFiles.length;i++){
+        scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" のオーパーツ数量と等級を解析しています…";
+        const r=await analyzeOopartsSequencePage(scanFiles[i],i);pages.push(r.page);lastBase=r.base;
+      }
+      if(canUseOopartsFullScan(pages)){
+        rows=alignOopartsFullScan(pages);
+      }else{
+        rows=[];
+        for(let i=0;i<scanFiles.length;i++){
+          scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" をアイコン照合しています…";
+          const r=await analyzeOne(scanFiles[i],i,kind,cat);rows.push(...r.rows);lastBase=r.base;
+        }
+      }
     }else{
       for(let i=0;i<scanFiles.length;i++){
         scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" を解析しています…";
@@ -825,6 +916,8 @@ scanAnalyzeBtn.onclick=async()=>{
     scanRows=dedupeRows(rows);renderScanRows(kind);
     scanStatus.textContent=kind==="bd"
       ? scanRows.length+"件を検出しました。BDは一覧全体を撮影した場合、ゲーム内の固定表示順と等級列から学園を確定し、一覧に出ない0個素材も補完します。"
+      : kind==="ooparts"
+      ? scanRows.length+"件を検出しました。オーパーツは一覧全体を撮影した場合、固定表示順と等級列で80枠へ対応付け、0個素材を補完し、末尾の次カテゴリは除外します。"
       : scanRows.length+"件の候補を検出しました。レポートは4枠を個別OCR、その他はアイコン照合＋所持数読取です。赤い「要確認」を中心に確認してください。";
   }catch(e){console.error(e);scanStatus.textContent="解析に失敗しました。通信状況を確認して再試行してください。";}finally{scanAnalyzeBtn.disabled=false}
 };
