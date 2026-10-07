@@ -56,7 +56,6 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 .bounty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px}
 .bounty-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 2px 8px #00000008}
 .bounty-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
-.bounty-stage{font-size:12px;font-weight:800;color:var(--blue);background:var(--soft);border:1px solid #bfdbfe;border-radius:999px;padding:4px 8px;white-space:nowrap}
 .bounty-title{font-size:17px;font-weight:800}
 .bounty-section-title{font-size:12px;font-weight:800;color:var(--muted);margin:12px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--line)}
 .bounty-school{display:grid;grid-template-columns:minmax(110px,1fr) 1fr 1fr;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f1f5f9}
@@ -65,12 +64,20 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 .bounty-stat{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px}
 .bounty-stat span:first-child{color:var(--muted)}
 .bounty-stat strong{font-size:13px}
+.bounty-rarities{grid-column:2/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:-2px 0 6px}
+.bounty-rarity{display:flex;flex-direction:column;gap:2px;padding:5px 7px;border-radius:8px;background:#f8fafc;min-width:0}
+.bounty-rarity span:first-child{font-size:10px;color:var(--muted)}
+.bounty-rarity strong{font-size:11px;white-space:nowrap}
 .bounty-oparts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .bounty-opart{display:grid;grid-template-columns:42px minmax(0,1fr);gap:9px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px}
 .bounty-opart img{width:42px;height:42px;object-fit:contain}
 .bounty-opart-name{font-size:12px;font-weight:700;line-height:1.35}
 .bounty-opart-value{font-size:13px;font-weight:800;margin-top:3px}
-@media(max-width:700px){.bounty-grid{grid-template-columns:1fr}.bounty-school{grid-template-columns:1fr 1fr}.bounty-school-name{grid-column:1/-1}.bounty-oparts{grid-template-columns:1fr}}
+.bounty-opart-rarities{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:5px}
+.bounty-opart-rarity{display:flex;flex-direction:column;gap:1px;padding:4px 5px;border-radius:7px;background:#f8fafc;min-width:0}
+.bounty-opart-rarity span:first-child{font-size:9px;color:var(--muted)}
+.bounty-opart-rarity strong{font-size:10px;white-space:nowrap}
+@media(max-width:700px){.bounty-grid{grid-template-columns:1fr}.bounty-school{grid-template-columns:1fr 1fr}.bounty-school-name{grid-column:1/-1}.bounty-rarities{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}.bounty-oparts{grid-template-columns:1fr}.bounty-opart-rarities{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .target-bulk{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
 .target-bulk-action{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .target-bulk-action input{width:90px;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:right;font-size:14px}
@@ -181,7 +188,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.14.0";
+const APP_VERSION="0.14.1";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -189,11 +196,11 @@ const tiers=[["basic","初級"],["intermediate","中級"],["advanced","上級"],
 const schools=[["abydos","アビドス"],["gehenna","ゲヘナ"],["trinity","トリニティ"],["millennium","ミレニアム"],["shanhaijing","山海経"],["hyakkiyako","百鬼夜行"],["redwinter","レッドウィンター"],["valkyrie","ヴァルキューレ"],["arius","アリウス"],["highlander","ハイランダー"],["wildhunt","ワイルドハント"],["odyssey","オデュッセイア"]];
 const ops=[["antikythera","アンティキティラ装置"],["voynich","ヴォイニッチ手稿"],["wolfsegg","ヴォルフスエック"],["ether","エーテル"],["crystalhaniwa","水晶埴輪"],["nimrud","ニムルドレンズ"],["nebra","ネブラディスク"],["phaistos","ファイストス円盤"],["mandragora","マンドレイク"],["rohonc","レヒニッツ写本"],["totempole","トーテムポール"],["ancientbattery","古代の電池"],["mysterystone","ミステリーストーン"],["discocolgante","円盤型ペンダント"],["hairgrowingdoll","髪伸び人形"],["ancientmedal","古代文明のメダル"],["goldenfleece","黄金の糸"],["dodecahedron","中空十二面体"],["goldshuttle","黄金シャトル"],["ancientrocket","古代ロケット"]];
 const bountyGroups=[
-  {stage:"10",name:"ハイウェイJ",schools:["gehenna","highlander"],ooparts:["phaistos","mandragora"]},
-  {stage:"10",name:"捨てられた列車J",schools:["trinity","valkyrie"],ooparts:["nebra","crystalhaniwa"]},
-  {stage:"10",name:"襲撃された校舎J",schools:["millennium","arius"],ooparts:["nimrud","rohonc"]},
-  {stage:"07",name:"燃え上がる道路G",schools:["hyakkiyako","shanhaijing","wildhunt"],ooparts:["wolfsegg","voynich"]},
-  {stage:"07",name:"由緒ある屋敷G",schools:["abydos","redwinter","odyssey"],ooparts:["ether","antikythera"]}
+  {name:"ハイウェイJ",schools:["gehenna","highlander"],ooparts:["phaistos","mandragora"]},
+  {name:"捨てられた列車J",schools:["trinity","valkyrie"],ooparts:["nebra","crystalhaniwa"]},
+  {name:"襲撃された校舎J",schools:["millennium","arius"],ooparts:["nimrud","rohonc"]},
+  {name:"燃え上がる道路G",schools:["hyakkiyako","shanhaijing","wildhunt"],ooparts:["wolfsegg","voynich"]},
+  {name:"由緒ある屋敷G",schools:["abydos","redwinter","odyssey"],ooparts:["ether","antikythera"]}
 ];
 const eq=[["hat","帽子"],["gloves","グローブ"],["shoes","シューズ"],["bag","バッグ"],["badge","バッジ"],["hairpin","ヘアピン"],["charm","お守り"],["watch","腕時計"],["necklace","ネックレス"]];
 const weaponGroups=[["spring","スプリング","images/weapon/spring_superior.png"],["hammer","ハンマー","images/weapon/hammer_superior.png"],["barrel","銃身","images/weapon/barrel_superior.png"],["firingpin","撃針","images/weapon/firingpin_superior.png"]];
@@ -365,6 +372,18 @@ function renderMisc(){
     up();miscGrid.append(c);
   });
 }
+function bountyRarityHtml(kind,key,b){
+  return '<div class="bounty-rarities">'+tiers.map(([tk,tl])=>{
+    const v=n(state[kind][key][tk])/b[tk],path=kind+"."+key;
+    return '<div class="bounty-rarity"><span>'+tl+'</span><strong>'+goalHtml(v,fr(v),path)+'</strong></div>';
+  }).join("")+'</div>';
+}
+function bountyOpartRarityHtml(key){
+  return '<div class="bounty-opart-rarities">'+tiers.map(([tk,tl])=>{
+    const v=n(state.ooparts[key][tk])/base.ooparts[tk],path="ooparts."+key;
+    return '<div class="bounty-opart-rarity"><span>'+tl+'</span><strong>'+goalHtml(v,fr(v),path)+'</strong></div>';
+  }).join("")+'</div>';
+}
 function renderBounty(){
   if(!window.bountyGrid)return;
   const schoolNames=Object.fromEntries(schools),opNames=Object.fromEntries(ops);
@@ -375,6 +394,8 @@ function renderBounty(){
         +'<div class="bounty-school-name">'+schoolNames[k]+'</div>'
         +'<div class="bounty-stat"><span>BD</span><strong>'+goalHtml(bdv,fr(bdv),"bd."+k)+'</strong></div>'
         +'<div class="bounty-stat"><span>ノート</span><strong>'+goalHtml(ntv,fr(ntv),"notes."+k)+'</strong></div>'
+        +bountyRarityHtml("bd",k,base.bd)
+        +bountyRarityHtml("notes",k,base.notes)
         +'</div>';
     }).join("");
     const opRows=g.ooparts.map(k=>{
@@ -382,10 +403,11 @@ function renderBounty(){
       return '<div class="bounty-opart">'
         +'<img src="images/ooparts/'+k+'.png" alt="'+opNames[k]+'">'
         +'<div><div class="bounty-opart-name">'+opNames[k]+'</div><div class="bounty-opart-value">'+goalHtml(v,fr(v),"ooparts."+k)+'</div></div>'
+        +bountyOpartRarityHtml(k)
         +'</div>';
     }).join("");
     return '<div class="bounty-card">'
-      +'<div class="bounty-head"><div class="bounty-title">'+g.name+'</div><div class="bounty-stage">'+g.stage+'</div></div>'
+      +'<div class="bounty-head"><div class="bounty-title">'+g.name+'</div></div>'
       +'<div class="bounty-section-title">BD・ノート</div>'+schoolRows
       +'<div class="bounty-section-title">オーパーツ</div><div class="bounty-oparts">'+opRows+'</div>'
       +'</div>';
