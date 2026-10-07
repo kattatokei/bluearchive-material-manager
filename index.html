@@ -58,13 +58,12 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 .bounty-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
 .bounty-title{font-size:17px;font-weight:800}
 .bounty-section-title{font-size:12px;font-weight:800;color:var(--muted);margin:12px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--line)}
-.bounty-school{display:grid;grid-template-columns:minmax(110px,1fr) 1fr 1fr;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f1f5f9}
-.bounty-school:last-child{border-bottom:none}
-.bounty-school-name{font-weight:700;font-size:13px}
-.bounty-stat{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px}
-.bounty-stat span:first-child{color:var(--muted)}
-.bounty-stat strong{font-size:13px}
-.bounty-rarities{grid-column:2/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:-2px 0 6px}
+.bounty-school-materials{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.bounty-mat{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:9px}
+.bounty-mat img{width:52px;height:52px;object-fit:contain}
+.bounty-mat-title{font-size:12px;font-weight:800;line-height:1.35}
+.bounty-mat-value{font-size:13px;font-weight:800;margin-top:3px}
+.bounty-rarities{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:5px}
 .bounty-rarity{display:flex;flex-direction:column;gap:2px;padding:5px 7px;border-radius:8px;background:#f8fafc;min-width:0}
 .bounty-rarity span:first-child{font-size:10px;color:var(--muted)}
 .bounty-rarity strong{font-size:11px;white-space:nowrap}
@@ -77,7 +76,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 .bounty-opart-rarity{display:flex;flex-direction:column;gap:1px;padding:4px 5px;border-radius:7px;background:#f8fafc;min-width:0}
 .bounty-opart-rarity span:first-child{font-size:9px;color:var(--muted)}
 .bounty-opart-rarity strong{font-size:10px;white-space:nowrap}
-@media(max-width:700px){.bounty-grid{grid-template-columns:1fr}.bounty-school{grid-template-columns:1fr 1fr}.bounty-school-name{grid-column:1/-1}.bounty-rarities{grid-column:1/-1;grid-template-columns:repeat(2,minmax(0,1fr))}.bounty-oparts{grid-template-columns:1fr}.bounty-opart-rarities{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:700px){.bounty-grid{grid-template-columns:1fr}.bounty-school-materials{grid-template-columns:1fr}.bounty-rarities{grid-template-columns:repeat(2,minmax(0,1fr))}.bounty-oparts{grid-template-columns:1fr}.bounty-opart-rarities{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .target-bulk{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
 .target-bulk-action{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .target-bulk-action input{width:90px;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:right;font-size:14px}
@@ -188,13 +187,23 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.14.1";
+const APP_VERSION="0.14.2";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
 const tiers=[["basic","初級"],["intermediate","中級"],["advanced","上級"],["superior","最上級"]];
 const schools=[["abydos","アビドス"],["gehenna","ゲヘナ"],["trinity","トリニティ"],["millennium","ミレニアム"],["shanhaijing","山海経"],["hyakkiyako","百鬼夜行"],["redwinter","レッドウィンター"],["valkyrie","ヴァルキューレ"],["arius","アリウス"],["highlander","ハイランダー"],["wildhunt","ワイルドハント"],["odyssey","オデュッセイア"]];
 const ops=[["antikythera","アンティキティラ装置"],["voynich","ヴォイニッチ手稿"],["wolfsegg","ヴォルフスエック"],["ether","エーテル"],["crystalhaniwa","水晶埴輪"],["nimrud","ニムルドレンズ"],["nebra","ネブラディスク"],["phaistos","ファイストス円盤"],["mandragora","マンドレイク"],["rohonc","レヒニッツ写本"],["totempole","トーテムポール"],["ancientbattery","古代の電池"],["mysterystone","ミステリーストーン"],["discocolgante","円盤型ペンダント"],["hairgrowingdoll","髪伸び人形"],["ancientmedal","古代文明のメダル"],["goldenfleece","黄金の糸"],["dodecahedron","中空十二面体"],["goldshuttle","黄金シャトル"],["ancientrocket","古代ロケット"]];
+const BOUNTY_IMG_ROOT="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/templates/inventory/";
+const BOUNTY_SCHOOL_ASSET={abydos:"Abydos",gehenna:"Gehenna",trinity:"Trinity",millennium:"Millennium",shanhaijing:"Shanhaijing",hyakkiyako:"Hyakkiyako",redwinter:"RedWinter",valkyrie:"Valkyrie",arius:"Arius",highlander:"Highlander",wildhunt:"Wildhunt"};
+const ODYSSEY_BD_IMG="data:image/jpeg;base64,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";
+const ODYSSEY_NOTE_IMG="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMDAgQDAwMEBAQFBgoGBgUFBgwICQcKDgwPDg4MDQ0PERYTDxAVEQ0NExoTFRcYGRkZDxIbHRsYHRYYGRj/2wBDAQQEBAYFBgsGBgsYEA0QGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBgYGBj/wAARCABIAEgDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD7N/4SQ+unf9/5P/jdWINcM8gRRaOxPCRzsSfpuUA/SuKucWmlrctCXY4yobnJ7dKQl8KzqUcjO0c4P+Ne+8rp2umzOrJ05Wkj0mO6hktPtIbamDknjGOoPvWbqGvQaeqtO1vbq+dn2hypceoUAnHviq/2lbezuXkTcqO8jA9GKIM59i/8687vpp9RYzXUoeZjkuR1NcuAwH1iT5nZI9LBYRV7uTskd1/wmlp/z8aZ/wB/pf8A41S/8JnanpPpv/f6X/43Xm32I4Pzj34qZbJUgaaSdI0Vcln+UD8TXrPJMMldyZ2PAUb6NnoZ8ZWo6z6b/wB/pf8A43QPGVsW2ibTc+nnS/8AxuvMZLPWLmIz6faIIApdJbvcnmkfwqnBAP8AeOAPRqxtM8SRahqSxwWThB8zMXHy+oPHXt9adLJMPWuqcm7ehy1MIoJT6Hty+JtyhlbTiD/03k/+N0V5sdfj6LaOAOAA4/worN5EvP8AA4Gld8ptab5uqIkzqBHGcxg/xN6/h2ratdKmmmhlmXy4fNA3nv3OKgtoIYtiMCsSjhV746Cr4uZ55ZJGyiQwOIkA4UkbRx9WFLFVZJNw2MJ1fbPnqO7Zz/xEvHt/hTetG6xT3ESKuGwQZZd5A/BDXJ+F9SbWtAWaUg3cOEnX1PZh9f55qz8brxk0fTtLi433bNgcfLFGqAfm7V49b61f6PGZ7d22qy+dGP8AlrGGBZT6jj+Y717uS5e5ZW6qXvNtr8v0PrMHBQwN7attnumnWV9rN28eh23niM7ZLhztgiPcF8HcR3VcnpnGc1H4w0m68NeHre50m9i1LW1vI1d7qNRa265LMShOIxjHznc3oea9N8M6zp2t+DbDU9ISKK1kiAWKEALERwUAHYEVxvjrwvp3iTw7qllJNIJriHbvLn76nKMfoe3TFfNwxsqtZKrpG+3+Z51GVSrI4Kz8YN4t1GSwOrRrfWceL6K0LeQ3JAMTNyeeCRj69KpzWNx4f8V3KXFr5cGpfvFmXlfNA5XP+0OfqG9a8X0yHxZ4U8XRahb6FqMklrKY5447dysq5wy5A6HBwexwa9T8Z+P9JvbG20R5saldSxtHGpG6AD5t7j+AqBnB9MV9FToqjK9P4TavSjUpuE3r0OiTCSqW6A9D3oqDwpJN4isLYtC0E5AFxGRzE2AT+HOR9RRW1TEUk1zM+XVapBtI9J8y4UZYJx7Ve0R5p3k80fKZo48rx0y5/wDQMfjWV4aOqap4H0zUtXtxBqE9ujXEadBJj5sZ7HqPrW9bQCy00kbVYRzS8nuQEX9S35V8pia0XRduoUoP2hy3ivw1pPiXVLM6mLnzEgJQxy7QC7s54x7j9KxD8KfDj8kX3P8A02H+Fd5qFi/9pSBFG1MIuOwUAD+VW7WEyRZYYYda7sPmFbD0IwpzaVu5731icaajfQ8/8HSH4c+MD4RkllbRtUBk09pDnypBjMZP4j8Cvoad4o8StbazcWdxHNA4J8hlTzFkG3hgByxB6qOfYjmuo8X+FD4j8MSWkJCXkRE9pL/clXp+B5B9ia8A8b/GG1TTW0saYl5rEY8q9S6X93BIOoZepbvjge9c1GcHUc5dTfBYylQUp1ZWPN/iEbSx8SFrHxBqOqO8Qa5ubtGjbzcncoBxx047ZxR4J8C6hqcEXiue7FlpjrKkUsQV5G2/LIcsQkRAJ+Zzn0GcVzqReJfH/iZLKO4N3c7cqJpdscS7guFzwoyyjA/xrrU1rwd8NdPn0ISyeLb7e020SKbKGbACsFyytkZzkMw2rjaScZ5ljsRWpqlhpcvn1seVWzRVZtpe6d34O8QWfgj4iafaWkc66T4gH2Oa4kZ5IWvY8YeOSXDOGVlVjgLuxjIorxSfW9a+IXjGaXU47y5uJkJgg01QgjkAxG5zxheAXY5wOTRWOFnKjTUJSvbq9zznLmbaPtX4YeNfE/j3x14vttV0D+wNL0VoLGHTpWSWZbghmdnkXgnbt4BIGfWu8uI/+JgtuvI8yCHgZ6EyN+GMVyfwE0rUrL4US63rlvLb6nr+p3WsXEc6GORPMkOwMDyCEVfwrsoAsuvW8vJSV5pkOfRQg/MZNedUlrZbHXTWl2OWzMgLlfmJyfzqZLIowIWtQRgHjFO8sVTrvY3crlRLUDnFfIn7Vnw3OgeI7f4naRbhLHUGWz1kJwscvSKc49fuk+w9a+yAvtWT4o8NaZ4v8G6l4Z1mDzbHUIGt5V7gEfeHuDgg+oFRGs1K5hVgpx5T8u2luIroG2eVJj8i+SSGOeMDHJz6Cu98NfCaSTS/7d8c6rH4a0dZ4bfEqM0jySkhFO1WEQ4JJboByORX038Mf2aLLwfHHLr13BqF9FlftMKkO65O35jyo24BC475LVvfFW3hv/D4+DPhXwkmoX+s22XkkiMdlpsG7H2iRx/EGGVQckj8+l105JROOOHaV5GV4S8C/DvwN4ksfB7vDd67dwNcx6faRmTKRrnzJDz1/haQ4JPy7aKf+zfos3hmPxV4X1/RZo/E+l3qw3esSq7f2jARmFkkb+EKMbQcAY7miuecmnZM6oJKOx2WlW3xJ1+aF/GculaNYIQz2Gkszy3GP4ZJCcKnqq8npnBNdD4h0q81TRvL0rUG07UYHE1pdAbhHIOzL3UglSPQ0UVkanIxa78coWaKfwf4XuCuAJor5kV/cAkkfQ1J/wAJD8a/+hI8Of8AgyNFFAB/wkPxr/6Ejw5/4MjR/wAJF8bP+hI8Of8AgyNFFAAfEXxrx/yJHhz/AMGRo/4SH415/wCRI8Of+DI0UUAH/CQ/Gr/oSPDn/gzNFFFFxWP/2Q==";
+function bountySchoolImg(kind,key){
+  if(key==="odyssey")return kind==="bd"?ODYSSEY_BD_IMG:ODYSSEY_NOTE_IMG;
+  const a=BOUNTY_SCHOOL_ASSET[key];
+  if(!a)return "";
+  return BOUNTY_IMG_ROOT+(kind==="bd"?"skill_db/Item_Icon_Material_ExSkill_":"skill_book/Item_Icon_SkillBook_")+a+"_3.png";
+}
 const bountyGroups=[
   {name:"ハイウェイJ",schools:["gehenna","highlander"],ooparts:["phaistos","mandragora"]},
   {name:"捨てられた列車J",schools:["trinity","valkyrie"],ooparts:["nebra","crystalhaniwa"]},
@@ -384,20 +393,21 @@ function bountyOpartRarityHtml(key){
     return '<div class="bounty-opart-rarity"><span>'+tl+'</span><strong>'+goalHtml(v,fr(v),path)+'</strong></div>';
   }).join("")+'</div>';
 }
+function bountySchoolMaterialCard(kind,key,label){
+  const b=kind==="bd"?base.bd:base.notes,v=smin(state[kind][key],b),path=kind+"."+key,img=bountySchoolImg(kind,key);
+  return '<div class="bounty-mat">'
+    +(img?'<img src="'+img+'" alt="'+label+' '+(kind==="bd"?"BD":"ノート")+'">':'')
+    +'<div><div class="bounty-mat-title">'+label+' '+(kind==="bd"?"BD":"ノート")+'</div><div class="bounty-mat-value">'+goalHtml(v,fr(v),path)+'</div></div>'
+    +bountyRarityHtml(kind,key,b)
+    +'</div>';
+}
 function renderBounty(){
   if(!window.bountyGrid)return;
   const schoolNames=Object.fromEntries(schools),opNames=Object.fromEntries(ops);
   bountyGrid.innerHTML=bountyGroups.map(g=>{
-    const schoolRows=g.schools.map(k=>{
-      const bdv=smin(state.bd[k],base.bd),ntv=smin(state.notes[k],base.notes);
-      return '<div class="bounty-school">'
-        +'<div class="bounty-school-name">'+schoolNames[k]+'</div>'
-        +'<div class="bounty-stat"><span>BD</span><strong>'+goalHtml(bdv,fr(bdv),"bd."+k)+'</strong></div>'
-        +'<div class="bounty-stat"><span>ノート</span><strong>'+goalHtml(ntv,fr(ntv),"notes."+k)+'</strong></div>'
-        +bountyRarityHtml("bd",k,base.bd)
-        +bountyRarityHtml("notes",k,base.notes)
-        +'</div>';
-    }).join("");
+    const schoolCards=g.schools.map(k=>
+      bountySchoolMaterialCard("bd",k,schoolNames[k])+bountySchoolMaterialCard("notes",k,schoolNames[k])
+    ).join("");
     const opRows=g.ooparts.map(k=>{
       const v=smin(state.ooparts[k],base.ooparts);
       return '<div class="bounty-opart">'
@@ -408,7 +418,7 @@ function renderBounty(){
     }).join("");
     return '<div class="bounty-card">'
       +'<div class="bounty-head"><div class="bounty-title">'+g.name+'</div></div>'
-      +'<div class="bounty-section-title">BD・ノート</div>'+schoolRows
+      +'<div class="bounty-section-title">BD・ノート</div><div class="bounty-school-materials">'+schoolCards+'</div>'
       +'<div class="bounty-section-title">オーパーツ</div><div class="bounty-oparts">'+opRows+'</div>'
       +'</div>';
   }).join("");
