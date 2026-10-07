@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.18";
+const APP_VERSION="0.9.19";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -697,12 +697,16 @@ async function analyzeBdSequencePage(file,fileIndex){
 
 function oopartsIconScores(slot,cat){
   const f=sourceFeature(slot,"cell",scanCropSpec("ooparts",false)),scores={};
+  let bestKey=null,bestScore=-1;
   for(const it of cat){
     if(!it.url||!it.key.startsWith("ooparts."))continue;
     const tf=templateCache.get(it.url);
-    if(tf)scores[it.key]=simFeature(f,tf);
+    if(!tf)continue;
+    const s=simFeature(f,tf);
+    scores[it.key]=s;
+    if(s>bestScore){bestScore=s;bestKey=it.key}
   }
-  return scores;
+  return {scores,bestKey,bestScore};
 }
 async function analyzeOopartsSequencePage(file,fileIndex,cat){
   const url=URL.createObjectURL(file);
@@ -714,9 +718,10 @@ async function analyzeOopartsSequencePage(file,fileIndex,cat){
       const count=readConnectedCount(slot);
       if(!count||count.value<0||count.value>999999)continue;
       const tier=slotTierByCardColor(slot)||slotTier(slot)||null;
+      const icon=oopartsIconScores(slot,cat);
       page.push({
         count:count.value,countConf:count.conf,tier,
-        iconScores:oopartsIconScores(slot,cat),
+        iconScores:icon.scores,iconBest:icon.bestKey,iconBestScore:icon.bestScore,
         source:fileIndex+1,row:Math.floor(i/5),col:i%5
       });
     }
@@ -766,37 +771,83 @@ function canUseBdFullScan(pages){
   // tier判定の成否ではなく数量枠の検出数で「一覧全体」を判定する。
   return pages.length>=2&&first>=18&&stitched.length>=42&&last<20;
 }
+function sameOopartsObservation(a,b){
+  if(!a||!b)return false;
+  if(a.iconBest&&b.iconBest&&a.iconBest===b.iconBest)return true;
+  return a.count===b.count&&(!a.tier||!b.tier||a.tier===b.tier);
+}
+function stitchOopartsPages(pages){
+  let out=[];
+  for(const page of pages){
+    if(!page.length)continue;
+    if(!out.length){out=[...page];continue}
+    let overlap=0;
+    const max=Math.min(out.length,page.length);
+    for(let k=max;k>=3;k--){
+      let same=0;
+      for(let i=0;i<k;i++)if(sameOopartsObservation(out[out.length-k+i],page[i]))same++;
+      if(same>=Math.max(3,Math.ceil(k*.78))){overlap=k;break}
+    }
+    out.push(...page.slice(overlap));
+  }
+  return out;
+}
 function alignOopartsFullScan(pages){
-  const obs=stitchBdPages(pages),canon=oopartsCanonicalItems();
+  const obs=stitchOopartsPages(pages),canon=oopartsCanonicalItems();
   if(!obs.length)return [];
   const O=obs.length,C=canon.length,INF=1e9;
-  // canonical 80枠に対し、0個で非表示の素材はcanonical側をskip。
-  // 等級色だけに依存せず、アイコン類似度を主アンカーにして位置合わせする。
+
+  // 各観測枠では「絶対類似度」ではなく、その枠内の最高類似度との差を使う。
+  // これによりテンプレ全体のスコアが低くても、正しい候補を相対的にアンカーにできる。
+  const bestSims=obs.map(o=>{
+    const vals=Object.values(o.iconScores||{});
+    return vals.length?Math.max(...vals):0;
+  });
+
   const dp=Array.from({length:O+1},()=>Array(C+1).fill(INF));
   const prev=Array.from({length:O+1},()=>Array(C+1).fill(null));
   dp[0][0]=0;
+
   for(let i=0;i<=O;i++)for(let j=0;j<=C;j++){
     const cur=dp[i][j];if(cur>=INF)continue;
+
     if(j<C){
-      const skipCanon=4.2;
-      if(cur+skipCanon<dp[i][j+1]){dp[i][j+1]=cur+skipCanon;prev[i][j+1]=[i,j,"skipCanon"]}
+      // 0個で一覧から消えたcanonical素材。全スキップより実観測への対応を強く優先する。
+      const skipCanon=9.0;
+      if(cur+skipCanon<dp[i][j+1]){
+        dp[i][j+1]=cur+skipCanon;prev[i][j+1]=[i,j,"skipCanon"];
+      }
     }
+
     if(i<O&&j<C){
-      const o=obs[i],item=canon[j],sim=o.iconScores?.[item.key]??0;
-      const tierPenalty=o.tier&&o.tier!==item.tier?1.8:0;
-      const matchCost=(1-Math.max(0,Math.min(1,sim)))*12+tierPenalty;
-      if(cur+matchCost<dp[i+1][j+1]){dp[i+1][j+1]=cur+matchCost;prev[i+1][j+1]=[i,j,"match"]}
+      const o=obs[i],item=canon[j],sim=o.iconScores?.[item.key]??0,best=bestSims[i]||0;
+      const relativeGap=Math.max(0,best-sim);
+      const iconPenalty=relativeGap*55;
+      const tierPenalty=o.tier&&o.tier!==item.tier?2.2:0;
+      const bestKeyBonus=o.iconBest===item.key?-1.25:0;
+      const matchCost=Math.max(0,iconPenalty+tierPenalty+bestKeyBonus);
+      if(cur+matchCost<dp[i+1][j+1]){
+        dp[i+1][j+1]=cur+matchCost;prev[i+1][j+1]=[i,j,"match"];
+      }
     }
-    // canonical末尾以降に写った次カテゴリを捨てる。途中の誤検出は高コスト。
+
     if(i<O){
-      const skipObs=(j===C)?0.05:7.5;
-      if(cur+skipObs<dp[i+1][j]){dp[i+1][j]=cur+skipObs;prev[i+1][j]=[i,j,"skipObs"]}
+      // 末尾の次カテゴリだけ安く捨てる。途中の観測を大量廃棄する経路は禁止に近いコスト。
+      const skipObs=(j===C)?0.05:13.0;
+      if(cur+skipObs<dp[i+1][j]){
+        dp[i+1][j]=cur+skipObs;prev[i+1][j]=[i,j,"skipObs"];
+      }
     }
   }
+
   if(dp[O][C]>=INF)return [];
   const actions=[];let i=O,j=C;
-  while(i||j){const p=prev[i][j];if(!p)break;actions.push([p[2],i,j]);[i,j]=[p[0],p[1]]}
+  while(i||j){
+    const p=prev[i][j];if(!p)break;
+    actions.push([p[2],i,j]);[i,j]=[p[0],p[1]];
+  }
   actions.reverse();
+
   const rows=[];let oi=0,ci=0;
   for(const [act] of actions){
     if(act==="skipCanon"){
@@ -807,14 +858,18 @@ function alignOopartsFullScan(pages){
     }else{
       const o=obs[oi++],item=canon[ci++];
       const cc=o.countConf>=45?"high":o.countConf>=22?"mid":"low";
-      rows.push({...item,count:o.count,confidence:cc==="high"?"高":cc==="mid"?"中":"要確認",confClass:cc,score:1,margin:1,candidates:[],source:o.source,row:o.row,col:o.col});
+      rows.push({
+        ...item,count:o.count,
+        confidence:cc==="high"?"高":cc==="mid"?"中":"要確認",confClass:cc,
+        score:o.iconScores?.[item.key]??0,margin:0,candidates:[],
+        source:o.source,row:o.row,col:o.col
+      });
     }
   }
   return rows;
 }
 function canUseOopartsFullScan(pages){
-  const stitched=stitchBdPages(pages),first=pages[0]?.length||0,last=pages[pages.length-1]?.length||0;
-  // 5枚前後で先頭から末尾まで撮ったケースを固定順モードにする。
+  const stitched=stitchOopartsPages(pages),first=pages[0]?.length||0,last=pages[pages.length-1]?.length||0;
   return pages.length>=4&&first>=18&&stitched.length>=75&&last<20;
 }
 async function analyzeOne(file,fileIndex,kind,cat){
