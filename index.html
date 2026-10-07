@@ -447,14 +447,20 @@ function readConnectedCount(slot){
   for(let p=0,i=0;i<d.length;i+=4,p++){
     const dr=d[i]-45,dg=d[i+1]-70,db=d[i+2]-99;
     mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
-    const y=Math.floor(p/sw),x=p%sw;if(y<sh*.77||x<sw*.35)mask[p]=0;
+    const y=Math.floor(p/sw),x=p%sw;
+    if(y<sh*.76||x<sw*.35)mask[p]=0;
   }
-  let comps=connectedComponents(mask,sw,sh).filter(c=>c.area>=18&&c.h>=10&&c.w>=4).sort((a,b)=>a.minx-b.minx);
-  if(comps.length<2)return null;
-  comps=comps.slice(1); // leading "x"
+  // 数字本体は高さ14〜16px前後。左の "x" は低く、カード斜線は横長なので除外できる。
+  const comps=connectedComponents(mask,sw,sh)
+    .filter(c=>c.area>=18 && c.h>=Math.max(13,sh*.13) && c.w>=4 && c.w<=14 && c.miny>=sh*.76)
+    .sort((a,b)=>a.minx-b.minx);
   if(!comps.length||comps.length>6)return null;
   const digits=[],scores=[],margins=[];
-  for(const c of comps){const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyEmpiricalDigit(norm);if(!r.digit||r.score<.22)return null;digits.push(r.digit);scores.push(r.score);margins.push(r.margin)}
+  for(const c of comps){
+    const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyEmpiricalDigit(norm);
+    if(!r.digit||r.score<.22)return null;
+    digits.push(r.digit);scores.push(r.score);margins.push(r.margin);
+  }
   const value=Number(digits.join(""));if(!Number.isFinite(value))return null;
   return {value,conf:Math.min(...scores)*100,text:String(value),margin:Math.min(...margins)};
 }
