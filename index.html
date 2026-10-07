@@ -118,7 +118,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <div class="note">各素材の備蓄目標を「何人分」で設定します。初期値はすべて1人分です。概要・各素材画面の人数表記は、この目標に応じて色分けされます。</div>
 <div class="target-bulk">
   <div><b>一括設定</b><div class="caption">全素材の目標を同じ人数に変更します。</div></div>
-  <div class="target-bulk-action"><input id="targetBulkValue" type="number" min="0" step="0.1" value="1"><span>人分</span><button id="targetBulkApply">全素材に適用</button></div>
+  <div class="target-bulk-action"><input id="targetBulkValue" type="number" min="0" step="1" value="1"><span>人分</span><button id="targetBulkApply">全素材に適用</button></div>
 </div>
 <div class="target-legend">
   <span class="goal-critical">● 1人分未満</span>
@@ -157,7 +157,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.13.4";
+const APP_VERSION="0.13.5";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -349,7 +349,7 @@ function renderTargets(){
   ];
   targetGrid.innerHTML=groups.map(([title,items])=>
     '<div class="target-card"><div class="target-card-title">'+title+'</div><div class="target-list">'
-    +items.map(([path,label])=>'<label class="target-row"><span>'+label+'</span><input data-target-path="'+path+'" type="number" min="0" step="0.1" value="'+targetAt(path)+'"><span>人分</span></label>').join("")
+    +items.map(([path,label])=>'<label class="target-row"><span>'+label+'</span><input data-target-path="'+path+'" type="number" min="0" step="1" value="'+targetAt(path)+'"><span>人分</span></label>').join("")
     +'</div></div>'
   ).join("");
   targetGrid.querySelectorAll("[data-target-path]").forEach(input=>{
