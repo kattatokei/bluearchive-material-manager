@@ -45,6 +45,11 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 @media(max-width:900px){.summary-grid{grid-template-columns:1fr}.summary-left{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-oparts{grid-column:auto;grid-row:auto}}
 @media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}.summary-left{grid-template-columns:1fr}}
 
+.goalctl{display:flex;align-items:center;gap:6px;margin:7px 0 10px;color:var(--muted);font-size:12px}
+.goalctl input{width:76px;border:1px solid var(--line);border-radius:9px;padding:6px 8px;text-align:right;background:#fff;font-size:13px}
+.goal-unset{color:var(--blue)!important}
+.goal-met{color:#059669!important}
+.goal-miss{color:#dc2626!important}
 .gpt-wrap{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(0,1.1fr);gap:14px;align-items:start}
 .gpt-panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
 .gpt-textarea{width:100%;min-height:360px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#fbfdff;color:var(--text)}
@@ -122,7 +127,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.11.0";
+const APP_VERSION="0.12.0";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -139,7 +144,17 @@ const weaponExp=[15,75,300,1500], weaponTarget=26280;
 const simpleBase={credits:95430000,secretNotes:3,eligma:3400};
 const emptyT=()=>({basic:0,intermediate:0,advanced:0,superior:0});
 const emptyEq=()=>({universal:0,tiers:Object.fromEntries(Array.from({length:10},(_,i)=>[i+1,0]))});
-const initial=()=>({version:2,bd:Object.fromEntries(schools.map(([k])=>[k,emptyT()])),notes:Object.fromEntries(schools.map(([k])=>[k,emptyT()])),ooparts:Object.fromEntries(ops.map(([k])=>[k,emptyT()])),equipment:Object.fromEntries(eq.map(([k])=>[k,emptyEq()])),reports:emptyT(),stones:emptyT(),weapon:Object.fromEntries(weaponGroups.map(([k])=>[k,emptyT()])),wb:{hp:0,atk:0,heal:0},simple:{credits:0,secretNotes:0,eligma:0}});
+const emptyTargets=()=>({
+  bd:Object.fromEntries(schools.map(([k])=>[k,0])),
+  notes:Object.fromEntries(schools.map(([k])=>[k,0])),
+  ooparts:Object.fromEntries(ops.map(([k])=>[k,0])),
+  equipment:Object.fromEntries(eq.map(([k])=>[k,0])),
+  reports:0,stones:0,
+  weapon:Object.fromEntries(weaponGroups.map(([k])=>[k,0])),
+  wb:{hp:0,atk:0,heal:0},
+  simple:{credits:0,secretNotes:0,eligma:0}
+});
+const initial=()=>({version:2,bd:Object.fromEntries(schools.map(([k])=>[k,emptyT()])),notes:Object.fromEntries(schools.map(([k])=>[k,emptyT()])),ooparts:Object.fromEntries(ops.map(([k])=>[k,emptyT()])),equipment:Object.fromEntries(eq.map(([k])=>[k,emptyEq()])),reports:emptyT(),stones:emptyT(),weapon:Object.fromEntries(weaponGroups.map(([k])=>[k,emptyT()])),wb:{hp:0,atk:0,heal:0},simple:{credits:0,secretNotes:0,eligma:0},targets:emptyTargets()});
 function deepMerge(a,b){for(const k in b){if(b[k]&&typeof b[k]==="object"&&!Array.isArray(b[k])){a[k]??={};deepMerge(a[k],b[k])}else a[k]=b[k]}return a}
 function migrateOld(o){const n=initial();if(!o||typeof o!=="object")return n;["bd","notes","ooparts"].forEach(k=>{if(o[k])deepMerge(n[k],o[k])});if(o.equipment){eq.forEach(([k])=>{if(typeof o.equipment[k]==="number")n.equipment[k].tiers[10]=o.equipment[k];else if(o.equipment[k]&&typeof o.equipment[k]==="object")deepMerge(n.equipment[k],o.equipment[k])})}if(o.misc){n.wb.hp=Number(o.misc.wbHp)||0;n.wb.atk=Number(o.misc.wbAtk)||0;n.wb.heal=Number(o.misc.wbHeal)||0;n.simple.credits=Number(o.misc.credits)||0;n.simple.secretNotes=Number(o.misc.secretNotes)||0;n.simple.eligma=Number(o.misc.eligma)||0}return n}
 let state=(()=>{try{const v2=localStorage.getItem(KEY);if(v2)return deepMerge(initial(),JSON.parse(v2));const old=localStorage.getItem(OLDKEY);return old?migrateOld(JSON.parse(old)):initial()}catch{return initial()}})();
@@ -147,47 +162,164 @@ const n=v=>Math.max(0,Number(v)||0), fr=v=>v===0?"0.00人分":v<.01?"<0.01人分
 function save(){localStorage.setItem(KEY,JSON.stringify(state));summary()}
 function smin(o,b){return Math.min(...tiers.map(([k])=>n(o[k])/b[k]))}
 function expOf(obj,values){return tiers.reduce((s,[k],i)=>s+n(obj[k])*values[i],0)}
-function series(kind,key,label,b,img){const c=document.createElement("div");c.className="card";c.dataset.label=label;
-c.innerHTML=(img?'<div class="imgline"><img class="icon" src="'+img+'" alt="'+label+'"><div class="caption">最上級素材</div></div>':'')+'<div class="head"><div class="name">'+label+'</div><div class="score"></div></div><div class="rows"><div class="row h"><div>等級</div><div>所持数</div><div>1人分</div><div>人数換算</div></div>'+tiers.map(([k,l])=>'<div class="row"><div>'+l+'</div><input data-k="'+k+'" type="number" min="0"><div class="right muted">'+b[k].toLocaleString()+'</div><div data-r="'+k+'" class="right ratio"></div></div>').join("")+'</div>';
-function up(){const sc=smin(state[kind][key],b);c.dataset.score=sc;c.querySelector(".score").textContent=fr(sc);tiers.forEach(([k])=>c.querySelector('[data-r="'+k+'"]').textContent=fr(n(state[kind][key][k])/b[k]))}
-tiers.forEach(([k])=>{const i=c.querySelector('[data-k="'+k+'"]');i.value=state[kind][key][k]||"";i.oninput=()=>{state[kind][key][k]=n(i.value);save();up();if(kind==="ooparts")sortOps()}});up();return c}
-function renderSeries(){bdGrid.innerHTML="";notesGrid.innerHTML="";opGrid.innerHTML="";schools.forEach(([k,l])=>{bdGrid.append(series("bd",k,l,base.bd));notesGrid.append(series("notes",k,l,base.notes))});ops.forEach(([k,l])=>opGrid.append(series("ooparts",k,l,base.ooparts,"images/ooparts/"+k+".png")))}
-function universalCost(key,people){const d=state.equipment[key];let cost=0;for(let i=0;i<10;i++){const have=n(d.tiers[i+1]),need=equipNeed[i]*people;cost+=Math.max(0,need-have)*universalRate[i]}return cost}
-function maxEquipPeople(key){const d=state.equipment[key],u=n(d.universal);let lo=0,hi=1;while(universalCost(key,hi)<=u&&hi<100000)hi*=2;while(lo+1<hi){const mid=Math.floor((lo+hi)/2);if(universalCost(key,mid)<=u)lo=mid;else hi=mid}return lo}
-function renderEq(){eqGrid.innerHTML="";eq.forEach(([k,l])=>{const d=state.equipment[k],c=document.createElement("div");c.className="card";c.innerHTML='<div class="imgline"><img class="icon" src="images/equipment/'+k+'.png" alt="'+l+'"><div><div class="name">'+l+'</div><div class="caption">代表画像：T10装備</div></div></div><div class="universal"><b>'+l+'の万能設計図</b><input data-u type="number" min="0"></div><div class="rows"><div class="row equip h"><div>Tier</div><div>通常設計図</div><div>1人分</div><div>万能換算</div></div>'+Array.from({length:10},(_,i)=>'<div class="row equip"><div>T'+(i+1)+'</div><input data-tier="'+(i+1)+'" type="number" min="0"><div class="right muted">'+equipNeed[i]+'</div><div class="right muted">×'+universalRate[i]+'</div></div>').join("")+'</div><div class="calcbox"><div><div class="label">万能設計図を最適に使用した場合</div><b>最大育成可能人数</b></div><strong data-max></strong></div>';
-const ui=c.querySelector("[data-u]");ui.value=d.universal||"";const up=()=>c.querySelector("[data-max]").textContent=maxEquipPeople(k)+"人";ui.oninput=()=>{d.universal=n(ui.value);save();up()};Array.from({length:10},(_,i)=>i+1).forEach(t=>{const x=c.querySelector('[data-tier="'+t+'"]');x.value=d.tiers[t]||"";x.oninput=()=>{d.tiers[t]=n(x.value);save();up()}});up();eqGrid.append(c)})}
-function expCard(title,img,obj,values,target,sub){const c=document.createElement("div");c.className="card";c.innerHTML='<div class="imgline"><img class="icon" src="'+img+'" alt="'+title+'"><div><div class="name">'+title+'</div><div class="caption">'+sub+'</div></div></div><div class="rows"><div class="row h"><div>等級</div><div>個数</div><div>1個EXP</div><div>小計EXP</div></div>'+tiers.map(([k,l],i)=>'<div class="row"><div>'+l+'</div><input data-k="'+k+'" type="number" min="0"><div class="right muted">'+values[i].toLocaleString()+'</div><div data-sub="'+k+'" class="right ratio"></div></div>').join("")+'</div><div class="calcbox"><div><div class="label">合計EXP <span data-exp></span> / 1人分 '+target.toLocaleString()+'</div><b>人数換算</b></div><strong data-people></strong></div>';
-function up(){const total=expOf(obj,values);c.querySelector("[data-exp]").textContent=num(total);c.querySelector("[data-people]").textContent=fr(total/target);tiers.forEach(([k],i)=>c.querySelector('[data-sub="'+k+'"]').textContent=num(n(obj[k])*values[i]))}
-tiers.forEach(([k])=>{const x=c.querySelector('[data-k="'+k+'"]');x.value=obj[k]||"";x.oninput=()=>{obj[k]=n(x.value);save();up()}});up();return c}
-function renderMisc(){miscGrid.innerHTML="";
-miscGrid.append(expCard("レポート","images/misc/report_superior.png",state.reports,reportExp,reportTarget,"代表画像：最上級レポート"));
-miscGrid.append(expCard("強化珠","images/misc/enhancement_superior.png",state.stones,stoneExp,stoneTarget,"代表画像：最上級強化珠／1人分＝装備3部位T1→T10最大"));
-weaponGroups.forEach(([k,l,img])=>miscGrid.append(expCard("固有武器素材・"+l,img,state.weapon[k],weaponExp,weaponTarget,"経験値ボーナス適用済み／固有武器Lv1→50")));
-const wb=document.createElement("div");wb.className="card";wb.innerHTML='<div class="imgline"><img class="icon" src="images/misc/wb.png" alt="WB"><div><div class="name">WB</div><div class="caption">代表画像1枚／各種類70冊＝1人分</div></div></div><div class="subgrid"><div class="subbox"><label>HP</label><input data-wb="hp" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="hp"></strong></div></div><div class="subbox"><label>攻撃</label><input data-wb="atk" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="atk"></strong></div></div><div class="subbox"><label>治癒</label><input data-wb="heal" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="heal"></strong></div></div></div>';
-["hp","atk","heal"].forEach(k=>{const x=wb.querySelector('[data-wb="'+k+'"]');x.value=state.wb[k]||"";const up=()=>wb.querySelector('[data-r="'+k+'"]').textContent=fr(n(state.wb[k])/70);x.oninput=()=>{state.wb[k]=n(x.value);save();up()};up()});miscGrid.append(wb);
-[["credits","クレジット",simpleBase.credits,"images/misc/credit.png"],["secretNotes","秘伝ノート",simpleBase.secretNotes,"images/misc/secret_note.png"],["eligma","カケラ",simpleBase.eligma,null]].forEach(([k,l,b,img])=>{const c=document.createElement("div");c.className="mini";c.innerHTML=(img?'<div class="imgline"><img class="icon" src="'+img+'" alt="'+l+'"><div class="name">'+l+'</div></div>':'<div class="name">'+l+'</div>')+'<input type="number" min="0"><div class="meta"><span>1人分：'+b.toLocaleString()+'</span><strong></strong></div>';const x=c.querySelector("input"),o=c.querySelector("strong");x.value=state.simple[k]||"";const up=()=>o.textContent=fr(n(state.simple[k])/b);x.oninput=()=>{state.simple[k]=n(x.value);save();up()};up();miscGrid.append(c)})}
+function targetAt(path){
+  let v=state.targets;
+  for(const p of path.split("."))v=v?.[p];
+  return n(v);
+}
+function setTargetAt(path,val){
+  const ps=path.split(".");let o=state.targets;
+  for(let i=0;i<ps.length-1;i++){o[ps[i]]??={};o=o[ps[i]]}
+  o[ps[ps.length-1]]=n(val);
+}
+function goalClass(value,target){const t=n(target);return t<=0?"goal-unset":value>=t?"goal-met":"goal-miss"}
+function paintGoal(el,value,path){
+  el.classList.remove("goal-unset","goal-met","goal-miss");
+  el.classList.add(goalClass(value,targetAt(path)));
+}
+function goalHtml(value,text,path){return '<span class="'+goalClass(value,targetAt(path))+'">'+text+'</span>'}
+
+function series(kind,key,label,b,img){
+  const c=document.createElement("div");c.className="card";c.dataset.label=label;
+  const goalPath=kind+"."+key;
+  c.innerHTML=(img?'<div class="imgline"><img class="icon" src="'+img+'" alt="'+label+'"><div class="caption">最上級素材</div></div>':'')
+    +'<div class="head"><div class="name">'+label+'</div><div class="score"></div></div>'
+    +'<div class="goalctl"><span>目標</span><input data-goal type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div>'
+    +'<div class="rows"><div class="row h"><div>等級</div><div>所持数</div><div>1人分</div><div>人数換算</div></div>'
+    +tiers.map(([k,l])=>'<div class="row"><div>'+l+'</div><input data-k="'+k+'" type="number" min="0"><div class="right muted">'+b[k].toLocaleString()+'</div><div data-r="'+k+'" class="right ratio"></div></div>').join("")
+    +'</div>';
+  function up(){
+    const sc=smin(state[kind][key],b),goal=targetAt(goalPath);
+    c.dataset.score=sc;
+    const score=c.querySelector(".score");score.textContent=fr(sc);paintGoal(score,sc,goalPath);
+    tiers.forEach(([k])=>{
+      const v=n(state[kind][key][k])/b[k],el=c.querySelector('[data-r="'+k+'"]');
+      el.textContent=fr(v);paintGoal(el,v,goalPath);
+    });
+  }
+  const gi=c.querySelector("[data-goal]");gi.value=targetAt(goalPath)||"";
+  gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
+  tiers.forEach(([k])=>{
+    const i=c.querySelector('[data-k="'+k+'"]');i.value=state[kind][key][k]||"";
+    i.oninput=()=>{state[kind][key][k]=n(i.value);save();up();if(kind==="ooparts")sortOps()};
+  });
+  up();return c;
+}
+function renderSeries(){
+  bdGrid.innerHTML="";notesGrid.innerHTML="";opGrid.innerHTML="";
+  schools.forEach(([k,l])=>{bdGrid.append(series("bd",k,l,base.bd));notesGrid.append(series("notes",k,l,base.notes))});
+  ops.forEach(([k,l])=>opGrid.append(series("ooparts",k,l,base.ooparts,"images/ooparts/"+k+".png")));
+}
+function universalCost(key,people){
+  const d=state.equipment[key];let cost=0;
+  for(let i=0;i<10;i++){const have=n(d.tiers[i+1]),need=equipNeed[i]*people;cost+=Math.max(0,need-have)*universalRate[i]}
+  return cost;
+}
+function maxEquipPeople(key){
+  const d=state.equipment[key],u=n(d.universal);let lo=0,hi=1;
+  while(universalCost(key,hi)<=u&&hi<100000)hi*=2;
+  while(lo+1<hi){const mid=Math.floor((lo+hi)/2);if(universalCost(key,mid)<=u)lo=mid;else hi=mid}
+  return lo;
+}
+function renderEq(){
+  eqGrid.innerHTML="";
+  eq.forEach(([k,l])=>{
+    const d=state.equipment[k],goalPath="equipment."+k,c=document.createElement("div");c.className="card";
+    c.innerHTML='<div class="imgline"><img class="icon" src="images/equipment/'+k+'.png" alt="'+l+'"><div><div class="name">'+l+'</div><div class="caption">代表画像：T10装備</div></div></div>'
+      +'<div class="goalctl"><span>目標</span><input data-goal type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div>'
+      +'<div class="universal"><b>'+l+'の万能設計図</b><input data-u type="number" min="0"></div>'
+      +'<div class="rows"><div class="row equip h"><div>Tier</div><div>通常設計図</div><div>1人分</div><div>万能換算</div></div>'
+      +Array.from({length:10},(_,i)=>'<div class="row equip"><div>T'+(i+1)+'</div><input data-tier="'+(i+1)+'" type="number" min="0"><div class="right muted">'+equipNeed[i]+'</div><div class="right muted">×'+universalRate[i]+'</div></div>').join("")
+      +'</div><div class="calcbox"><div><div class="label">万能設計図を最適に使用した場合</div><b>最大育成可能人数</b></div><strong data-max></strong></div>';
+    const ui=c.querySelector("[data-u]"),gi=c.querySelector("[data-goal]");
+    ui.value=d.universal||"";gi.value=targetAt(goalPath)||"";
+    const up=()=>{const v=maxEquipPeople(k),el=c.querySelector("[data-max]");el.textContent=v+"人";paintGoal(el,v,goalPath)};
+    ui.oninput=()=>{d.universal=n(ui.value);save();up()};
+    gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
+    Array.from({length:10},(_,i)=>i+1).forEach(t=>{
+      const x=c.querySelector('[data-tier="'+t+'"]');x.value=d.tiers[t]||"";
+      x.oninput=()=>{d.tiers[t]=n(x.value);save();up()};
+    });
+    up();eqGrid.append(c);
+  });
+}
+function expCard(title,img,obj,values,needExp,sub,goalPath){
+  const c=document.createElement("div");c.className="card";
+  c.innerHTML='<div class="imgline"><img class="icon" src="'+img+'" alt="'+title+'"><div><div class="name">'+title+'</div><div class="caption">'+sub+'</div></div></div>'
+    +'<div class="goalctl"><span>目標</span><input data-goal type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div>'
+    +'<div class="rows"><div class="row h"><div>等級</div><div>個数</div><div>1個EXP</div><div>小計EXP</div></div>'
+    +tiers.map(([k,l],i)=>'<div class="row"><div>'+l+'</div><input data-k="'+k+'" type="number" min="0"><div class="right muted">'+values[i].toLocaleString()+'</div><div data-sub="'+k+'" class="right ratio"></div></div>').join("")
+    +'</div><div class="calcbox"><div><div class="label">合計EXP <span data-exp></span> / 1人分 '+needExp.toLocaleString()+'</div><b>人数換算</b></div><strong data-people></strong></div>';
+  const gi=c.querySelector("[data-goal]");gi.value=targetAt(goalPath)||"";
+  function up(){
+    const total=expOf(obj,values),people=total/needExp;
+    c.querySelector("[data-exp]").textContent=num(total);
+    const pe=c.querySelector("[data-people]");pe.textContent=fr(people);paintGoal(pe,people,goalPath);
+    tiers.forEach(([k],i)=>c.querySelector('[data-sub="'+k+'"]').textContent=num(n(obj[k])*values[i]));
+  }
+  gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
+  tiers.forEach(([k])=>{
+    const x=c.querySelector('[data-k="'+k+'"]');x.value=obj[k]||"";
+    x.oninput=()=>{obj[k]=n(x.value);save();up()};
+  });
+  up();return c;
+}
+function renderMisc(){
+  miscGrid.innerHTML="";
+  miscGrid.append(expCard("レポート","images/misc/report_superior.png",state.reports,reportExp,reportTarget,"代表画像：最上級レポート","reports"));
+  miscGrid.append(expCard("強化珠","images/misc/enhancement_superior.png",state.stones,stoneExp,stoneTarget,"代表画像：最上級強化珠／1人分＝装備3部位T1→T10最大","stones"));
+  weaponGroups.forEach(([k,l,img])=>miscGrid.append(expCard("固有武器素材・"+l,img,state.weapon[k],weaponExp,weaponTarget,"経験値ボーナス適用済み／固有武器Lv1→50","weapon."+k)));
+
+  const wb=document.createElement("div");wb.className="card";
+  wb.innerHTML='<div class="imgline"><img class="icon" src="images/misc/wb.png" alt="WB"><div><div class="name">WB</div><div class="caption">代表画像1枚／各種類70冊＝1人分</div></div></div>'
+    +'<div class="subgrid">'
+    +["hp","atk","heal"].map(k=>{const l={hp:"HP",atk:"攻撃",heal:"治癒"}[k];return '<div class="subbox"><label>'+l+'</label><input data-wb="'+k+'" type="number" min="0"><div class="goalctl"><span>目標</span><input data-goal="'+k+'" type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div><div class="meta"><span>70 / 人</span><strong data-r="'+k+'"></strong></div></div>'}).join("")
+    +'</div>';
+  ["hp","atk","heal"].forEach(k=>{
+    const x=wb.querySelector('[data-wb="'+k+'"]'),gi=wb.querySelector('[data-goal="'+k+'"]'),r=wb.querySelector('[data-r="'+k+'"]'),goalPath="wb."+k;
+    x.value=state.wb[k]||"";gi.value=targetAt(goalPath)||"";
+    const up=()=>{const v=n(state.wb[k])/70;r.textContent=fr(v);paintGoal(r,v,goalPath)};
+    x.oninput=()=>{state.wb[k]=n(x.value);save();up()};
+    gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
+    up();
+  });
+  miscGrid.append(wb);
+
+  [["credits","クレジット",simpleBase.credits,"images/misc/credit.png"],["secretNotes","秘伝ノート",simpleBase.secretNotes,"images/misc/secret_note.png"],["eligma","カケラ",simpleBase.eligma,null]].forEach(([k,l,b,img])=>{
+    const goalPath="simple."+k,c=document.createElement("div");c.className="mini";
+    c.innerHTML=(img?'<div class="imgline"><img class="icon" src="'+img+'" alt="'+l+'"><div class="name">'+l+'</div></div>':'<div class="name">'+l+'</div>')
+      +'<div class="goalctl"><span>目標</span><input data-goal type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div>'
+      +'<input data-count type="number" min="0"><div class="meta"><span>1人分：'+b.toLocaleString()+'</span><strong data-r></strong></div>';
+    const x=c.querySelector("[data-count]"),gi=c.querySelector("[data-goal]"),o=c.querySelector("[data-r]");
+    x.value=state.simple[k]||"";gi.value=targetAt(goalPath)||"";
+    const up=()=>{const v=n(state.simple[k])/b;o.textContent=fr(v);paintGoal(o,v,goalPath)};
+    x.oninput=()=>{state.simple[k]=n(x.value);save();up()};
+    gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
+    up();miscGrid.append(c);
+  });
+}
 function summary(){
-const leftGroups=[
-["BD",schools.map(([k,l])=>[l,fr(smin(state.bd[k],base.bd))]),true],
-["ノート",schools.map(([k,l])=>[l,fr(smin(state.notes[k],base.notes))]),true],
-["装備",eq.map(([k,l])=>[l,maxEquipPeople(k)+"人"]),true],
-["育成素材",[
-["レポート",fr(expOf(state.reports,reportExp)/reportTarget)],
-["強化珠",fr(expOf(state.stones,stoneExp)/stoneTarget)],
-["クレジット",fr(n(state.simple.credits)/simpleBase.credits)],
-["秘伝ノート",fr(n(state.simple.secretNotes)/simpleBase.secretNotes)],
-["カケラ",fr(n(state.simple.eligma)/simpleBase.eligma)]
-],false],
-["固有武器",weaponGroups.map(([k,l])=>[l,fr(expOf(state.weapon[k],weaponExp)/weaponTarget)]),false],
-["WB",[
-["HP",fr(n(state.wb.hp)/70)],
-["攻撃",fr(n(state.wb.atk)/70)],
-["治癒",fr(n(state.wb.heal)/70)]
-],false]
-];
-const card=([title,items,compact],extra="")=>'<div class="summary-card '+extra+(compact?' compact':'')+'"><div class="summary-title"><span>'+title+'</span><span class="pill">'+items.length+'種</span></div><div class="summary-list">'+items.map(([a,b])=>'<div class="summary-item"><span>'+a+'</span><strong>'+b+'</strong></div>').join("")+'</div></div>';
-const opGroup=["オーパーツ",ops.map(([k,l])=>[l,fr(smin(state.ooparts[k],base.ooparts))]),false];
-summaryGrid.innerHTML='<div class="summary-left">'+leftGroups.map(g=>card(g)).join("")+'</div>'+card(opGroup,"summary-oparts");
+  const leftGroups=[
+    ["BD",schools.map(([k,l])=>{const v=smin(state.bd[k],base.bd);return [l,goalHtml(v,fr(v),"bd."+k)]}),true],
+    ["ノート",schools.map(([k,l])=>{const v=smin(state.notes[k],base.notes);return [l,goalHtml(v,fr(v),"notes."+k)]}),true],
+    ["装備",eq.map(([k,l])=>{const v=maxEquipPeople(k);return [l,goalHtml(v,v+"人","equipment."+k)]}),true],
+    ["育成素材",[
+      ["レポート",(()=>{const v=expOf(state.reports,reportExp)/reportTarget;return goalHtml(v,fr(v),"reports")})()],
+      ["強化珠",(()=>{const v=expOf(state.stones,stoneExp)/stoneTarget;return goalHtml(v,fr(v),"stones")})()],
+      ["クレジット",(()=>{const v=n(state.simple.credits)/simpleBase.credits;return goalHtml(v,fr(v),"simple.credits")})()],
+      ["秘伝ノート",(()=>{const v=n(state.simple.secretNotes)/simpleBase.secretNotes;return goalHtml(v,fr(v),"simple.secretNotes")})()],
+      ["カケラ",(()=>{const v=n(state.simple.eligma)/simpleBase.eligma;return goalHtml(v,fr(v),"simple.eligma")})()]
+    ],false],
+    ["固有武器",weaponGroups.map(([k,l])=>{const v=expOf(state.weapon[k],weaponExp)/weaponTarget;return [l,goalHtml(v,fr(v),"weapon."+k)]}),false],
+    ["WB",[
+      ["HP",(()=>{const v=n(state.wb.hp)/70;return goalHtml(v,fr(v),"wb.hp")})()],
+      ["攻撃",(()=>{const v=n(state.wb.atk)/70;return goalHtml(v,fr(v),"wb.atk")})()],
+      ["治癒",(()=>{const v=n(state.wb.heal)/70;return goalHtml(v,fr(v),"wb.heal")})()]
+    ],false]
+  ];
+  const card=([title,items,compact],extra="")=>'<div class="summary-card '+extra+(compact?' compact':'')+'"><div class="summary-title"><span>'+title+'</span><span class="pill">'+items.length+'種</span></div><div class="summary-list">'+items.map(([a,b])=>'<div class="summary-item"><span>'+a+'</span><strong>'+b+'</strong></div>').join("")+'</div></div>';
+  const opGroup=["オーパーツ",ops.map(([k,l])=>{const v=smin(state.ooparts[k],base.ooparts);return [l,goalHtml(v,fr(v),"ooparts."+k)]}),false];
+  summaryGrid.innerHTML='<div class="summary-left">'+leftGroups.map(g=>card(g)).join("")+'</div>'+card(opGroup,"summary-oparts");
 }
 function sortOps(){const q=opSearch.value.trim().toLowerCase(),s=opSort.value,c=[...opGrid.children];c.forEach(x=>x.style.display=x.dataset.label.toLowerCase().includes(q)?"":"none");c.sort((a,b)=>s==="asc"?+a.dataset.score-+b.dataset.score:s==="desc"?+b.dataset.score-+a.dataset.score:a.dataset.label.localeCompare(b.dataset.label,"ja")).forEach(x=>opGrid.append(x))}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.getElementById(b.dataset.tab).classList.add("active")});
