@@ -53,6 +53,24 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 .goal-met{color:#059669!important}
 .goal-miss{color:#d97706!important}
 .goal-critical{color:#dc2626!important}
+.bounty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(420px,1fr));gap:14px}
+.bounty-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:0 2px 8px #00000008}
+.bounty-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
+.bounty-stage{font-size:12px;font-weight:800;color:var(--blue);background:var(--soft);border:1px solid #bfdbfe;border-radius:999px;padding:4px 8px;white-space:nowrap}
+.bounty-title{font-size:17px;font-weight:800}
+.bounty-section-title{font-size:12px;font-weight:800;color:var(--muted);margin:12px 0 7px;padding-bottom:5px;border-bottom:1px solid var(--line)}
+.bounty-school{display:grid;grid-template-columns:minmax(110px,1fr) 1fr 1fr;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid #f1f5f9}
+.bounty-school:last-child{border-bottom:none}
+.bounty-school-name{font-weight:700;font-size:13px}
+.bounty-stat{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12px}
+.bounty-stat span:first-child{color:var(--muted)}
+.bounty-stat strong{font-size:13px}
+.bounty-oparts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.bounty-opart{display:grid;grid-template-columns:42px minmax(0,1fr);gap:9px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:8px}
+.bounty-opart img{width:42px;height:42px;object-fit:contain}
+.bounty-opart-name{font-size:12px;font-weight:700;line-height:1.35}
+.bounty-opart-value{font-size:13px;font-weight:800;margin-top:3px}
+@media(max-width:700px){.bounty-grid{grid-template-columns:1fr}.bounty-school{grid-template-columns:1fr 1fr}.bounty-school-name{grid-column:1/-1}.bounty-oparts{grid-template-columns:1fr}}
 .target-bulk{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
 .target-bulk-action{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .target-bulk-action input{width:90px;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:right;font-size:14px}
@@ -85,6 +103,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <button class="tab" data-tab="bd">BD</button>
 <button class="tab" data-tab="notes">ノート</button>
 <button class="tab" data-tab="ooparts">オーパーツ</button>
+<button class="tab" data-tab="bounty">指名手配</button>
 <button class="tab" data-tab="equipment">装備</button>
 <button class="tab" data-tab="misc">その他</button>
 <button class="tab" data-tab="targets">目標設定</button>
@@ -102,6 +121,11 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <section id="ooparts" class="section">
 <div class="toolbar"><input id="opSearch" type="search" placeholder="オーパーツ名で検索"><select id="opSort"><option value="name">名前順</option><option value="asc">人数が少ない順</option><option value="desc">人数が多い順</option></select></div>
 <div class="note">オーパーツは簡易的な「○人分相当」です。各系統の最上級素材画像を表示しています。</div><div id="opGrid" class="grid"></div>
+</section>
+
+<section id="bounty" class="section">
+<div class="note">指名手配の獲得期待報酬ごとに、対応するBD・ノート・オーパーツの備蓄状況をまとめています。表示されている素材系統は、画像に出ているレアリティだけでなく下位レアリティも獲得対象として扱います。</div>
+<div id="bountyGrid" class="bounty-grid"></div>
 </section>
 
 <section id="equipment" class="section">
@@ -157,13 +181,20 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.13.5";
+const APP_VERSION="0.14.0";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
 const tiers=[["basic","初級"],["intermediate","中級"],["advanced","上級"],["superior","最上級"]];
 const schools=[["abydos","アビドス"],["gehenna","ゲヘナ"],["trinity","トリニティ"],["millennium","ミレニアム"],["shanhaijing","山海経"],["hyakkiyako","百鬼夜行"],["redwinter","レッドウィンター"],["valkyrie","ヴァルキューレ"],["arius","アリウス"],["highlander","ハイランダー"],["wildhunt","ワイルドハント"],["odyssey","オデュッセイア"]];
 const ops=[["antikythera","アンティキティラ装置"],["voynich","ヴォイニッチ手稿"],["wolfsegg","ヴォルフスエック"],["ether","エーテル"],["crystalhaniwa","水晶埴輪"],["nimrud","ニムルドレンズ"],["nebra","ネブラディスク"],["phaistos","ファイストス円盤"],["mandragora","マンドレイク"],["rohonc","レヒニッツ写本"],["totempole","トーテムポール"],["ancientbattery","古代の電池"],["mysterystone","ミステリーストーン"],["discocolgante","円盤型ペンダント"],["hairgrowingdoll","髪伸び人形"],["ancientmedal","古代文明のメダル"],["goldenfleece","黄金の糸"],["dodecahedron","中空十二面体"],["goldshuttle","黄金シャトル"],["ancientrocket","古代ロケット"]];
+const bountyGroups=[
+  {stage:"10",name:"ハイウェイJ",schools:["gehenna","highlander"],ooparts:["phaistos","mandragora"]},
+  {stage:"10",name:"捨てられた列車J",schools:["trinity","valkyrie"],ooparts:["nebra","crystalhaniwa"]},
+  {stage:"10",name:"襲撃された校舎J",schools:["millennium","arius"],ooparts:["nimrud","rohonc"]},
+  {stage:"07",name:"燃え上がる道路G",schools:["hyakkiyako","shanhaijing","wildhunt"],ooparts:["wolfsegg","voynich"]},
+  {stage:"07",name:"由緒ある屋敷G",schools:["abydos","redwinter","odyssey"],ooparts:["ether","antikythera"]}
+];
 const eq=[["hat","帽子"],["gloves","グローブ"],["shoes","シューズ"],["bag","バッグ"],["badge","バッジ"],["hairpin","ヘアピン"],["charm","お守り"],["watch","腕時計"],["necklace","ネックレス"]];
 const weaponGroups=[["spring","スプリング","images/weapon/spring_superior.png"],["hammer","ハンマー","images/weapon/hammer_superior.png"],["barrel","銃身","images/weapon/barrel_superior.png"],["firingpin","撃針","images/weapon/firingpin_superior.png"]];
 const base={bd:{basic:30,intermediate:30,advanced:30,superior:8},notes:{basic:75,intermediate:75,advanced:75,superior:60},ooparts:{basic:828,intermediate:341,advanced:107,superior:45}};
@@ -194,7 +225,7 @@ if(navigator?.storage!==undefined && state.targetPresetVersion!==1){
   localStorage.setItem(KEY,JSON.stringify(state));
 }
 const n=v=>Math.max(0,Number(v)||0), fr=v=>v===0?"0.00人分":v<.01?"<0.01人分":v.toFixed(2)+"人分", num=v=>Math.round(v).toLocaleString();
-function save(){localStorage.setItem(KEY,JSON.stringify(state));summary()}
+function save(){localStorage.setItem(KEY,JSON.stringify(state));summary();renderBounty()}
 function smin(o,b){return Math.min(...tiers.map(([k])=>n(o[k])/b[k]))}
 function expOf(obj,values){return tiers.reduce((s,[k],i)=>s+n(obj[k])*values[i],0)}
 function targetAt(path){
@@ -334,6 +365,33 @@ function renderMisc(){
     up();miscGrid.append(c);
   });
 }
+function renderBounty(){
+  if(!window.bountyGrid)return;
+  const schoolNames=Object.fromEntries(schools),opNames=Object.fromEntries(ops);
+  bountyGrid.innerHTML=bountyGroups.map(g=>{
+    const schoolRows=g.schools.map(k=>{
+      const bdv=smin(state.bd[k],base.bd),ntv=smin(state.notes[k],base.notes);
+      return '<div class="bounty-school">'
+        +'<div class="bounty-school-name">'+schoolNames[k]+'</div>'
+        +'<div class="bounty-stat"><span>BD</span><strong>'+goalHtml(bdv,fr(bdv),"bd."+k)+'</strong></div>'
+        +'<div class="bounty-stat"><span>ノート</span><strong>'+goalHtml(ntv,fr(ntv),"notes."+k)+'</strong></div>'
+        +'</div>';
+    }).join("");
+    const opRows=g.ooparts.map(k=>{
+      const v=smin(state.ooparts[k],base.ooparts);
+      return '<div class="bounty-opart">'
+        +'<img src="images/ooparts/'+k+'.png" alt="'+opNames[k]+'">'
+        +'<div><div class="bounty-opart-name">'+opNames[k]+'</div><div class="bounty-opart-value">'+goalHtml(v,fr(v),"ooparts."+k)+'</div></div>'
+        +'</div>';
+    }).join("");
+    return '<div class="bounty-card">'
+      +'<div class="bounty-head"><div class="bounty-title">'+g.name+'</div><div class="bounty-stage">'+g.stage+'</div></div>'
+      +'<div class="bounty-section-title">BD・ノート</div>'+schoolRows
+      +'<div class="bounty-section-title">オーパーツ</div><div class="bounty-oparts">'+opRows+'</div>'
+      +'</div>';
+  }).join("");
+}
+
 function renderTargets(){
   const groups=[
     ["BD",schools.map(([k,l])=>["bd."+k,l])],
@@ -656,6 +714,6 @@ function applyImportKey(key,val){
   else if(p[0]==="simple")state.simple[p[1]]=val;
 }
 
-function render(){renderSeries();renderEq();renderMisc();renderTargets();summary();sortOps()}render();
+function render(){renderSeries();renderEq();renderMisc();renderTargets();renderBounty();summary();sortOps()}render();
 </script>
 </body></html>
