@@ -92,7 +92,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </section>
 
 <section id="scan" class="section">
-<div class="note">同じカテゴリのスクショをまとめて選択できます。今回もらったゲーム画面の配置を基準に、右側5列グリッドのアイコン照合＋数字OCRで候補を出します。反映前に必ず一覧で確認できます。カケラは読取対象外です。</div>
+<div class="note">同じカテゴリのスクショをまとめて選択できます。今回もらったゲーム画面の実座標を基準に、右側5列×4行の各スロットを直接切り出し、アイコン照合＋ゲーム内数字フォント照合で候補を出します。反映前に必ず一覧で確認できます。カケラは読取対象外です。</div>
 <div class="scan-wrap">
   <div class="scan-panel">
     <div class="name" style="margin-bottom:10px">スクリーンショット</div>
@@ -104,16 +104,18 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
     <div style="margin-top:12px">
       <label class="caption">画像の種類</label>
       <select id="scanKind" style="width:100%;margin-top:5px">
-        <option value="equipment">装備・万能設計図</option>
+        <option value="reports">レポート</option>
         <option value="bd">BD</option>
         <option value="notes">ノート</option>
         <option value="ooparts">オーパーツ</option>
-        <option value="misc">レポート・強化珠・固有武器素材・WB・秘伝ノート</option>
+        <option value="equipment">装備・万能設計図</option>
+        <option value="stonesweapon">強化珠・固有武器素材</option>
+        <option value="wbsecret">WB・秘伝ノート</option>
       </select>
     </div>
     <div class="scan-actions"><button id="scanAnalyzeBtn" disabled>画像を解析</button><button id="scanApplyBtn" disabled>確認した内容を一括反映</button><button id="scanClearBtn">クリア</button></div>
     <div id="scanStatus" class="scan-status">画像を選択してください。</div>
-    <div class="scan-debug">クレジットは最後に選択した画像の上部表示を読み取ります。オデュッセイアは現在テンプレート不足のため自動判定が弱く、候補一覧で手動選択できるようにしています。</div>
+    <div class="scan-debug">クレジットは最後に選択した画像の上部表示を読み取ります。低信頼の候補は自動反映せず「要確認」にします。現在は画像種別を細かく分け、別カテゴリへの誤判定を抑える方式です。</div>
   </div>
   <div class="scan-panel">
     <img id="scanPreview" class="scan-preview" alt="読取画像プレビュー">
@@ -198,7 +200,13 @@ importFile.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x
 resetBtn.onclick=()=>{if(confirm("入力した素材数をすべて初期化しますか？")){state=initial();save();render()}};
 
 let scanObjectUrl=null,scanFiles=[],scanRows=[],scanWorker=null,templateCache=new Map();
-const SCAN_GRID={x:.533,y:.224,stepX:.0734,stepY:.1455,w:.0705,h:.136,cols:5,rows:5};
+const SCAN_SLOTS=[
+[.5387,.2215,.6301,.3535],[.6238,.2215,.7152,.3535],[.7090,.2215,.8004,.3535],[.7941,.2215,.8855,.3535],[.8793,.2215,.9707,.3535],
+[.5387,.3625,.6301,.4944],[.6238,.3625,.7152,.4944],[.7090,.3625,.8004,.4944],[.7941,.3625,.8855,.4944],[.8793,.3625,.9707,.4944],
+[.5387,.5028,.6301,.6347],[.6238,.5028,.7152,.6347],[.7090,.5028,.8004,.6347],[.7941,.5028,.8855,.6347],[.8793,.5028,.9707,.6347],
+[.5387,.6431,.6301,.7750],[.6238,.6431,.7152,.7750],[.7090,.6431,.8004,.7750],[.7941,.6431,.8855,.7750],[.8793,.6431,.9707,.7750]
+];
+const V7ROOT="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/";
 const V6="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v6/templates/inventory_detail/";
 const V7EQ="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/templates/inventory/equipment/";
 const schoolAsset={abydos:"Abydos",gehenna:"Gehenna",trinity:"Trinity",millennium:"Millennium",shanhaijing:"Shanhaijing",hyakkiyako:"Hyakkiyako",redwinter:"RedWinter",valkyrie:"Valkyrie",arius:"Arius",highlander:"Highlander",wildhunt:"Wildhunt"};
@@ -207,28 +215,31 @@ const eqAsset={hat:"Hat",gloves:"Gloves",shoes:"Shoes",bag:"Bag",badge:"Badge",h
 const tierFileIndex={basic:0,intermediate:1,advanced:2,superior:3};
 function scanCatalog(kind){
   const a=[];
-  const add=(key,label,url)=>a.push({key,label,url});
+  const add=(key,label,url,tier=null)=>a.push({key,label,url,tier});
+  const v7=p=>V7ROOT+"templates/inventory/"+p;
   if(kind==="bd"){
-    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("bd."+k+"."+tk,l+" "+tl,schoolAsset[k]?V6+"tactical_bd/Item_Icon_Material_ExSkill_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png":null)));
+    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("bd."+k+"."+tk,l+" "+tl,schoolAsset[k]?v7("skill_db/Item_Icon_Material_ExSkill_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png"):null,tk)));
   }else if(kind==="notes"){
-    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("notes."+k+"."+tk,l+" "+tl,schoolAsset[k]?V6+"tech_notes/Item_Icon_SkillBook_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png":null)));
+    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("notes."+k+"."+tk,l+" "+tl,schoolAsset[k]?v7("skill_book/Item_Icon_SkillBook_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png"):null,tk)));
   }else if(kind==="ooparts"){
-    ops.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("ooparts."+k+"."+tk,l+" "+tl,V6+"ooparts/Item_Icon_Material_"+opAsset[k]+"_"+tierFileIndex[tk]+".png")));
+    ops.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("ooparts."+k+"."+tk,l+" "+tl,v7("ooparts/Item_Icon_Material_"+opAsset[k]+"_"+tierFileIndex[tk]+".png"),tk)));
   }else if(kind==="equipment"){
     eq.forEach(([k,l])=>{
       const A=eqAsset[k];
-      add("equipment."+k+".universal",l+" 万能設計図",V7EQ+"Equipment_Icon_"+A+"_Useall_Piece.png");
-      for(let t=1;t<=10;t++) add("equipment."+k+".tier"+t,l+" T"+t,V7EQ+"Equipment_Icon_"+A+"_Tier"+t+(t===1?"":"_Piece")+".png");
+      add("equipment."+k+".universal",l+" 万能設計図",v7("equipment/Equipment_Icon_"+A+"_Useall_Piece.png"));
+      for(let t=1;t<=10;t++) add("equipment."+k+".tier"+t,l+" T"+t,v7("equipment/Equipment_Icon_"+A+"_Tier"+t+(t===1?"":"_Piece")+".png"));
     });
-  }else{
-    tiers.forEach(([tk,tl])=>add("reports."+tk,tl+"レポート",V6+"activity_reports/Item_Icon_ExpItem_"+tierFileIndex[tk]+".png"));
-    tiers.forEach(([tk,tl])=>add("stones."+tk,tl+"強化珠",V6+"equipment/Equipment_Icon_Exp_"+tierFileIndex[tk]+".png"));
+  }else if(kind==="reports"){
+    tiers.forEach(([tk,tl])=>add("reports."+tk,tl+"レポート",V6+"activity_reports/Item_Icon_ExpItem_"+tierFileIndex[tk]+".png",tk));
+  }else if(kind==="stonesweapon"){
+    tiers.forEach(([tk,tl])=>add("stones."+tk,tl+"強化珠",V6+"equipment/Equipment_Icon_Exp_"+tierFileIndex[tk]+".png",tk));
     const wg={spring:"A",hammer:"B",barrel:"C",firingpin:"Z"};
-    weaponGroups.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("weapon."+k+"."+tk,l+" "+tl,V6+"equipment/Equipment_Icon_WeaponExpGrowth"+wg[k]+"_"+tierFileIndex[tk]+".png")));
+    weaponGroups.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("weapon."+k+"."+tk,l+" "+tl,V6+"equipment/Equipment_Icon_WeaponExpGrowth"+wg[k]+"_"+tierFileIndex[tk]+".png",tk)));
+  }else if(kind==="wbsecret"){
     add("wb.hp","WB・HP",V6+"ooparts/Item_Icon_WorkBook_PotentialMaxHP.png");
     add("wb.atk","WB・攻撃",V6+"ooparts/Item_Icon_WorkBook_PotentialAttack.png");
     add("wb.heal","WB・治癒",V6+"ooparts/Item_Icon_WorkBook_PotentialHealPower.png");
-    add("simple.secretNotes","秘伝ノート",V6+"tech_notes/Item_Icon_SkillBook_Ultimate_Piece.png");
+    add("simple.secretNotes","秘伝ノート",v7("skill_book/Item_Icon_SkillBook_Ultimate_Piece.png"));
   }
   add("simple.credits","クレジット",null);
   return a;
@@ -236,30 +247,79 @@ function scanCatalog(kind){
 function loadImg(src){
   return new Promise((resolve,reject)=>{const i=new Image();i.crossOrigin="anonymous";i.onload=()=>resolve(i);i.onerror=reject;i.src=src});
 }
-function sourceFeature(src,mode="cell"){
-  const c=document.createElement("canvas"),z=24;c.width=z;c.height=z;const g=c.getContext("2d",{willReadFrequently:true});
+function sourceFeature(src,mode="cell",cropSpec=null){
+  const z=48,c=document.createElement("canvas");c.width=z;c.height=z;const g=c.getContext("2d",{willReadFrequently:true});
   const sw=src.naturalWidth||src.width,sh=src.naturalHeight||src.height;
-  const sx=sw*.12,sy=sh*.04,cw=sw*.76,ch=sh*.70;
-  g.drawImage(src,sx,sy,cw,ch,0,0,z,z);
-  const d=g.getImageData(0,0,z,z).data,v=[];let mean=0;
-  for(let y=1;y<z-1;y++)for(let x=1;x<z-1;x++){
-    const p=(y*z+x)*4,l=.299*d[p]+.587*d[p+1]+.114*d[p+2];
-    const pr=(y*z+x+1)*4,pd=((y+1)*z+x)*4;
-    const lr=.299*d[pr]+.587*d[pr+1]+.114*d[pr+2],ld=.299*d[pd]+.587*d[pd+1]+.114*d[pd+2];
-    const e=(Math.abs(lr-l)+Math.abs(ld-l))/2;v.push(e);mean+=e;
-  }
-  mean/=v.length;let ss=0;for(let i=0;i<v.length;i++){v[i]-=mean;ss+=v[i]*v[i]}const s=Math.sqrt(ss)||1;for(let i=0;i<v.length;i++)v[i]/=s;return v;
+  let l=.15,r=.15,t=.15,b=.15;
+  if(cropSpec){l=cropSpec.left;r=cropSpec.right;t=cropSpec.top;b=cropSpec.bottom}
+  g.drawImage(src,sw*l,sh*t,sw*(1-l-r),sh*(1-t-b),0,0,z,z);
+  return g.getImageData(0,0,z,z).data;
 }
-function simFeature(a,b){let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s}
+function simFeature(a,b){
+  let d=0,n=0;
+  for(let i=0;i<a.length;i+=4){d+=Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]);n+=3}
+  return Math.max(0,1-d/(n*255));
+}
+function scanCropSpec(kind,template=false){
+  if(kind==="notes")return template?{left:.348,right:.4097,top:.2541,bottom:.442}:{left:.3547,right:.4103,top:.2632,bottom:.4474};
+  if(kind==="bd")return template?{left:.295,right:.34,top:.24,bottom:.34}:{left:.30,right:.34,top:.25,bottom:.35};
+  return {left:.18,right:.18,top:.12,bottom:.30};
+}
+function slotTier(slot){
+  const c=document.createElement("canvas");c.width=20;c.height=20;const g=c.getContext("2d",{willReadFrequently:true});
+  const sw=slot.width,sh=slot.height;
+  g.drawImage(slot,sw*27/234,sh*58/190,sw*20/234,sh*20/190,0,0,20,20);
+  const d=g.getImageData(0,0,20,20).data;let R=0,G=0,B=0,N=0;
+  for(let i=0;i<d.length;i+=4){R+=d[i];G+=d[i+1];B+=d[i+2];N++}
+  const v=[R/N,G/N,B/N],pal={basic:[181,203,218],intermediate:[119,176,253],advanced:[237,158,140],superior:[174,93,253]};
+  let best=null,dist=1e9,second=1e9;for(const [k,p] of Object.entries(pal)){const x=Math.hypot(v[0]-p[0],v[1]-p[1],v[2]-p[2]);if(x<dist){second=dist;dist=x;best=k}else if(x<second)second=x}
+  return dist<=80&&second-dist>=4?best:null;
+}
 async function catalogFeatures(kind,onProgress){
   const cat=scanCatalog(kind),usable=cat.filter(x=>x.url);let done=0;
   for(const it of usable){
     if(!templateCache.has(it.url)){
-      try{const img=await loadImg(it.url);templateCache.set(it.url,sourceFeature(img,"template"))}catch{templateCache.set(it.url,null)}
+      try{const img=await loadImg(it.url);templateCache.set(it.url,sourceFeature(img,"template",scanCropSpec(kind,true)))}catch{templateCache.set(it.url,null)}
     }
     done++;if(onProgress)onProgress(done,usable.length);
   }
   return cat;
+}
+let digitTemplates=null;
+async function ensureDigitTemplates(){
+  if(digitTemplates)return digitTemplates;
+  digitTemplates={};
+  for(let d=0;d<=9;d++){
+    const img=await loadImg(V7ROOT+"templates/inventory_count/"+d+".png");
+    const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext("2d").drawImage(img,0,0);
+    const data=c.getContext("2d").getImageData(0,0,c.width,c.height).data,mask=[];
+    for(let i=0;i<data.length;i+=4)mask.push((.299*data[i]+.587*data[i+1]+.114*data[i+2])>=127?1:0);
+    digitTemplates[d]={w:c.width,h:c.height,mask};
+  }
+  return digitTemplates;
+}
+function binaryIou(mask,w,h,tmpl){
+  let inter=0,uni=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const a=mask[y*w+x],tx=Math.min(tmpl.w-1,Math.floor(x*tmpl.w/w)),ty=Math.min(tmpl.h-1,Math.floor(y*tmpl.h/h)),b=tmpl.mask[ty*tmpl.w+tx];
+    if(a&&b)inter++;if(a||b)uni++;
+  }
+  return uni?inter/uni:0;
+}
+async function readSlotCount(slot){
+  const tm=await ensureDigitTemplates(),digits=[],scores=[],margins=[];
+  const ctx=slot.getContext("2d",{willReadFrequently:true});
+  for(let pos=0;pos<6;pos++){
+    const x1=Math.round(slot.width*(55+23*pos)/234),y1=Math.round(slot.height*144/190),x2=Math.round(slot.width*(77+23*pos)/234),y2=Math.round(slot.height*178/190);
+    const w=Math.max(1,x2-x1),hh=Math.max(1,y2-y1),data=ctx.getImageData(x1,y1,w,hh).data,mask=[];let ink=0;
+    for(let i=0;i<data.length;i+=4){const dd=(data[i]-45)**2+(data[i+1]-70)**2+(data[i+2]-99)**2<=12**2?1:0;mask.push(dd);ink+=dd}
+    if(ink<Math.max(2,Math.round(w*hh*.015)))break;
+    const ranked=[];for(let d=0;d<=9;d++)ranked.push([binaryIou(mask,w,hh,tm[d]),d]);ranked.sort((a,b)=>b[0]-a[0]);
+    digits.push(String(ranked[0][1]));scores.push(ranked[0][0]);margins.push(ranked[0][0]-ranked[1][0]);
+  }
+  if(!digits.length)return null;
+  const score=Math.min(...scores),margin=Math.min(...margins);
+  return score>=.70&&margin>=.04?{value:Number(digits.join("")),score,margin}:null;
 }
 function makeCanvasFromImage(img){
   const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext("2d").drawImage(img,0,0);return c;
@@ -284,27 +344,12 @@ async function ensureWorker(){
   await scanWorker.setParameters({tessedit_char_whitelist:"0123456789xXkK,×",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
   return scanWorker;
 }
-function detectQuantities(words,imgW,imgH){
-  const out=[];
-  for(const w of words||[]){
-    const q=parseQtyText(w.text);if(q===null)continue;
-    const cx=(w.bbox.x0+w.bbox.x1)/2,cy=(w.bbox.y0+w.bbox.y1)/2;
-    const nx=cx/imgW,ny=cy/imgH;
-    const col=Math.round((nx-SCAN_GRID.x-SCAN_GRID.w*.52)/SCAN_GRID.stepX);
-    const row=Math.round((ny-SCAN_GRID.y-SCAN_GRID.h*.82)/SCAN_GRID.stepY);
-    if(col<0||col>=5||row<0||row>=5)continue;
-    const expectedX=SCAN_GRID.x+col*SCAN_GRID.stepX+SCAN_GRID.w*.52,expectedY=SCAN_GRID.y+row*SCAN_GRID.stepY+SCAN_GRID.h*.82;
-    if(Math.abs(nx-expectedX)>.045||Math.abs(ny-expectedY)>.06)continue;
-    out.push({row,col,count:q,ocr:w.text,ocrConf:w.confidence||0});
-  }
-  const best=new Map();for(const x of out){const k=x.row+"-"+x.col;if(!best.has(k)||x.ocrConf>best.get(k).ocrConf)best.set(k,x)}return [...best.values()];
-}
-function matchCell(base,row,col,cat){
-  const x=base.width*(SCAN_GRID.x+col*SCAN_GRID.stepX),y=base.height*(SCAN_GRID.y+row*SCAN_GRID.stepY),w=base.width*SCAN_GRID.w,h=base.height*SCAN_GRID.h;
-  const cell=cropCanvas(base,x,y,w,h),f=sourceFeature(cell),scores=[];
-  for(const it of cat){if(!it.url)continue;const tf=templateCache.get(it.url);if(tf)scores.push([simFeature(f,tf),it])}
-  scores.sort((a,b)=>b[0]-a[0]);const a=scores[0],b=scores[1];if(!a)return {best:null,candidates:[],score:0,margin:0};
-  return {best:a[1],candidates:scores.slice(0,5).map(x=>x[1]),score:a[0],margin:a[0]-(b?b[0]:0)};
+function matchCell(slot,cat,kind){
+  const tier=slotTier(slot),f=sourceFeature(slot,"cell",scanCropSpec(kind,false)),scores=[];
+  const pool=tier?cat.filter(it=>!it.tier||it.tier===tier):cat;
+  for(const it of pool){if(!it.url)continue;const tf=templateCache.get(it.url);if(tf)scores.push([simFeature(f,tf),it])}
+  scores.sort((a,b)=>b[0]-a[0]);const a=scores[0],b=scores[1];if(!a)return {best:null,candidates:[],score:0,margin:0,tier};
+  return {best:a[1],candidates:scores.slice(0,5).map(x=>x[1]),score:a[0],margin:a[0]-(b?b[0]:0),tier};
 }
 async function recognizeCredit(base){
   const c=cropCanvas(base,base.width*.525,0,base.width*.17,base.height*.085),w=await ensureWorker();
@@ -312,20 +357,17 @@ async function recognizeCredit(base){
   return vals.length?Math.max(...vals):null;
 }
 function confInfo(score,margin){
-  if(score>.44&&margin>.055)return ["高","high"];if(score>.28&&margin>.022)return ["中","mid"];return ["要確認","low"];
+  if(score>=.80&&margin>=.03)return ["高","high"];if(score>=.68&&margin>=.015)return ["中","mid"];return ["要確認","low"];
 }
 async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
-    const img=await loadImg(url),base=makeCanvasFromImage(img),worker=await ensureWorker();
-    const gx=base.width*.515,gy=base.height*.195,gw=base.width*.405,gh=base.height*.755;
-    const grid=cropCanvas(base,gx,gy,gw,gh),ocr=await worker.recognize(grid);
-    // translate OCR bboxes back to full-image coordinates
-    const words=(ocr.data.words||[]).map(w=>({text:w.text,confidence:w.confidence,bbox:{x0:w.bbox.x0+gx,x1:w.bbox.x1+gx,y0:w.bbox.y0+gy,y1:w.bbox.y1+gy}}));
-    const qs=detectQuantities(words,base.width,base.height),rows=[];
-    for(const q of qs){
-      const m=matchCell(base,q.row,q.col,cat);if(!m.best)continue;
+    const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
+    for(let i=0;i<SCAN_SLOTS.length;i++){
+      const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
+      const count=await readSlotCount(slot);if(!count)continue;
+      const m=matchCell(slot,cat,kind);if(!m.best)continue;
       const [ct,cc]=confInfo(m.score,m.margin);
-      rows.push({key:m.best.key,label:m.best.label,count:q.count,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:q.row,col:q.col});
+      rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
     }
     return {rows,base};
   }finally{URL.revokeObjectURL(url)}
