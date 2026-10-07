@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.2";
+const APP_VERSION="0.9.3";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -217,6 +217,158 @@ const SCAN_SLOTS=Array.from({length:20},(_,i)=>{
 const V7ROOT="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/";
 const NOTE_HASH_BANK={"hyakkiyako.basic":"x/mPfH/H/k/A+A+A8A4A4A9A","hyakkiyako.intermediate":"j+Oe+P+O/E/A/A+I6E4E4A4A","hyakkiyako.advanced":"P/5/8/888c8A8A8w8MoIoAwA","hyakkiyako.superior":"/83+z/57544A5A5g44ywwAQA","redwinter.basic":"MfOf/g/x+7+bmBwA4AwHgPgG","redwinter.intermediate":"+A+A+/50545g9g9g4w4A/A/A","redwinter.advanced":"sA8Y9+79z5/A7I7AxgwA+A/E","redwinter.superior":"4D7x/8/2/j+w8Q+AmAAA8A8Y","trinity.basic":"//zz4D4TzBoAoAwB6H6HB35+","trinity.intermediate":"3/HP4OgukGygygkGouoOHu38","trinity.advanced":"nPcC/g/A+A8g+A/A/A5A8Hfn","trinity.superior":"/e4E/A/A+A5A8A+A+Q2E4P/P","gehenna.basic":"/b+P2AzAwA4AgEwE/m/j/w/4","gehenna.intermediate":"9n8/sAsAAB4BAZAZ+f/P/B/4","gehenna.advanced":"7f7+wAYAADgDAnA38/8/+E/w","gehenna.superior":"Py+g8g8A8AgAgA+A/4/4/8f/","abydos.basic":"eB+E+w/Q+A+g+A+Q8w848g8H","abydos.intermediate":"9D8Q9A9A8B4A8D9o7o7w7H4e","abydos.advanced":"8P4h2g+B4H0BwG3Q/wvDueo4","abydos.superior":"88rGpQ8GwP4DwY9IfjeeY4Tx","millennium.basic":"+4/4/I+I8I4IwI+I+I+I+I+I","millennium.intermediate":"/4/w+Q8R4RwRwR8R8R8R8R8R","millennium.advanced":"3g/g9g5ixihixm5mxmxHxHxn","millennium.superior":"/g/A/M3I2ImImMmMmMmOmPnP","arius.basic":"//+//HDjASA8A2B+DxzA7Azg","arius.intermediate":"8t78/P8A4A4A4A4D7D5y5z4D","arius.advanced":"5/v4+e4A4BwBwDwH2O3kzm4G","arius.superior":"///x/8wMgHgHgPAecauQucgI","shanhaijing.basic":"P8/G/D/g/AtQxxGjsQ0QwHxH","shanhaijing.intermediate":"/x+I4E+G8HQvDzbz5gogg8k8","shanhaijing.superior":"B8H4fw/g+A+A/A8w/B/B+A+B","valkyrie.basic":"jnOE/E/g/g8g8g8g+g/g/A/A","valkyrie.intermediate":"OY+M8N+B+B+B/A/A/A+A/A/A","valkyrie.advanced":"c4484/8f8H8H8E+A8A8A8A+A","valkyrie.superior":"7w74x85+4f5P5D4I4A5A4g8A","highlander.basic":"znvk/g/g/A+g8g5g5w9g8A+A","highlander.intermediate":"nP/I/B/I+A/G/BzGzg7A4A8A","highlander.advanced":"O/8U+H+h8A+c+UeM/A8A0A6A","highlander.superior":"/+548f9H8D8w9I8w8A4A4AoQ","wildhunt.basic":"ABABACATdHdv/+/8/h+H8eQ8","wildhunt.intermediate":"wAYA4AwAwow9x////874/geD","wildhunt.advanced":"AAwAwAgQh0h/j////+3w/B8H","wildhunt.superior":"gAgAgABBDIPvP//+/8/k+P4P","odyssey.basic":"xvyf8f4P4H4D8D8A+A8A8A/A","odyssey.intermediate":"j9v+4/g/wfwP4H4E8A4A0A+A","odyssey.advanced":"HAfA/A9A/g/g/w/w/w/gdgcA","odyssey.superior":"eF+B+B+A/A/A/g/g/g/A/A4Q","secret.superior":"fn7P8H4B8A487czCzGzExwwQ"};
 const DIGIT_EXEMPLARS={"0":["AAAAAAAAAHgAeAH8Bw4OBg4GDgYYBhgEGAxwDHAMcAxwCHA4cDBwMHBwH8AGAAAA","AAAAAAH+Af4DBg4GDgYMBhwGEAYQBnAGcAZwBnAEcBxgHGAcYDhwIHAgfeAfAAAA","AAAAAAAAAAAA/AD8BwYGBg4GDgYOBhgGGAQYDBgMcAxwDHAIcDhwOHBwH8APgAAA","AAAA/AD8Af4DBgMGDgIMAhwCHAIcBnAGcAZwBnAccBxwHGAccDhw4HDgf8AOAAAA"],"1":["AAAAEAAQADAA8ADwD+AP4ADgAOAA4ADAAcABwAHAAcABwAEAAwADAAMAAwACAAAA","AAAAcABwAOAH4AfgH+AAgACAA4ADgAOAA4ADgAOAAwAHAAcABwAHAAcABAAcAAAA","AAAAIAAgACAAYABgD+AP4AHAAcABwAHAAYABgAOAA4ADgAOAA4AOAA4ADgAMAAAA","AAAAEAAQAHAA4ADgH+AD4APgAOAAgACAA4ADgAOAA4ADAAMABwAHAAcABwAcAAAA"],"2":["AAAAAAAAAAAAAHg4eDhx/gMGBgYGBgAGAAYADAAcADAB4AMAAwAOABwAGAB/+AAA","AAAAAAAAAAAAOAA4Af4DBgIGBgYABgAGAAYADAA4AOADwAPABgAMABwAf/gc8AAA","AAAAAAAAAAB4EHgQcf5jBgIGBgZkBmQGAAYADAA4AOADwAPABgAMABwAf/gf8AAA","AAAAAAAAAAAAAHD4cPhh3gMGBgYEBgAEAAQADAAYAPABwAcABwAMABgAfAB/8AAA"],"3":["AAAAAAAAcHhweGH+BwYGBg4GDgYABAAIAPgAeAB4AAwADHAMcDhwOHA4f/APgAAA","AAAAAAAAAAAA+AD4AbwHBg4GDgYIBAAMADgA8ADwADgADAAIcDhwOHA4cHB/wAAA","AAAAAAAAAPgA+AH8BwYOBggECAQADAA4APAAeAB4AAwACHA4cDhwOHBwf8AGAAAA","AAAAAAAAAAAB/AH8Bw4OBg4GDgYADAAIAPAA+AD4ADgADGAIcDhwOHBwefAfgAAA"],"4":["AAAABgAGAB4APgA+AD4AxAEcARwCHAwcEBgQGHA4cDxwPH/8APgA4ADgAOAAwAAA","AAAAAAAAAAAABgAGAD4APABMAEwAjAEMBggOOA44CDgQOH/8f/x//ABwAHAAQAAA","AAAAAAAAfwZ/Bn4OeDwATACMAIwBDAcMBjgIOAg4EDh+/H/8AHAAcABwAEAAQAAA","AAAAAAAGAAYAHgA+AD4AJgDGAQQBBAIcDBwMHBAcEBx//n/+f/wAOAA4ACAA4AAA"],"5":["AAAAAAAAAAAAAAP+A/4CAAYABAAEAA/wD/AOOAgYABgAGAAYABhwEHgwH+AHAAAA","AAAAAAAAAABh/mH+BwAGAA4ADgAOAA/4HngYDBgMAAwADAA4cDhwOHBwf8APAAAA","AAAAAAAAAAAB/gH+AQAGAAYABgAOAA/4DjwIDAgMAAwADAAMcDhwOHhwH8AGAAAA","AAAAAAAAAAAAAAH+Af4DAAIABgAEAAfwB/AOOAwYAAwACAAYABhwGBgwH+APAAAA"],"6":["AAAAAAAAAHgAeAD+BwYGBg4ADgAIABj4HzwYDBgMeAxwDHAIcDhwOHBwH8APAAAA","AAAAAAAAAAAAOAA4AfwDDgYEDAAMAAwACfAeOBwYGBgQGBAYcBhwMBgwH+AHAAAA","AAAAAAAAAAAAfAB8Ac4HBgYCBgIOAAgAGfgePB48GAxwDHAMcAhwCHA4eHAfwAAA","AAAAAAAAAHgAeAH+BwYOBggACAAYABnwHjh4OHg4cDhwOGA4cDBwMHBwH8AGAAAA"],"7":["AAAAAAAAAAAf/h/+AA4ADAA4ADgAcADAAYABAAEABwAOAA4AGAAYABgAcABwAAAA","AAAAAB/+H/4AHgAcABwAOADgAcABwAEAAwADAA4ADAAcABwAEABwAHAAYABgAAAA","AAAAAAAAAAAAAA/+D/4ADgAMCDgIOABwAMAAgACAAYAHAA4ADgAOABgAGABwAAAA","AAAAAAAAAAAf/h/+AAwACAAwADAAQADAAYAHAAcABwAOAAgAGAAYAHAAcABwAAAA"],"8":["AAAAAAAAAHgAeAH8BwYOBg4GDgYODAc4B/AOOA44GDxwDHAIcDhwOHBwf8APAAAA","AAAAAAAAAAAAOAA4AfwDDgYGBgQGDAYMBhgD8A44GBgYCBgIGBhwGBgwH+AHAAAA","AAAAAAAAAAAA/gD+AYYHBgYGBgYGBgcMB/gPOA84GAwYDHAMcAhwCHA4HvAPgAAA","AAAAAAAAAAAAAAH8AfwDDgYGBgQGDAYYBhgH8AY4CBgYGBAYEBhwGHgwH+APwAAA"],"9":["AAAAAAAAAHgAeAH8BwYOBg4CDgIOBg4GDg4PPA88B8wADAA4cDhwOHBwH8APAAAA","AAAAAAAAAAAAAAD4APgD3AYMBgYMBgwEDAQMDAwcD/wDGAAYABgAEHAweOAfwAAA","AAAAAAAAAAAA+AD4B7wOBA4GDgYYBhgGGAwYPBg8H/wHiAA4ADAAMGBwcMB/gAAA","AAAAAAAAAAAAfAB8Ac4HBgYCBgIOAg4GDgYODg4OD/4HjAAMAAgACHA4eHAfwAAA"]}
+const V6="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v6/templates/inventory_detail/";
+const V7EQ="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/templates/inventory/equipment/";
+const schoolAsset={abydos:"Abydos",gehenna:"Gehenna",trinity:"Trinity",millennium:"Millennium",shanhaijing:"Shanhaijing",hyakkiyako:"Hyakkiyako",redwinter:"RedWinter",valkyrie:"Valkyrie",arius:"Arius",highlander:"Highlander",wildhunt:"Wildhunt"};
+const opAsset={antikythera:"Antikythera",voynich:"Voynich",wolfsegg:"Wolfsegg",ether:"Ether",crystalhaniwa:"CrystalHaniwa",nimrud:"Nimrud",nebra:"Nebra",phaistos:"Phaistos",mandragora:"Mandragora",rohonc:"Rohonc",totempole:"TotemPole",ancientbattery:"Baghdad",mysterystone:"WinniStone",discocolgante:"DiscoColgante",hairgrowingdoll:"Kikuko",ancientmedal:"AtlantisMedal",goldenfleece:"GoldenFleece",dodecahedron:"RomanDice",goldshuttle:"Quimbaya",ancientrocket:"Rocket"};
+const eqAsset={hat:"Hat",gloves:"Gloves",shoes:"Shoes",bag:"Bag",badge:"Badge",hairpin:"Hairpin",charm:"Charm",watch:"Watch",necklace:"Necklace"};
+const tierFileIndex={basic:0,intermediate:1,advanced:2,superior:3};
+function scanCatalog(kind){
+  const a=[];
+  const add=(key,label,url,tier=null)=>a.push({key,label,url,tier});
+  const v7=p=>V7ROOT+"templates/inventory/"+p;
+  if(kind==="bd"){
+    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("bd."+k+"."+tk,l+" "+tl,schoolAsset[k]?v7("skill_db/Item_Icon_Material_ExSkill_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png"):null,tk)));
+  }else if(kind==="notes"){
+    schools.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("notes."+k+"."+tk,l+" "+tl,schoolAsset[k]?v7("skill_book/Item_Icon_SkillBook_"+schoolAsset[k]+"_"+tierFileIndex[tk]+".png"):null,tk)));add("simple.secretNotes","秘伝ノート",v7("skill_book/Item_Icon_SkillBook_Ultimate_Piece.png"),"superior");
+  }else if(kind==="ooparts"){
+    ops.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("ooparts."+k+"."+tk,l+" "+tl,v7("ooparts/Item_Icon_Material_"+opAsset[k]+"_"+tierFileIndex[tk]+".png"),tk)));
+  }else if(kind==="equipment"){
+    eq.forEach(([k,l])=>{
+      const A=eqAsset[k];
+      add("equipment."+k+".universal",l+" 万能設計図",v7("equipment/Equipment_Icon_"+A+"_Useall_Piece.png"));
+      for(let t=1;t<=10;t++) add("equipment."+k+".tier"+t,l+" T"+t,v7("equipment/Equipment_Icon_"+A+"_Tier"+t+(t===1?"":"_Piece")+".png"));
+    });
+  }else if(kind==="reports"){
+    tiers.forEach(([tk,tl])=>add("reports."+tk,tl+"レポート",V6+"activity_reports/Item_Icon_ExpItem_"+tierFileIndex[tk]+".png",tk));
+  }else if(kind==="stonesweapon"){
+    tiers.forEach(([tk,tl])=>add("stones."+tk,tl+"強化珠",V6+"equipment/Equipment_Icon_Exp_"+tierFileIndex[tk]+".png",tk));
+    const wg={spring:"A",hammer:"B",barrel:"C",firingpin:"Z"};
+    weaponGroups.forEach(([k,l])=>tiers.forEach(([tk,tl])=>add("weapon."+k+"."+tk,l+" "+tl,V6+"equipment/Equipment_Icon_WeaponExpGrowth"+wg[k]+"_"+tierFileIndex[tk]+".png",tk)));
+  }else if(kind==="wbsecret"){
+    add("wb.hp","WB・HP",V6+"ooparts/Item_Icon_WorkBook_PotentialMaxHP.png");
+    add("wb.atk","WB・攻撃",V6+"ooparts/Item_Icon_WorkBook_PotentialAttack.png");
+    add("wb.heal","WB・治癒",V6+"ooparts/Item_Icon_WorkBook_PotentialHealPower.png");
+    add("simple.secretNotes","秘伝ノート",v7("skill_book/Item_Icon_SkillBook_Ultimate_Piece.png"));
+  }
+  add("simple.credits","クレジット",null);
+  return a;
+}
+function loadImg(src){
+  return new Promise((resolve,reject)=>{const i=new Image();i.crossOrigin="anonymous";i.onload=()=>resolve(i);i.onerror=reject;i.src=src});
+}
+function sourceFeature(src,mode="cell",cropSpec=null){
+  const z=48,c=document.createElement("canvas");c.width=z;c.height=z;const g=c.getContext("2d",{willReadFrequently:true});
+  const sw=src.naturalWidth||src.width,sh=src.naturalHeight||src.height;
+  let l=.15,r=.15,t=.15,b=.15;
+  if(cropSpec){l=cropSpec.left;r=cropSpec.right;t=cropSpec.top;b=cropSpec.bottom}
+  g.drawImage(src,sw*l,sh*t,sw*(1-l-r),sh*(1-t-b),0,0,z,z);
+  return g.getImageData(0,0,z,z).data;
+}
+function simFeature(a,b){
+  let diff=0,n=0,sa=0,sb=0,lumA=[],lumB=[];
+  const len=Math.min(a.length,b.length);
+  for(let i=0;i<len;i+=4){
+    diff+=Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]);n+=3;
+    const la=.299*a[i]+.587*a[i+1]+.114*a[i+2],lb=.299*b[i]+.587*b[i+1]+.114*b[i+2];
+    lumA.push(la);lumB.push(lb);sa+=la;sb+=lb;
+  }
+  if(!lumA.length)return 0;
+  const ma=sa/lumA.length,mb=sb/lumB.length;let cov=0,va=0,vb=0;
+  for(let i=0;i<lumA.length;i++){const da=lumA[i]-ma,db=lumB[i]-mb;cov+=da*db;va+=da*da;vb+=db*db}
+  const ncc=(va>0&&vb>0)?cov/Math.sqrt(va*vb):0;
+  const nccScore=Math.max(0,Math.min(1,(ncc+1)/2));
+  const diffScore=Math.max(0,1-diff/(n*255));
+  return Math.max(0,Math.min(1,.62*nccScore+.38*diffScore));
+}
+function scanCropSpec(kind,template=false){
+  if(kind==="notes")return template?{left:.348,right:.4097,top:.2541,bottom:.442}:{left:.3547,right:.4103,top:.2632,bottom:.4474};
+  if(kind==="bd")return template?{left:.295,right:.34,top:.24,bottom:.34}:{left:.30,right:.34,top:.25,bottom:.35};
+  return {left:.18,right:.18,top:.12,bottom:.30};
+}
+function slotTier(slot){
+  const c=document.createElement("canvas");c.width=30;c.height=20;const g=c.getContext("2d",{willReadFrequently:true});
+  const sw=slot.width,sh=slot.height;
+  g.drawImage(slot,sw*.10,sh*.35,sw*.15,sh*.15,0,0,c.width,c.height);
+  const d=g.getImageData(0,0,c.width,c.height).data,rs=[],gs=[],bs=[];
+  for(let i=0;i<d.length;i+=4){rs.push(d[i]);gs.push(d[i+1]);bs.push(d[i+2])}
+  const med=v=>{v.sort((a,b)=>a-b);return v[Math.floor(v.length/2)]||0};
+  const rgb=[med(rs),med(gs),med(bs)],pal={basic:[181,203,218],intermediate:[119,176,253],advanced:[237,158,140],superior:[174,93,253]};
+  const ds=Object.entries(pal).map(([k,p])=>[k,Math.hypot(rgb[0]-p[0],rgb[1]-p[1],rgb[2]-p[2])]).sort((a,b)=>a[1]-b[1]);
+  return ds[0][1]<=78&&(ds[1][1]-ds[0][1])>=5?ds[0][0]:null;
+}
+async function catalogFeatures(kind,onProgress){
+  const cat=scanCatalog(kind),usable=cat.filter(x=>x.url);let done=0;
+  for(const it of usable){
+    if(!templateCache.has(it.url)){
+      try{const img=await loadImg(it.url);templateCache.set(it.url,sourceFeature(img,"template",scanCropSpec(kind,true)))}catch{templateCache.set(it.url,null)}
+    }
+    done++;if(onProgress)onProgress(done,usable.length);
+  }
+  return cat;
+}
+let digitTemplates=null;
+async function ensureDigitTemplates(){
+  if(digitTemplates)return digitTemplates;
+  digitTemplates={};
+  for(let d=0;d<=9;d++){
+    const img=await loadImg(V7ROOT+"templates/inventory_count/"+d+".png");
+    const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext("2d").drawImage(img,0,0);
+    const data=c.getContext("2d").getImageData(0,0,c.width,c.height).data,mask=[];
+    for(let i=0;i<data.length;i+=4)mask.push((.299*data[i]+.587*data[i+1]+.114*data[i+2])>=127?1:0);
+    digitTemplates[d]={w:c.width,h:c.height,mask};
+  }
+  return digitTemplates;
+}
+function binaryIou(mask,w,h,tmpl){
+  let inter=0,uni=0;
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const a=mask[y*w+x],tx=Math.min(tmpl.w-1,Math.floor(x*tmpl.w/w)),ty=Math.min(tmpl.h-1,Math.floor(y*tmpl.h/h)),b=tmpl.mask[ty*tmpl.w+tx];
+    if(a&&b)inter++;if(a||b)uni++;
+  }
+  return uni?inter/uni:0;
+}
+async function readSlotCount(slot){
+  const tm=await ensureDigitTemplates(),digits=[],scores=[],margins=[];
+  const ctx=slot.getContext("2d",{willReadFrequently:true});
+  for(let pos=0;pos<6;pos++){
+    const x1=Math.round(slot.width*(55+23*pos)/234),y1=Math.round(slot.height*144/190),x2=Math.round(slot.width*(77+23*pos)/234),y2=Math.round(slot.height*178/190);
+    const w=Math.max(1,x2-x1),hh=Math.max(1,y2-y1),data=ctx.getImageData(x1,y1,w,hh).data,mask=[];let ink=0;
+    for(let i=0;i<data.length;i+=4){const dd=(data[i]-45)**2+(data[i+1]-70)**2+(data[i+2]-99)**2<=12**2?1:0;mask.push(dd);ink+=dd}
+    if(ink<Math.max(2,Math.round(w*hh*.015)))break;
+    const ranked=[];for(let d=0;d<=9;d++)ranked.push([binaryIou(mask,w,hh,tm[d]),d]);ranked.sort((a,b)=>b[0]-a[0]);
+    digits.push(String(ranked[0][1]));scores.push(ranked[0][0]);margins.push(ranked[0][0]-ranked[1][0]);
+  }
+  if(!digits.length)return null;
+  const score=Math.min(...scores),margin=Math.min(...margins);
+  return score>=.70&&margin>=.04?{value:Number(digits.join("")),score,margin}:null;
+}
+function makeCanvasFromImage(img){
+  const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;c.getContext("2d").drawImage(img,0,0);return c;
+}
+function cropCanvas(base,x,y,w,h){
+  const c=document.createElement("canvas");c.width=Math.max(1,Math.round(w));c.height=Math.max(1,Math.round(h));c.getContext("2d").drawImage(base,x,y,w,h,0,0,c.width,c.height);return c;
+}
+function parseQtyText(t){
+  t=String(t||"").replace(/[Oo]/g,"0").replace(/\s/g,"").replace(/,/g,"");
+  const m=t.match(/[xX×]?(\d+(?:\.\d+)?)([kK])?/);if(!m)return null;
+  let v=Number(m[1]);if(!Number.isFinite(v))return null;if(m[2])v*=1000;return Math.round(v);
+}
+async function ensureTesseract(){
+  if(window.Tesseract)return;
+  scanStatus.textContent="所持数の数字を読み取る準備をしています…";
+  await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});
+}
+async function ensureWorker(){
+  await ensureTesseract();
+  if(scanWorker)return scanWorker;
+  scanWorker=await Tesseract.createWorker("eng",1,{logger:m=>{if(m.status==="recognizing text")scanStatus.textContent="所持数を読み取り中… "+Math.round((m.progress||0)*100)+"%"}});
+  await scanWorker.setParameters({tessedit_char_whitelist:"0123456789xXkK,×",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
+  return scanWorker;
+}
+
+
+
 let empDigitDecoded=null;
 function empiricalDigitMeans(){
   if(empDigitDecoded)return empDigitDecoded;
