@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.13";
+const APP_VERSION="0.9.14";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -446,19 +446,37 @@ function normalizeDigitComponent(comp,mask,w,h){
   return out;
 }
 function classifyEmpiricalDigit(norm){return classifyDigitEmpirical(norm)}
-function readConnectedCount(slot){
+function connectedCountDigitComponents(slot){
   const sw=slot.width,sh=slot.height,d=slot.getContext("2d",{willReadFrequently:true}).getImageData(0,0,sw,sh).data,mask=new Uint8Array(sw*sh);
   for(let p=0,i=0;i<d.length;i+=4,p++){
     const dr=d[i]-45,dg=d[i+1]-70,db=d[i+2]-99;
     mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
-    const y=Math.floor(p/sw),x=p%sw;if(y<sh*.77||x<sw*.35)mask[p]=0;
+    const y=Math.floor(p/sw),x=p%sw;
+    if(y<sh*.77||x<sw*.35)mask[p]=0;
   }
-  let comps=connectedComponents(mask,sw,sh).filter(c=>c.area>=18&&c.h>=10&&c.w>=4).sort((a,b)=>a.minx-b.minx);
-  if(comps.length<2)return null;
-  comps=comps.slice(1); // leading "x"
+
+  // 「×」は数字より背が低く、カード下端などのノイズは横に長い。
+  // 先頭成分を固定で捨てず、数字らしい寸法の成分だけを拾う。
+  // これで「×739 → 2739」のように×の一部を2として読む誤認を防ぐ。
+  const minArea=Math.max(12,Math.round(sw*sh*.0014));
+  const comps=connectedComponents(mask,sw,sh)
+    .filter(c=>
+      c.area>=minArea &&
+      c.h>=sh*.135 && c.h<=sh*.22 &&
+      c.w>=sw*.03 && c.w<=sw*.14
+    )
+    .sort((a,b)=>a.minx-b.minx);
+  return {mask,comps};
+}
+function readConnectedCount(slot){
+  const {mask,comps}=connectedCountDigitComponents(slot),sw=slot.width,sh=slot.height;
   if(!comps.length||comps.length>6)return null;
   const digits=[],scores=[],margins=[];
-  for(const c of comps){const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyEmpiricalDigit(norm);if(!r.digit||r.score<.22)return null;digits.push(r.digit);scores.push(r.score);margins.push(r.margin)}
+  for(const c of comps){
+    const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyEmpiricalDigit(norm);
+    if(!r.digit||r.score<.22)return null;
+    digits.push(r.digit);scores.push(r.score);margins.push(r.margin);
+  }
   const value=Number(digits.join(""));if(!Number.isFinite(value))return null;
   return {value,conf:Math.min(...scores)*100,text:String(value),margin:Math.min(...margins)};
 }
@@ -582,29 +600,6 @@ async function analyzeReports(base,fileIndex){
   }
   return rows;
 }
-function noteCountDigitLength(slot){
-  const sw=slot.width,sh=slot.height;
-  const d=slot.getContext("2d",{willReadFrequently:true}).getImageData(0,0,sw,sh).data;
-  const mask=new Uint8Array(sw*sh);
-  for(let p=0,i=0;i<d.length;i+=4,p++){
-    const dr=d[i]-45,dg=d[i+1]-70,db=d[i+2]-99;
-    mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
-    const y=Math.floor(p/sw),x=p%sw;
-    if(y<sh*.77||x<sw*.35)mask[p]=0;
-  }
-  const digits=connectedComponents(mask,sw,sh)
-    .filter(c=>c.area>=18&&c.h>=13&&c.w>=4&&c.w<=14);
-  return digits.length>=1&&digits.length<=6?digits.length:null;
-}
-function correctNoteCountByLength(slot,count){
-  if(!count||count.value==null)return count;
-  const digitLen=noteCountDigitLength(slot);
-  if(!digitLen)return count;
-  const raw=String(count.value);
-  if(raw.length<=digitLen)return {...count,rawValue:count.value,corrected:false};
-  const fixed=raw.slice(-digitLen);
-  return {...count,value:Number(fixed),text:fixed,rawValue:count.value,corrected:true};
-}
 async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
     const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
@@ -615,7 +610,6 @@ async function analyzeOne(file,fileIndex,kind,cat){
       const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
       let count=(kind==="notes"||kind==="bd")?readConnectedCount(slot):counts.get(i);
       if(!count||count.value<0||count.value>999999)continue;
-      if(kind==="notes"||kind==="bd")count=correctNoteCountByLength(slot,count);
       const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
       const [ct0,cc0]=confInfo(kind,m.score,m.margin);
       const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
