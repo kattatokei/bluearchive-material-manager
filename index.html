@@ -52,6 +52,17 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 .goal-met{color:#059669!important}
 .goal-miss{color:#d97706!important}
 .goal-critical{color:#dc2626!important}
+.target-bulk{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+.target-bulk-action{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.target-bulk-action input{width:90px;border:1px solid var(--line);border-radius:9px;padding:8px;text-align:right;font-size:14px}
+.target-legend{display:flex;gap:14px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:12px;font-weight:700}
+.target-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.target-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+.target-card-title{font-weight:800;margin-bottom:10px}
+.target-list{display:grid;gap:7px}
+.target-row{display:grid;grid-template-columns:minmax(120px,1fr) 90px 36px;gap:8px;align-items:center;font-size:13px}
+.target-row input{width:100%;border:1px solid var(--line);border-radius:9px;padding:7px 8px;text-align:right;font-size:13px}
+@media(max-width:700px){.target-bulk{align-items:flex-start;flex-direction:column}.target-grid{grid-template-columns:1fr}}
 .gpt-wrap{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(0,1.1fr);gap:14px;align-items:start}
 .gpt-panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
 .gpt-textarea{width:100%;min-height:360px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#fbfdff;color:var(--text)}
@@ -75,6 +86,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <button class="tab" data-tab="ooparts">オーパーツ</button>
 <button class="tab" data-tab="equipment">装備</button>
 <button class="tab" data-tab="misc">その他</button>
+<button class="tab" data-tab="targets">目標設定</button>
 <button class="tab" data-tab="gptimport">GPT取込</button>
 </div>
 <div class="spacer"></div><button id="exportBtn">JSON書き出し</button><label class="filebtn">JSON読み込み<input id="importFile" type="file" accept=".json,application/json"></label><button id="resetBtn">全データ初期化</button>
@@ -99,6 +111,21 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <section id="misc" class="section">
 <div class="note">レポート・強化珠・固有武器素材は「個数」を入力するとEXPへ自動換算します。固有武器素材は経験値ボーナス適用済み（15 / 75 / 300 / 1,500 EXP）として計算します。</div>
 <div id="miscGrid" class="grid"></div>
+</section>
+
+<section id="targets" class="section">
+<div class="note">各素材の備蓄目標を「何人分」で設定します。初期値はすべて1人分です。概要・各素材画面の人数表記は、この目標に応じて色分けされます。</div>
+<div class="target-bulk">
+  <div><b>一括設定</b><div class="caption">全素材の目標を同じ人数に変更します。</div></div>
+  <div class="target-bulk-action"><input id="targetBulkValue" type="number" min="0" step="0.1" value="1"><span>人分</span><button id="targetBulkApply">全素材に適用</button></div>
+</div>
+<div class="target-legend">
+  <span class="goal-critical">● 1人分未満</span>
+  <span class="goal-miss">● 目標未満</span>
+  <span class="goal-met">● 目標以上</span>
+  <span class="goal-over">● 目標の2倍以上</span>
+</div>
+<div id="targetGrid" class="target-grid"></div>
 </section>
 
 <section id="gptimport" class="section">
@@ -129,7 +156,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.12.1";
+const APP_VERSION="0.13.0";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -146,20 +173,25 @@ const weaponExp=[15,75,300,1500], weaponTarget=26280;
 const simpleBase={credits:95430000,secretNotes:3,eligma:3400};
 const emptyT=()=>({basic:0,intermediate:0,advanced:0,superior:0});
 const emptyEq=()=>({universal:0,tiers:Object.fromEntries(Array.from({length:10},(_,i)=>[i+1,0]))});
-const emptyTargets=()=>({
-  bd:Object.fromEntries(schools.map(([k])=>[k,0])),
-  notes:Object.fromEntries(schools.map(([k])=>[k,0])),
-  ooparts:Object.fromEntries(ops.map(([k])=>[k,0])),
-  equipment:Object.fromEntries(eq.map(([k])=>[k,0])),
-  reports:0,stones:0,
-  weapon:Object.fromEntries(weaponGroups.map(([k])=>[k,0])),
-  wb:{hp:0,atk:0,heal:0},
-  simple:{credits:0,secretNotes:0,eligma:0}
+const defaultTargets=()=>({
+  bd:Object.fromEntries(schools.map(([k])=>[k,1])),
+  notes:Object.fromEntries(schools.map(([k])=>[k,1])),
+  ooparts:Object.fromEntries(ops.map(([k])=>[k,1])),
+  equipment:Object.fromEntries(eq.map(([k])=>[k,1])),
+  reports:1,stones:1,
+  weapon:Object.fromEntries(weaponGroups.map(([k])=>[k,1])),
+  wb:{hp:1,atk:1,heal:1},
+  simple:{credits:1,secretNotes:1,eligma:1}
 });
-const initial=()=>({version:2,bd:Object.fromEntries(schools.map(([k])=>[k,emptyT()])),notes:Object.fromEntries(schools.map(([k])=>[k,emptyT()])),ooparts:Object.fromEntries(ops.map(([k])=>[k,emptyT()])),equipment:Object.fromEntries(eq.map(([k])=>[k,emptyEq()])),reports:emptyT(),stones:emptyT(),weapon:Object.fromEntries(weaponGroups.map(([k])=>[k,emptyT()])),wb:{hp:0,atk:0,heal:0},simple:{credits:0,secretNotes:0,eligma:0},targets:emptyTargets()});
+const initial=()=>({version:2,targetPresetVersion:1,bd:Object.fromEntries(schools.map(([k])=>[k,emptyT()])),notes:Object.fromEntries(schools.map(([k])=>[k,emptyT()])),ooparts:Object.fromEntries(ops.map(([k])=>[k,emptyT()])),equipment:Object.fromEntries(eq.map(([k])=>[k,emptyEq()])),reports:emptyT(),stones:emptyT(),weapon:Object.fromEntries(weaponGroups.map(([k])=>[k,emptyT()])),wb:{hp:0,atk:0,heal:0},simple:{credits:0,secretNotes:0,eligma:0},targets:defaultTargets()});
 function deepMerge(a,b){for(const k in b){if(b[k]&&typeof b[k]==="object"&&!Array.isArray(b[k])){a[k]??={};deepMerge(a[k],b[k])}else a[k]=b[k]}return a}
 function migrateOld(o){const n=initial();if(!o||typeof o!=="object")return n;["bd","notes","ooparts"].forEach(k=>{if(o[k])deepMerge(n[k],o[k])});if(o.equipment){eq.forEach(([k])=>{if(typeof o.equipment[k]==="number")n.equipment[k].tiers[10]=o.equipment[k];else if(o.equipment[k]&&typeof o.equipment[k]==="object")deepMerge(n.equipment[k],o.equipment[k])})}if(o.misc){n.wb.hp=Number(o.misc.wbHp)||0;n.wb.atk=Number(o.misc.wbAtk)||0;n.wb.heal=Number(o.misc.wbHeal)||0;n.simple.credits=Number(o.misc.credits)||0;n.simple.secretNotes=Number(o.misc.secretNotes)||0;n.simple.eligma=Number(o.misc.eligma)||0}return n}
 let state=(()=>{try{const v2=localStorage.getItem(KEY);if(v2)return deepMerge(initial(),JSON.parse(v2));const old=localStorage.getItem(OLDKEY);return old?migrateOld(JSON.parse(old)):initial()}catch{return initial()}})();
+if(navigator?.storage!==undefined && state.targetPresetVersion!==1){
+  state.targets=defaultTargets();
+  state.targetPresetVersion=1;
+  localStorage.setItem(KEY,JSON.stringify(state));
+}
 const n=v=>Math.max(0,Number(v)||0), fr=v=>v===0?"0.00人分":v<.01?"<0.01人分":v.toFixed(2)+"人分", num=v=>Math.round(v).toLocaleString();
 function save(){localStorage.setItem(KEY,JSON.stringify(state));summary()}
 function smin(o,b){return Math.min(...tiers.map(([k])=>n(o[k])/b[k]))}
@@ -192,7 +224,6 @@ function series(kind,key,label,b,img){
   const goalPath=kind+"."+key;
   c.innerHTML=(img?'<div class="imgline"><img class="icon" src="'+img+'" alt="'+label+'"><div class="caption">最上級素材</div></div>':'')
     +'<div class="head"><div class="name">'+label+'</div><div class="score"></div></div>'
-    +'<div class="goalctl"><span>目標</span><input data-goal type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div>'
     +'<div class="rows"><div class="row h"><div>等級</div><div>所持数</div><div>1人分</div><div>人数換算</div></div>'
     +tiers.map(([k,l])=>'<div class="row"><div>'+l+'</div><input data-k="'+k+'" type="number" min="0"><div class="right muted">'+b[k].toLocaleString()+'</div><div data-r="'+k+'" class="right ratio"></div></div>').join("")
     +'</div>';
@@ -205,8 +236,6 @@ function series(kind,key,label,b,img){
       el.textContent=fr(v);paintGoal(el,v,goalPath);
     });
   }
-  const gi=c.querySelector("[data-goal]");gi.value=targetAt(goalPath)||"";
-  gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
   tiers.forEach(([k])=>{
     const i=c.querySelector('[data-k="'+k+'"]');i.value=state[kind][key][k]||"";
     i.oninput=()=>{state[kind][key][k]=n(i.value);save();up();if(kind==="ooparts")sortOps()};
@@ -234,16 +263,14 @@ function renderEq(){
   eq.forEach(([k,l])=>{
     const d=state.equipment[k],goalPath="equipment."+k,c=document.createElement("div");c.className="card";
     c.innerHTML='<div class="imgline"><img class="icon" src="images/equipment/'+k+'.png" alt="'+l+'"><div><div class="name">'+l+'</div><div class="caption">代表画像：T10装備</div></div></div>'
-      +'<div class="goalctl"><span>目標</span><input data-goal type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div>'
       +'<div class="universal"><b>'+l+'の万能設計図</b><input data-u type="number" min="0"></div>'
       +'<div class="rows"><div class="row equip h"><div>Tier</div><div>通常設計図</div><div>1人分</div><div>万能換算</div></div>'
       +Array.from({length:10},(_,i)=>'<div class="row equip"><div>T'+(i+1)+'</div><input data-tier="'+(i+1)+'" type="number" min="0"><div class="right muted">'+equipNeed[i]+'</div><div class="right muted">×'+universalRate[i]+'</div></div>').join("")
       +'</div><div class="calcbox"><div><div class="label">万能設計図を最適に使用した場合</div><b>最大育成可能人数</b></div><strong data-max></strong></div>';
-    const ui=c.querySelector("[data-u]"),gi=c.querySelector("[data-goal]");
-    ui.value=d.universal||"";gi.value=targetAt(goalPath)||"";
+    const ui=c.querySelector("[data-u]");
+    ui.value=d.universal||"";
     const up=()=>{const v=maxEquipPeople(k),el=c.querySelector("[data-max]");el.textContent=v+"人";paintGoal(el,v,goalPath)};
     ui.oninput=()=>{d.universal=n(ui.value);save();up()};
-    gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
     Array.from({length:10},(_,i)=>i+1).forEach(t=>{
       const x=c.querySelector('[data-tier="'+t+'"]');x.value=d.tiers[t]||"";
       x.oninput=()=>{d.tiers[t]=n(x.value);save();up()};
@@ -254,18 +281,15 @@ function renderEq(){
 function expCard(title,img,obj,values,needExp,sub,goalPath){
   const c=document.createElement("div");c.className="card";
   c.innerHTML='<div class="imgline"><img class="icon" src="'+img+'" alt="'+title+'"><div><div class="name">'+title+'</div><div class="caption">'+sub+'</div></div></div>'
-    +'<div class="goalctl"><span>目標</span><input data-goal type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div>'
     +'<div class="rows"><div class="row h"><div>等級</div><div>個数</div><div>1個EXP</div><div>小計EXP</div></div>'
     +tiers.map(([k,l],i)=>'<div class="row"><div>'+l+'</div><input data-k="'+k+'" type="number" min="0"><div class="right muted">'+values[i].toLocaleString()+'</div><div data-sub="'+k+'" class="right ratio"></div></div>').join("")
     +'</div><div class="calcbox"><div><div class="label">合計EXP <span data-exp></span> / 1人分 '+needExp.toLocaleString()+'</div><b>人数換算</b></div><strong data-people></strong></div>';
-  const gi=c.querySelector("[data-goal]");gi.value=targetAt(goalPath)||"";
   function up(){
     const total=expOf(obj,values),people=total/needExp;
     c.querySelector("[data-exp]").textContent=num(total);
     const pe=c.querySelector("[data-people]");pe.textContent=fr(people);paintGoal(pe,people,goalPath);
     tiers.forEach(([k],i)=>c.querySelector('[data-sub="'+k+'"]').textContent=num(n(obj[k])*values[i]));
   }
-  gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
   tiers.forEach(([k])=>{
     const x=c.querySelector('[data-k="'+k+'"]');x.value=obj[k]||"";
     x.oninput=()=>{obj[k]=n(x.value);save();up()};
@@ -281,14 +305,13 @@ function renderMisc(){
   const wb=document.createElement("div");wb.className="card";
   wb.innerHTML='<div class="imgline"><img class="icon" src="images/misc/wb.png" alt="WB"><div><div class="name">WB</div><div class="caption">代表画像1枚／各種類70冊＝1人分</div></div></div>'
     +'<div class="subgrid">'
-    +["hp","atk","heal"].map(k=>{const l={hp:"HP",atk:"攻撃",heal:"治癒"}[k];return '<div class="subbox"><label>'+l+'</label><input data-wb="'+k+'" type="number" min="0"><div class="goalctl"><span>目標</span><input data-goal="'+k+'" type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div><div class="meta"><span>70 / 人</span><strong data-r="'+k+'"></strong></div></div>'}).join("")
+    +["hp","atk","heal"].map(k=>{const l={hp:"HP",atk:"攻撃",heal:"治癒"}[k];return '<div class="subbox"><label>'+l+'</label><input data-wb="'+k+'" type="number" min="0"><div class="meta"><span>70 / 人</span><strong data-r="'+k+'"></strong></div></div>'}).join("")
     +'</div>';
   ["hp","atk","heal"].forEach(k=>{
-    const x=wb.querySelector('[data-wb="'+k+'"]'),gi=wb.querySelector('[data-goal="'+k+'"]'),r=wb.querySelector('[data-r="'+k+'"]'),goalPath="wb."+k;
-    x.value=state.wb[k]||"";gi.value=targetAt(goalPath)||"";
+    const x=wb.querySelector('[data-wb="'+k+'"]'),r=wb.querySelector('[data-r="'+k+'"]'),goalPath="wb."+k;
+    x.value=state.wb[k]||"";
     const up=()=>{const v=n(state.wb[k])/70;r.textContent=fr(v);paintGoal(r,v,goalPath)};
     x.oninput=()=>{state.wb[k]=n(x.value);save();up()};
-    gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
     up();
   });
   miscGrid.append(wb);
@@ -296,16 +319,44 @@ function renderMisc(){
   [["credits","クレジット",simpleBase.credits,"images/misc/credit.png"],["secretNotes","秘伝ノート",simpleBase.secretNotes,"images/misc/secret_note.png"],["eligma","カケラ",simpleBase.eligma,null]].forEach(([k,l,b,img])=>{
     const goalPath="simple."+k,c=document.createElement("div");c.className="mini";
     c.innerHTML=(img?'<div class="imgline"><img class="icon" src="'+img+'" alt="'+l+'"><div class="name">'+l+'</div></div>':'<div class="name">'+l+'</div>')
-      +'<div class="goalctl"><span>目標</span><input data-goal type="number" min="0" step="0.1" placeholder="未設定"><span>人分</span></div>'
       +'<input data-count type="number" min="0"><div class="meta"><span>1人分：'+b.toLocaleString()+'</span><strong data-r></strong></div>';
-    const x=c.querySelector("[data-count]"),gi=c.querySelector("[data-goal]"),o=c.querySelector("[data-r]");
-    x.value=state.simple[k]||"";gi.value=targetAt(goalPath)||"";
+    const x=c.querySelector("[data-count]"),o=c.querySelector("[data-r]");
+    x.value=state.simple[k]||"";
     const up=()=>{const v=n(state.simple[k])/b;o.textContent=fr(v);paintGoal(o,v,goalPath)};
     x.oninput=()=>{state.simple[k]=n(x.value);save();up()};
-    gi.oninput=()=>{setTargetAt(goalPath,gi.value);save();up()};
     up();miscGrid.append(c);
   });
 }
+function renderTargets(){
+  const groups=[
+    ["BD",schools.map(([k,l])=>["bd."+k,l])],
+    ["ノート",schools.map(([k,l])=>["notes."+k,l])],
+    ["オーパーツ",ops.map(([k,l])=>["ooparts."+k,l])],
+    ["装備",eq.map(([k,l])=>["equipment."+k,l])],
+    ["育成素材",[
+      ["reports","レポート"],["stones","強化珠"],
+      ["simple.credits","クレジット"],["simple.secretNotes","秘伝ノート"],["simple.eligma","カケラ"]
+    ]],
+    ["固有武器",weaponGroups.map(([k,l])=>["weapon."+k,l])],
+    ["WB",[["wb.hp","HP"],["wb.atk","攻撃"],["wb.heal","治癒"]]]
+  ];
+  targetGrid.innerHTML=groups.map(([title,items])=>
+    '<div class="target-card"><div class="target-card-title">'+title+'</div><div class="target-list">'
+    +items.map(([path,label])=>'<label class="target-row"><span>'+label+'</span><input data-target-path="'+path+'" type="number" min="0" step="0.1" value="'+targetAt(path)+'"><span>人分</span></label>').join("")
+    +'</div></div>'
+  ).join("");
+  targetGrid.querySelectorAll("[data-target-path]").forEach(input=>{
+    input.onchange=()=>{setTargetAt(input.dataset.targetPath,input.value);save();renderSeries();renderEq();renderMisc()};
+  });
+}
+targetBulkApply.onclick=()=>{
+  const v=n(targetBulkValue.value);
+  state.targets=defaultTargets();
+  const applyAll=o=>{for(const k in o){if(o[k]&&typeof o[k]==="object")applyAll(o[k]);else o[k]=v}};
+  applyAll(state.targets);
+  save();renderTargets();renderSeries();renderEq();renderMisc();
+};
+
 function summary(){
   const leftGroups=[
     ["BD",schools.map(([k,l])=>{const v=smin(state.bd[k],base.bd);return [l,goalHtml(v,fr(v),"bd."+k)]}),true],
@@ -598,6 +649,6 @@ function applyImportKey(key,val){
   else if(p[0]==="simple")state.simple[p[1]]=val;
 }
 
-function render(){renderSeries();renderEq();renderMisc();summary();sortOps()}render();
+function render(){renderSeries();renderEq();renderMisc();renderTargets();summary();sortOps()}render();
 </script>
 </body></html>
