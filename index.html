@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.1";
+const APP_VERSION="0.9.2";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -482,13 +482,25 @@ scanAnalyzeBtn.onclick=async()=>{
   const kind=scanKind.value;
   try{
     scanStatus.textContent="認識用アイコンを準備しています…";
-    const cat=await catalogFeatures(kind,(d,t)=>scanStatus.textContent="認識用アイコンを準備しています… "+d+"/"+t);
+    const cat=kind==="notes"?scanCatalog(kind):await catalogFeatures(kind,(d,t)=>scanStatus.textContent="認識用アイコンを準備しています… "+d+"/"+t);
     let rows=[],lastBase=null;
     for(let i=0;i<scanFiles.length;i++){scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" を解析しています…";const r=await analyzeOne(scanFiles[i],i,kind,cat);rows.push(...r.rows);lastBase=r.base}
-    if(lastBase){scanStatus.textContent="クレジットを読み取っています…";const cr=await recognizeCredit(lastBase);if(cr!==null)rows.push({key:"simple.credits",label:"クレジット",count:cr,confidence:"高",confClass:"high",source:scanFiles.length,candidates:[]})}
+    if(lastBase){
+      try{
+        scanStatus.textContent="クレジットを読み取っています…";
+        const cr=await recognizeCredit(lastBase);
+        if(cr!==null)rows.push({key:"simple.credits",label:"クレジット",count:cr,confidence:"高",confClass:"high",source:scanFiles.length,candidates:[]});
+      }catch(creditErr){
+        console.warn("credit OCR skipped",creditErr);
+      }
+    }
     scanRows=dedupeRows(rows);renderScanRows(kind);
     scanStatus.textContent=scanRows.length+"件の候補を検出しました。レポートは4枠を個別OCR、その他はアイコン照合＋所持数読取です。赤い「要確認」を中心に確認してください。";
-  }catch(e){console.error(e);scanStatus.textContent="解析に失敗しました。通信状況を確認して再試行してください。";}finally{scanAnalyzeBtn.disabled=false}
+  }catch(e){
+    console.error(e);
+    const msg=(e&&e.message)?e.message:String(e);
+    scanStatus.textContent="解析エラー: "+msg;
+  }finally{scanAnalyzeBtn.disabled=false}
 };
 function scanCopyText(){
   const kindLabel=scanKind.selectedOptions[0]?.textContent||scanKind.value;
