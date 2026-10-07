@@ -60,6 +60,19 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 .summary-card.compact .summary-list{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:12px}.summary-card.compact .summary-item:nth-last-child(2):nth-child(odd){border-bottom:0}
 @media(max-width:900px){.summary-grid{grid-template-columns:1fr}.summary-left{grid-template-columns:repeat(2,minmax(0,1fr))}.summary-oparts{grid-column:auto;grid-row:auto}}
 @media(max-width:700px){.row{grid-template-columns:1fr 1fr}.row.equip{grid-template-columns:1fr 1fr}.row.h{display:none}.spacer{display:none}.subgrid{grid-template-columns:1fr}.universal{grid-template-columns:1fr}.summary-left{grid-template-columns:1fr}.scan-wrap{grid-template-columns:1fr}.scan-result{grid-template-columns:1fr 90px}.scan-result .conf,.scan-result .src{display:none}}
+
+.gpt-wrap{display:grid;grid-template-columns:minmax(320px,.9fr) minmax(0,1.1fr);gap:14px;align-items:start}
+.gpt-panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+.gpt-textarea{width:100%;min-height:360px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px;font:13px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;background:#fbfdff;color:var(--text)}
+.gpt-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.gpt-status{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:13px;line-height:1.55;color:var(--muted)}
+.gpt-preview{display:grid;gap:6px;max-height:620px;overflow:auto}
+.gpt-change{display:grid;grid-template-columns:minmax(180px,1fr) 105px 24px 105px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
+.gpt-change .before,.gpt-change .after{text-align:right;font-variant-numeric:tabular-nums}
+.gpt-change .after{font-weight:750;color:#0f766e}
+.gpt-errors{margin-top:10px;border:1px solid #fecaca;background:#fff7f7;color:#991b1b;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.6}
+.gpt-schema{margin-top:12px;padding:10px 12px;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:12px;line-height:1.55;color:var(--muted)}
+@media(max-width:700px){.gpt-wrap{grid-template-columns:1fr}.gpt-change{grid-template-columns:minmax(150px,1fr) 78px 18px 78px}}
 </style>
 </head>
 <body>
@@ -71,6 +84,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <button class="tab" data-tab="ooparts">オーパーツ</button>
 <button class="tab" data-tab="equipment">装備</button>
 <button class="tab" data-tab="misc">その他</button>
+<button class="tab" data-tab="gptimport">GPT取込</button>
 <button class="tab" data-tab="scan">画像読取</button>
 </div>
 <div class="spacer"></div><button id="exportBtn">JSON書き出し</button><label class="filebtn">JSON読み込み<input id="importFile" type="file" accept=".json,application/json"></label><button id="resetBtn">全データ初期化</button>
@@ -95,6 +109,31 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 <section id="misc" class="section">
 <div class="note">レポート・強化珠・固有武器素材は「個数」を入力するとEXPへ自動換算します。固有武器素材は経験値ボーナス適用済み（15 / 75 / 300 / 1,500 EXP）として計算します。</div>
 <div id="miscGrid" class="grid"></div>
+</section>
+
+<section id="gptimport" class="section">
+<div class="note">ChatGPTなどでスクリーンショットを読み取り、専用JSONをここへ貼り付けて所持数へ反映します。未記載の項目は変更しません。反映前に現在値との差分を確認できます。</div>
+<div class="gpt-wrap">
+  <div class="gpt-panel">
+    <div class="name" style="margin-bottom:8px">GPT読取JSON</div>
+    <textarea id="gptJsonInput" class="gpt-textarea" spellcheck="false" placeholder='ここにJSONを貼り付け'></textarea>
+    <div class="gpt-actions">
+      <button id="gptCheckBtn">JSONを確認</button>
+      <button id="gptApplyBtn" disabled>差分を一括反映</button>
+      <button id="gptPromptBtn">読取用プロンプトをコピー</button>
+      <label class="filebtn">JSONファイルを選択<input id="gptJsonFile" type="file" accept=".json,application/json,text/plain"></label>
+      <button id="gptClearBtn">クリア</button>
+    </div>
+    <div id="gptStatus" class="gpt-status">JSONを貼り付けるか、読取用プロンプトをコピーしてChatGPTにスクリーンショットと一緒に渡してください。</div>
+    <div class="gpt-schema">専用形式は <b>bluearchive-material-inventory-v1</b>。日本語名・内部キーのどちらでも読めます。数値が書かれた項目だけ更新し、JSONにない素材は現在値を維持します。</div>
+  </div>
+  <div class="gpt-panel">
+    <div class="name" style="margin-bottom:8px">反映プレビュー</div>
+    <div id="gptPreviewEmpty" class="caption" style="padding:36px 10px;text-align:center">JSONを確認すると、ここに「現在 → 取込後」の差分が表示されます。</div>
+    <div id="gptPreview" class="gpt-preview"></div>
+    <div id="gptErrors"></div>
+  </div>
+</div>
 </section>
 
 <section id="scan" class="section">
@@ -135,7 +174,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.19";
+const APP_VERSION="0.10.0";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -208,6 +247,253 @@ opSearch.oninput=sortOps;opSort.onchange=sortOps;
 exportBtn.onclick=()=>{const u=URL.createObjectURL(new Blob([JSON.stringify(state,null,2)],{type:"application/json"})),a=document.createElement("a");a.href=u;a.download="bluearchive-materials-v2.json";a.click();URL.revokeObjectURL(u)};
 importFile.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x=JSON.parse(await f.text());state=x.version===2?deepMerge(initial(),x):migrateOld(x);save();render()}catch{alert("JSONの読み込みに失敗しました")}e.target.value=""};
 resetBtn.onclick=()=>{if(confirm("入力した素材数をすべて初期化しますか？")){state=initial();save();render()}};
+
+
+let gptPendingChanges=[];
+
+function gptNormKey(v){return String(v??"").trim().replace(/[\s　・･_-]+/g,"").toLowerCase()}
+function gptAliasMap(pairs){
+  const m=new Map();
+  for(const [k,l] of pairs){m.set(gptNormKey(k),k);m.set(gptNormKey(l),k)}
+  return m;
+}
+const GPT_SCHOOL_MAP=gptAliasMap(schools), GPT_OP_MAP=gptAliasMap(ops), GPT_EQ_MAP=gptAliasMap(eq);
+const GPT_WEAPON_MAP=gptAliasMap(weaponGroups.map(([k,l])=>[k,l]));
+const GPT_TIER_MAP=new Map([
+  ["basic","basic"],["初級","basic"],["t1","basic"],["1","basic"],
+  ["intermediate","intermediate"],["中級","intermediate"],["t2","intermediate"],["2","intermediate"],
+  ["advanced","advanced"],["上級","advanced"],["t3","advanced"],["3","advanced"],
+  ["superior","superior"],["最上級","superior"],["t4","superior"],["4","superior"]
+].map(([a,b])=>[gptNormKey(a),b]));
+const GPT_SIMPLE_MAP=new Map([
+  ["credits","credits"],["credit","credits"],["クレジット","credits"],
+  ["secretnotes","secretNotes"],["秘伝ノート","secretNotes"],
+  ["eligma","eligma"],["カケラ","eligma"]
+].map(([a,b])=>[gptNormKey(a),b]));
+const GPT_WB_MAP=new Map([
+  ["hp","hp"],["体力","hp"],["攻撃","atk"],["atk","atk"],["治癒","heal"],["回復","heal"],["heal","heal"]
+].map(([a,b])=>[gptNormKey(a),b]));
+
+function gptParseJsonText(text){
+  let s=String(text||"").trim();
+  s=s.replace(/^\s*```(?:json)?\s*/i,"").replace(/\s*```\s*$/,"").trim();
+  try{return JSON.parse(s)}catch{}
+  const a=s.indexOf("{"),b=s.lastIndexOf("}");
+  if(a>=0&&b>a)return JSON.parse(s.slice(a,b+1));
+  throw new Error("JSONとして解析できませんでした");
+}
+function gptQty(v){
+  if(v===null||v===undefined||v==="")return null;
+  const q=typeof v==="number"?v:Number(String(v).replace(/,/g,"").trim());
+  if(!Number.isFinite(q)||q<0)return null;
+  return Math.round(q);
+}
+function gptCurrentValue(key){
+  const p=key.split(".");
+  if(["bd","notes","ooparts"].includes(p[0]))return n(state[p[0]][p[1]][p[2]]);
+  if(p[0]==="equipment")return p[2]==="universal"?n(state.equipment[p[1]].universal):n(state.equipment[p[1]].tiers[Number(p[2].replace("tier",""))]);
+  if(p[0]==="reports")return n(state.reports[p[1]]);
+  if(p[0]==="stones")return n(state.stones[p[1]]);
+  if(p[0]==="weapon")return n(state.weapon[p[1]][p[2]]);
+  if(p[0]==="wb")return n(state.wb[p[1]]);
+  if(p[0]==="simple")return n(state.simple[p[1]]);
+  return 0;
+}
+function gptPushChange(changes,key,label,value,errors,path){
+  const q=gptQty(value);
+  if(q===null){errors.push(path+"：0以上の数値として読めません");return}
+  changes.set(key,{key,label,value:q,before:gptCurrentValue(key)});
+}
+function gptReadTierObject(obj,prefix,labelBase,changes,errors,path){
+  if(!obj||typeof obj!=="object"||Array.isArray(obj)){errors.push(path+"：等級オブジェクトではありません");return}
+  for(const [rawTier,val] of Object.entries(obj)){
+    const tier=GPT_TIER_MAP.get(gptNormKey(rawTier));
+    if(!tier){errors.push(path+"."+rawTier+"：等級名を認識できません");continue}
+    const tierLabel=tiers.find(([k])=>k===tier)?.[1]||tier;
+    gptPushChange(changes,prefix+"."+tier,labelBase+" "+tierLabel,val,errors,path+"."+rawTier);
+  }
+}
+function gptReadSeriesGroup(root,kind,nameMap,labelPairs,changes,errors){
+  const obj=root?.[kind]; if(obj===undefined)return;
+  if(!obj||typeof obj!=="object"||Array.isArray(obj)){errors.push(kind+"：オブジェクト形式にしてください");return}
+  const labels=Object.fromEntries(labelPairs);
+  for(const [rawName,tierObj] of Object.entries(obj)){
+    const key=nameMap.get(gptNormKey(rawName));
+    if(!key){errors.push(kind+"."+rawName+"：名前を認識できません");continue}
+    gptReadTierObject(tierObj,kind+"."+key,labels[key],changes,errors,kind+"."+rawName);
+  }
+}
+function gptBuildChanges(root){
+  const changes=new Map(),errors=[];
+  if(!root||typeof root!=="object"||Array.isArray(root))throw new Error("JSONの最上位はオブジェクトにしてください");
+  gptReadSeriesGroup(root,"bd",GPT_SCHOOL_MAP,schools,changes,errors);
+  gptReadSeriesGroup(root,"notes",GPT_SCHOOL_MAP,schools,changes,errors);
+  gptReadSeriesGroup(root,"ooparts",GPT_OP_MAP,ops,changes,errors);
+
+  for(const kind of ["reports","stones"]){
+    if(root[kind]!==undefined)gptReadTierObject(root[kind],kind,kind==="reports"?"レポート":"強化珠",changes,errors,kind);
+  }
+
+  if(root.weapon!==undefined){
+    if(!root.weapon||typeof root.weapon!=="object"||Array.isArray(root.weapon))errors.push("weapon：オブジェクト形式にしてください");
+    else{
+      const labels=Object.fromEntries(weaponGroups.map(([k,l])=>[k,l]));
+      for(const [rawName,tierObj] of Object.entries(root.weapon)){
+        const key=GPT_WEAPON_MAP.get(gptNormKey(rawName));
+        if(!key){errors.push("weapon."+rawName+"：種類を認識できません");continue}
+        gptReadTierObject(tierObj,"weapon."+key,"固有武器素材・"+labels[key],changes,errors,"weapon."+rawName);
+      }
+    }
+  }
+
+  if(root.equipment!==undefined){
+    if(!root.equipment||typeof root.equipment!=="object"||Array.isArray(root.equipment))errors.push("equipment：オブジェクト形式にしてください");
+    else{
+      const labels=Object.fromEntries(eq);
+      for(const [rawName,eqObj] of Object.entries(root.equipment)){
+        const key=GPT_EQ_MAP.get(gptNormKey(rawName));
+        if(!key){errors.push("equipment."+rawName+"：装備名を認識できません");continue}
+        if(!eqObj||typeof eqObj!=="object"||Array.isArray(eqObj)){errors.push("equipment."+rawName+"：オブジェクト形式にしてください");continue}
+        for(const [rk,val] of Object.entries(eqObj)){
+          const nk=gptNormKey(rk);
+          if(["universal","万能","万能設計図"].map(gptNormKey).includes(nk)){
+            gptPushChange(changes,"equipment."+key+".universal",labels[key]+" 万能設計図",val,errors,"equipment."+rawName+"."+rk);
+            continue;
+          }
+          const m=String(rk).match(/(?:tier|t)?\s*(10|[1-9])/i);
+          if(m){
+            const t=Number(m[1]);
+            gptPushChange(changes,"equipment."+key+".tier"+t,labels[key]+" T"+t,val,errors,"equipment."+rawName+"."+rk);
+          }else errors.push("equipment."+rawName+"."+rk+"：Tier名を認識できません");
+        }
+      }
+    }
+  }
+
+  if(root.wb!==undefined){
+    if(!root.wb||typeof root.wb!=="object"||Array.isArray(root.wb))errors.push("wb：オブジェクト形式にしてください");
+    else for(const [rk,val] of Object.entries(root.wb)){
+      const key=GPT_WB_MAP.get(gptNormKey(rk));
+      if(!key){errors.push("wb."+rk+"：種類を認識できません");continue}
+      const label={hp:"WB HP",atk:"WB 攻撃",heal:"WB 治癒"}[key];
+      gptPushChange(changes,"wb."+key,label,val,errors,"wb."+rk);
+    }
+  }
+
+  if(root.simple!==undefined){
+    if(!root.simple||typeof root.simple!=="object"||Array.isArray(root.simple))errors.push("simple：オブジェクト形式にしてください");
+    else for(const [rk,val] of Object.entries(root.simple)){
+      const key=GPT_SIMPLE_MAP.get(gptNormKey(rk));
+      if(!key){errors.push("simple."+rk+"：項目名を認識できません");continue}
+      const label={credits:"クレジット",secretNotes:"秘伝ノート",eligma:"カケラ"}[key];
+      gptPushChange(changes,"simple."+key,label,val,errors,"simple."+rk);
+    }
+  }
+
+  return {changes:[...changes.values()],errors};
+}
+function renderGptPreview(result){
+  gptPendingChanges=result.changes;
+  gptPreview.innerHTML="";
+  gptPreviewEmpty.style.display=gptPendingChanges.length?"none":"block";
+  for(const x of gptPendingChanges){
+    const row=document.createElement("div");row.className="gpt-change";
+    row.innerHTML='<div>'+x.label+'</div><div class="before">'+num(x.before)+'</div><div>→</div><div class="after">'+num(x.value)+'</div>';
+    gptPreview.appendChild(row);
+  }
+  gptErrors.innerHTML=result.errors.length
+    ? '<div class="gpt-errors"><b>確認が必要な項目 '+result.errors.length+'件</b><br>'+result.errors.map(x=>"・"+x).join("<br>")+'</div>'
+    : "";
+  const changed=gptPendingChanges.filter(x=>x.before!==x.value).length;
+  const same=gptPendingChanges.length-changed;
+  gptStatus.textContent=gptPendingChanges.length
+    ? gptPendingChanges.length+"項目を認識しました。変更 "+changed+"件／同値 "+same+"件"+(result.errors.length?"。認識できない項目もあります。":"。内容を確認して一括反映できます。")
+    : "反映できる項目がありません。JSONの項目名と形式を確認してください。";
+  gptApplyBtn.disabled=!gptPendingChanges.length;
+}
+function gptPromptText(){
+  const schoolNames=schools.map(x=>x[1]).join("、");
+  const opNames=ops.map(x=>x[1]).join("、");
+  const eqNames=eq.map(x=>x[1]).join("、");
+  return `ブルーアーカイブの素材所持画面のスクリーンショットを読み取ってください。
+複数画像にはスクロール重複がある場合があります。同じ素材は重複計上せず、最終的な所持数を1つにまとめてください。
+画像に写っていない値は推測しないでください。ただし、0個の素材が一覧から省略されていることが前後の固定順から明確に判断できる場合のみ0を出して構いません。
+数字や素材名に自信がない場合は勝手に補完せず、その項目自体をJSONから省略してください。
+回答は説明文やMarkdownコードフェンスを付けず、JSONだけを返してください。
+
+format は必ず "bluearchive-material-inventory-v1" にしてください。必要なカテゴリだけ出力し、不要なカテゴリは丸ごと省略してください。未記載項目はサイト側で変更されません。
+
+使用できる名前:
+学園: ${schoolNames}
+オーパーツ: ${opNames}
+装備: ${eqNames}
+等級: 初級 / 中級 / 上級 / 最上級
+
+形式例:
+{
+  "format": "bluearchive-material-inventory-v1",
+  "bd": {
+    "百鬼夜行": {"初級": 283, "中級": 117, "上級": 79, "最上級": 16}
+  },
+  "notes": {
+    "百鬼夜行": {"初級": 739, "中級": 299, "上級": 217, "最上級": 46}
+  },
+  "ooparts": {
+    "ネブラディスク": {"初級": 716, "中級": 555, "上級": 365, "最上級": 66}
+  },
+  "reports": {"初級": 0, "中級": 0, "上級": 0, "最上級": 0},
+  "stones": {"初級": 0, "中級": 0, "上級": 0, "最上級": 0},
+  "weapon": {
+    "スプリング": {"初級": 0, "中級": 0, "上級": 0, "最上級": 0}
+  },
+  "equipment": {
+    "帽子": {"万能設計図": 0, "T1": 0, "T2": 0, "T3": 0, "T4": 0, "T5": 0, "T6": 0, "T7": 0, "T8": 0, "T9": 0, "T10": 0}
+  },
+  "wb": {"HP": 0, "攻撃": 0, "治癒": 0},
+  "simple": {"クレジット": 0, "秘伝ノート": 0, "カケラ": 0}
+}`;
+}
+async function gptCopyText(text,success){
+  try{await navigator.clipboard.writeText(text)}
+  catch{
+    const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();document.execCommand("copy");ta.remove();
+  }
+  gptStatus.textContent=success;
+}
+gptCheckBtn.onclick=()=>{
+  try{
+    const root=gptParseJsonText(gptJsonInput.value);
+    const fmt=root.format;
+    const result=gptBuildChanges(root);
+    if(fmt&&fmt!=="bluearchive-material-inventory-v1")result.errors.unshift("format：想定外の形式 "+fmt);
+    renderGptPreview(result);
+  }catch(e){
+    gptPendingChanges=[];gptPreview.innerHTML="";gptPreviewEmpty.style.display="block";gptErrors.innerHTML="";
+    gptApplyBtn.disabled=true;gptStatus.textContent="JSONを確認できませんでした："+e.message;
+  }
+};
+gptApplyBtn.onclick=()=>{
+  if(!gptPendingChanges.length)return;
+  const changed=gptPendingChanges.filter(x=>x.before!==x.value).length;
+  if(!confirm(changed+"件の所持数を更新しますか？（JSONにない項目は変更しません）"))return;
+  for(const x of gptPendingChanges)applyScanKey(x.key,x.value);
+  save();render();
+  gptPendingChanges=gptPendingChanges.map(x=>({...x,before:x.value}));
+  renderGptPreview({changes:gptPendingChanges,errors:[]});
+  gptStatus.textContent=changed+"件を反映しました。未記載項目は変更していません。";
+  gptApplyBtn.disabled=true;
+};
+gptPromptBtn.onclick=()=>gptCopyText(gptPromptText(),"ChatGPT用の画像読取プロンプトをコピーしました。スクリーンショットと一緒に送ってください。");
+gptJsonFile.onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  try{gptJsonInput.value=await f.text();gptCheckBtn.click()}
+  catch{gptStatus.textContent="ファイルを読み込めませんでした。"}
+  e.target.value="";
+};
+gptClearBtn.onclick=()=>{
+  gptJsonInput.value="";gptPendingChanges=[];gptPreview.innerHTML="";gptErrors.innerHTML="";gptPreviewEmpty.style.display="block";gptApplyBtn.disabled=true;
+  gptStatus.textContent="JSONを貼り付けるか、読取用プロンプトをコピーしてChatGPTにスクリーンショットと一緒に渡してください。";
+};
 
 let scanObjectUrl=null,scanFiles=[],scanRows=[],scanWorker=null,templateCache=new Map();
 const SCAN_SLOTS=Array.from({length:20},(_,i)=>{
