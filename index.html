@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.17";
+const APP_VERSION="0.9.18";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -695,7 +695,16 @@ async function analyzeBdSequencePage(file,fileIndex){
   }finally{URL.revokeObjectURL(url)}
 }
 
-async function analyzeOopartsSequencePage(file,fileIndex){
+function oopartsIconScores(slot,cat){
+  const f=sourceFeature(slot,"cell",scanCropSpec("ooparts",false)),scores={};
+  for(const it of cat){
+    if(!it.url||!it.key.startsWith("ooparts."))continue;
+    const tf=templateCache.get(it.url);
+    if(tf)scores[it.key]=simFeature(f,tf);
+  }
+  return scores;
+}
+async function analyzeOopartsSequencePage(file,fileIndex,cat){
   const url=URL.createObjectURL(file);
   try{
     const img=await loadImg(url),base=makeCanvasFromImage(img),page=[];
@@ -705,7 +714,11 @@ async function analyzeOopartsSequencePage(file,fileIndex){
       const count=readConnectedCount(slot);
       if(!count||count.value<0||count.value>999999)continue;
       const tier=slotTierByCardColor(slot)||slotTier(slot)||null;
-      page.push({count:count.value,countConf:count.conf,tier,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
+      page.push({
+        count:count.value,countConf:count.conf,tier,
+        iconScores:oopartsIconScores(slot,cat),
+        source:fileIndex+1,row:Math.floor(i/5),col:i%5
+      });
     }
     return {page,base};
   }finally{URL.revokeObjectURL(url)}
@@ -758,24 +771,25 @@ function alignOopartsFullScan(pages){
   if(!obs.length)return [];
   const O=obs.length,C=canon.length,INF=1e9;
   // canonical 80枠に対し、0個で非表示の素材はcanonical側をskip。
-  // 一覧末尾の次カテゴリ（今回の教材など）はobserved側をskipできる。
+  // 等級色だけに依存せず、アイコン類似度を主アンカーにして位置合わせする。
   const dp=Array.from({length:O+1},()=>Array(C+1).fill(INF));
   const prev=Array.from({length:O+1},()=>Array(C+1).fill(null));
   dp[0][0]=0;
   for(let i=0;i<=O;i++)for(let j=0;j<=C;j++){
     const cur=dp[i][j];if(cur>=INF)continue;
     if(j<C){
-      const skipCanon=1.25;
+      const skipCanon=4.2;
       if(cur+skipCanon<dp[i][j+1]){dp[i][j+1]=cur+skipCanon;prev[i][j+1]=[i,j,"skipCanon"]}
     }
     if(i<O&&j<C){
-      const t=obs[i].tier,expect=canon[j].tier;
-      const matchCost=!t?0:(t===expect?0:8);
+      const o=obs[i],item=canon[j],sim=o.iconScores?.[item.key]??0;
+      const tierPenalty=o.tier&&o.tier!==item.tier?1.8:0;
+      const matchCost=(1-Math.max(0,Math.min(1,sim)))*12+tierPenalty;
       if(cur+matchCost<dp[i+1][j+1]){dp[i+1][j+1]=cur+matchCost;prev[i+1][j+1]=[i,j,"match"]}
     }
     // canonical末尾以降に写った次カテゴリを捨てる。途中の誤検出は高コスト。
     if(i<O){
-      const skipObs=(j===C)?0.05:12;
+      const skipObs=(j===C)?0.05:7.5;
       if(cur+skipObs<dp[i+1][j]){dp[i+1][j]=cur+skipObs;prev[i+1][j]=[i,j,"skipObs"]}
     }
   }
@@ -895,7 +909,7 @@ scanAnalyzeBtn.onclick=async()=>{
       const pages=[];
       for(let i=0;i<scanFiles.length;i++){
         scanStatus.textContent="画像 "+(i+1)+"/"+scanFiles.length+" のオーパーツ数量と等級を解析しています…";
-        const r=await analyzeOopartsSequencePage(scanFiles[i],i);pages.push(r.page);lastBase=r.base;
+        const r=await analyzeOopartsSequencePage(scanFiles[i],i,cat);pages.push(r.page);lastBase=r.base;
       }
       if(canUseOopartsFullScan(pages)){
         rows=alignOopartsFullScan(pages);
