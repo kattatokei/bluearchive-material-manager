@@ -426,7 +426,28 @@ async function readSlotCountRobust(slot){
     if(b.digits!==a.digits)return b.digits-a.digits;
     return b.conf-a.conf;
   });
-  return out[0];
+  let best=out[0];
+  // 右寄せの短い個数（例 x445）が先頭1桁だけ落ちやすいので、
+  // 2桁以下に見えた時だけ左側を広く取った再読取で補正する。
+  if(best.digits<=2){
+    const repairs=[];
+    for(const [l,t,thr] of [[0,.65,140],[0,.70,140],[.05,.68,160]]){
+      const q=await ocrSlotVariant(slot,l,t,thr);
+      if(q.value!==null&&q.value>=0&&q.value<=999999)repairs.push(q);
+    }
+    const freq=new Map();
+    for(const q of repairs)freq.set(q.value,(freq.get(q.value)||0)+1);
+    repairs.sort((a,b)=>{
+      const fa=freq.get(a.value)||0,fb=freq.get(b.value)||0;
+      if(fb!==fa)return fb-fa;
+      if(b.digits!==a.digits)return b.digits-a.digits;
+      return b.conf-a.conf;
+    });
+    if(repairs.length && ((freq.get(repairs[0].value)||0)>=2 || repairs[0].digits>best.digits)){
+      best=repairs[0];
+    }
+  }
+  return best;
 }
 async function analyzeReports(base,fileIndex){
   const rows=[],keys=["basic","intermediate","advanced","superior"];
