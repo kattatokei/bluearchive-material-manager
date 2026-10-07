@@ -200,12 +200,10 @@ importFile.onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const x
 resetBtn.onclick=()=>{if(confirm("入力した素材数をすべて初期化しますか？")){state=initial();save();render()}};
 
 let scanObjectUrl=null,scanFiles=[],scanRows=[],scanWorker=null,templateCache=new Map();
-const SCAN_SLOTS=[
-[.5387,.2215,.6301,.3535],[.6238,.2215,.7152,.3535],[.7090,.2215,.8004,.3535],[.7941,.2215,.8855,.3535],[.8793,.2215,.9707,.3535],
-[.5387,.3625,.6301,.4944],[.6238,.3625,.7152,.4944],[.7090,.3625,.8004,.4944],[.7941,.3625,.8855,.4944],[.8793,.3625,.9707,.4944],
-[.5387,.5028,.6301,.6347],[.6238,.5028,.7152,.6347],[.7090,.5028,.8004,.6347],[.7941,.5028,.8855,.6347],[.8793,.5028,.9707,.6347],
-[.5387,.6431,.6301,.7750],[.6238,.6431,.7152,.7750],[.7090,.6431,.8004,.7750],[.7941,.6431,.8855,.7750],[.8793,.6431,.9707,.7750]
-];
+const SCAN_SLOTS=Array.from({length:20},(_,i)=>{
+  const row=Math.floor(i/5),col=i%5,x1=.533+col*.0734,y1=.224+row*.1455;
+  return [x1,y1,x1+.0705,y1+.136];
+});
 const V7ROOT="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/";
 const V6="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v6/templates/inventory_detail/";
 const V7EQ="https://raw.githubusercontent.com/coup-d-etat-pinkgorilla/planner_of_plana/main/BA%20Planner/v7/backend/assets/recognition/v1/templates/inventory/equipment/";
@@ -334,15 +332,46 @@ function parseQtyText(t){
 }
 async function ensureTesseract(){
   if(window.Tesseract)return;
-  scanStatus.textContent="数字読取ライブラリを読み込んでいます…";
+  scanStatus.textContent="所持数の数字を読み取る準備をしています…";
   await new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js";s.onload=res;s.onerror=rej;document.head.appendChild(s)});
 }
 async function ensureWorker(){
   await ensureTesseract();
   if(scanWorker)return scanWorker;
-  scanWorker=await Tesseract.createWorker("eng",1,{logger:m=>{if(m.status==="recognizing text")scanStatus.textContent="数字を読み取り中… "+Math.round((m.progress||0)*100)+"%"}});
+  scanWorker=await Tesseract.createWorker("eng",1,{logger:m=>{if(m.status==="recognizing text")scanStatus.textContent="所持数を読み取り中… "+Math.round((m.progress||0)*100)+"%"}});
   await scanWorker.setParameters({tessedit_char_whitelist:"0123456789xXkK,×",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
   return scanWorker;
+}
+
+async function readAllSlotCounts(base){
+  const worker=await ensureWorker();
+  const cellW=420,cellH=220,scale=5;
+  const comp=document.createElement("canvas");comp.width=cellW*5;comp.height=cellH*4;
+  const cg=comp.getContext("2d",{willReadFrequently:true});cg.fillStyle="#fff";cg.fillRect(0,0,comp.width,comp.height);
+  for(let i=0;i<SCAN_SLOTS.length;i++){
+    const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
+    const sx=Math.round(slot.width*.40),sy=Math.round(slot.height*.69),sw=Math.max(1,slot.width-sx),sh=Math.max(1,Math.round(slot.height*.305));
+    const raw=slot.getContext("2d",{willReadFrequently:true}).getImageData(sx,sy,sw,Math.min(sh,slot.height-sy));
+    const tmp=document.createElement("canvas");tmp.width=sw;tmp.height=raw.height;const tg=tmp.getContext("2d",{willReadFrequently:true});
+    const out=tg.createImageData(sw,raw.height);
+    for(let p=0;p<raw.data.length;p+=4){
+      const lum=.299*raw.data[p]+.587*raw.data[p+1]+.114*raw.data[p+2],v=lum<175?0:255;
+      out.data[p]=out.data[p+1]=out.data[p+2]=v;out.data[p+3]=255;
+    }
+    tg.putImageData(out,0,0);
+    const row=Math.floor(i/5),col=i%5,dw=sw*scale,dh=raw.height*scale;
+    cg.drawImage(tmp,col*cellW+30,row*cellH+30,dw,dh);
+  }
+  await worker.setParameters({tessedit_char_whitelist:"0123456789xXkK",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
+  const res=await worker.recognize(comp),map=new Map();
+  for(const w of res.data.words||[]){
+    const q=parseQtyText(w.text);if(q===null)continue;
+    const cx=(w.bbox.x0+w.bbox.x1)/2,cy=(w.bbox.y0+w.bbox.y1)/2,col=Math.floor(cx/cellW),row=Math.floor(cy/cellH);
+    if(col<0||col>=5||row<0||row>=4)continue;
+    const idx=row*5+col,old=map.get(idx);
+    if(!old||(w.confidence||0)>(old.conf||0))map.set(idx,{value:q,conf:w.confidence||0,text:w.text});
+  }
+  return map;
 }
 function matchCell(slot,cat,kind){
   const tier=slotTier(slot),f=sourceFeature(slot,"cell",scanCropSpec(kind,false)),scores=[];
@@ -361,12 +390,12 @@ function confInfo(score,margin){
 }
 async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
-    const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
-    for(let i=0;i<SCAN_SLOTS.length;i++){
+    const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[],counts=await readAllSlotCounts(base);
+    for(const [i,count] of counts.entries()){
       const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-      const count=await readSlotCount(slot);if(!count)continue;
       const m=matchCell(slot,cat,kind);if(!m.best)continue;
-      const [ct,cc]=confInfo(m.score,m.margin);
+      const [ct0,cc0]=confInfo(m.score,m.margin);
+      const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
       rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
     }
     return {rows,base};
