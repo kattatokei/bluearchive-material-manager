@@ -254,9 +254,20 @@ function sourceFeature(src,mode="cell",cropSpec=null){
   return g.getImageData(0,0,z,z).data;
 }
 function simFeature(a,b){
-  let d=0,n=0;
-  for(let i=0;i<a.length;i+=4){d+=Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]);n+=3}
-  return Math.max(0,1-d/(n*255));
+  let diff=0,n=0,sa=0,sb=0,lumA=[],lumB=[];
+  const len=Math.min(a.length,b.length);
+  for(let i=0;i<len;i+=4){
+    diff+=Math.abs(a[i]-b[i])+Math.abs(a[i+1]-b[i+1])+Math.abs(a[i+2]-b[i+2]);n+=3;
+    const la=.299*a[i]+.587*a[i+1]+.114*a[i+2],lb=.299*b[i]+.587*b[i+1]+.114*b[i+2];
+    lumA.push(la);lumB.push(lb);sa+=la;sb+=lb;
+  }
+  if(!lumA.length)return 0;
+  const ma=sa/lumA.length,mb=sb/lumB.length;let cov=0,va=0,vb=0;
+  for(let i=0;i<lumA.length;i++){const da=lumA[i]-ma,db=lumB[i]-mb;cov+=da*db;va+=da*da;vb+=db*db}
+  const ncc=(va>0&&vb>0)?cov/Math.sqrt(va*vb):0;
+  const nccScore=Math.max(0,Math.min(1,(ncc+1)/2));
+  const diffScore=Math.max(0,1-diff/(n*255));
+  return Math.max(0,Math.min(1,.62*nccScore+.38*diffScore));
 }
 function scanCropSpec(kind,template=false){
   if(kind==="notes")return template?{left:.348,right:.4097,top:.2541,bottom:.442}:{left:.3547,right:.4103,top:.2632,bottom:.4474};
@@ -264,14 +275,15 @@ function scanCropSpec(kind,template=false){
   return {left:.18,right:.18,top:.12,bottom:.30};
 }
 function slotTier(slot){
-  const c=document.createElement("canvas");c.width=20;c.height=20;const g=c.getContext("2d",{willReadFrequently:true});
-  const sw=slot.width,sh=slot.height;
-  g.drawImage(slot,sw*27/234,sh*58/190,sw*20/234,sh*20/190,0,0,20,20);
-  const d=g.getImageData(0,0,20,20).data;let R=0,G=0,B=0,N=0;
-  for(let i=0;i<d.length;i+=4){R+=d[i];G+=d[i+1];B+=d[i+2];N++}
-  const v=[R/N,G/N,B/N],pal={basic:[181,203,218],intermediate:[119,176,253],advanced:[237,158,140],superior:[174,93,253]};
-  let best=null,dist=1e9,second=1e9;for(const [k,p] of Object.entries(pal)){const x=Math.hypot(v[0]-p[0],v[1]-p[1],v[2]-p[2]);if(x<dist){second=dist;dist=x;best=k}else if(x<second)second=x}
-  return dist<=80&&second-dist>=4?best:null;
+  const refW=234,refH=190;
+  const x1=Math.round(slot.width*27/refW),y1=Math.round(slot.height*58/refH);
+  const w=Math.max(2,Math.round(slot.width*20/refW)),hh=Math.max(2,Math.round(slot.height*20/refH));
+  const d=slot.getContext("2d",{willReadFrequently:true}).getImageData(x1,y1,Math.min(w,slot.width-x1),Math.min(hh,slot.height-y1)).data;
+  const rs=[],gs=[],bs=[];for(let i=0;i<d.length;i+=4){rs.push(d[i]);gs.push(d[i+1]);bs.push(d[i+2])}
+  const med=v=>{v.sort((a,b)=>a-b);return v[Math.floor(v.length/2)]||0},rgb=[med(rs),med(gs),med(bs)];
+  const pal={basic:[181,203,218],intermediate:[119,176,253],advanced:[237,158,140],superior:[174,93,253]};
+  const ds=Object.entries(pal).map(([k,p])=>[k,Math.hypot(rgb[0]-p[0],rgb[1]-p[1],rgb[2]-p[2])]).sort((a,b)=>a[1]-b[1]);
+  return ds[0][1]<=75&&(ds[1][1]-ds[0][1])>=6?ds[0][0]:null;
 }
 async function catalogFeatures(kind,onProgress){
   const cat=scanCatalog(kind),usable=cat.filter(x=>x.url);let done=0;
@@ -344,31 +356,30 @@ async function ensureWorker(){
 }
 
 async function readAllSlotCounts(base){
-  const worker=await ensureWorker();
-  const cellW=420,cellH=220,scale=5;
-  const comp=document.createElement("canvas");comp.width=cellW*5;comp.height=cellH*4;
+  const worker=await ensureWorker(),cellW=520,cellH=120,scale=6;
+  const comp=document.createElement("canvas");comp.width=cellW;comp.height=cellH*SCAN_SLOTS.length;
   const cg=comp.getContext("2d",{willReadFrequently:true});cg.fillStyle="#fff";cg.fillRect(0,0,comp.width,comp.height);
   for(let i=0;i<SCAN_SLOTS.length;i++){
     const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-    const sx=Math.round(slot.width*.40),sy=Math.round(slot.height*.69),sw=Math.max(1,slot.width-sx),sh=Math.max(1,Math.round(slot.height*.305));
-    const raw=slot.getContext("2d",{willReadFrequently:true}).getImageData(sx,sy,sw,Math.min(sh,slot.height-sy));
-    const tmp=document.createElement("canvas");tmp.width=sw;tmp.height=raw.height;const tg=tmp.getContext("2d",{willReadFrequently:true});
-    const out=tg.createImageData(sw,raw.height);
+    const sx=Math.round(slot.width*.12),sy=Math.round(slot.height*.61),sw=Math.max(1,slot.width-sx),sh=Math.max(1,slot.height-sy);
+    const raw=slot.getContext("2d",{willReadFrequently:true}).getImageData(sx,sy,sw,sh);
+    const small=document.createElement("canvas");small.width=sw;small.height=sh;const sg=small.getContext("2d",{willReadFrequently:true});
+    const out=sg.createImageData(sw,sh);
     for(let p=0;p<raw.data.length;p+=4){
-      const lum=.299*raw.data[p]+.587*raw.data[p+1]+.114*raw.data[p+2],v=lum<175?0:255;
+      const lum=.299*raw.data[p]+.587*raw.data[p+1]+.114*raw.data[p+2],v=lum<165?0:255;
       out.data[p]=out.data[p+1]=out.data[p+2]=v;out.data[p+3]=255;
     }
-    tg.putImageData(out,0,0);
-    const row=Math.floor(i/5),col=i%5,dw=sw*scale,dh=raw.height*scale;
-    cg.drawImage(tmp,col*cellW+30,row*cellH+30,dw,dh);
+    sg.putImageData(out,0,0);
+    const dw=sw*scale,dh=sh*scale,dy=i*cellH+Math.max(2,Math.floor((cellH-dh)/2));
+    cg.drawImage(small,20,dy,dw,dh);
   }
   await worker.setParameters({tessedit_char_whitelist:"0123456789xXkK",tessedit_pageseg_mode:"11",preserve_interword_spaces:"1"});
   const res=await worker.recognize(comp),map=new Map();
   for(const w of res.data.words||[]){
-    const q=parseQtyText(w.text);if(q===null)continue;
-    const cx=(w.bbox.x0+w.bbox.x1)/2,cy=(w.bbox.y0+w.bbox.y1)/2,col=Math.floor(cx/cellW),row=Math.floor(cy/cellH);
-    if(col<0||col>=5||row<0||row>=4)continue;
-    const idx=row*5+col,old=map.get(idx);
+    const q=parseQtyText(w.text);if(q===null||q>999999)continue;
+    const cy=(w.bbox.y0+w.bbox.y1)/2,idx=Math.floor(cy/cellH);
+    if(idx<0||idx>=SCAN_SLOTS.length)continue;
+    const old=map.get(idx);
     if(!old||(w.confidence||0)>(old.conf||0))map.set(idx,{value:q,conf:w.confidence||0,text:w.text});
   }
   return map;
@@ -385,8 +396,11 @@ async function recognizeCredit(base){
   const r=await w.recognize(c);const vals=(r.data.words||[]).map(x=>parseQtyText(x.text)).filter(x=>x!==null&&x>10000);
   return vals.length?Math.max(...vals):null;
 }
-function confInfo(score,margin){
-  if(score>=.80&&margin>=.03)return ["高","high"];if(score>=.68&&margin>=.015)return ["中","mid"];return ["要確認","low"];
+function confInfo(kind,score,margin){
+  const hi=kind==="notes"?[.82,.08]:kind==="bd"?[.88,.04]:[.80,.03];
+  if(score>=hi[0]&&margin>=hi[1])return ["高","high"];
+  if(score>=hi[0]-.10&&margin>=Math.max(.012,hi[1]*.35))return ["中","mid"];
+  return ["要確認","low"];
 }
 
 async function ocrSlotVariant(slot,left,top,threshold){
@@ -466,11 +480,17 @@ async function analyzeOne(file,fileIndex,kind,cat){
     const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
     if(kind==="reports") return {rows:await analyzeReports(base,fileIndex),base};
     const counts=await readAllSlotCounts(base);
-    for(const [i,count] of counts.entries()){
-      if(count.value<0||count.value>999999)continue;
+    const indexes=(kind==="notes"||kind==="bd")?Array.from({length:SCAN_SLOTS.length},(_,i)=>i):[...counts.keys()];
+    for(const i of indexes){
       const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
+      let count=counts.get(i);
+      if(!count&&(kind==="notes"||kind==="bd")){
+        const q=await ocrSlotVariant(slot,.12,.61,155);
+        if(q.value!==null&&q.value>=0&&q.value<=999999)count={value:q.value,conf:q.conf,text:q.text};
+      }
+      if(!count||count.value<0||count.value>999999)continue;
       const m=matchCell(slot,cat,kind);if(!m.best)continue;
-      const [ct0,cc0]=confInfo(m.score,m.margin);
+      const [ct0,cc0]=confInfo(kind,m.score,m.margin);
       const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
       rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
     }
