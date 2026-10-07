@@ -16,6 +16,11 @@ button,.filebtn,select,input[type=search]{border:1px solid var(--line);backgroun
 .scan-upload{border:2px dashed #bfdbfe;background:#f8fbff;border-radius:14px;padding:18px;text-align:center}
 .scan-upload .filebtn{display:inline-block;margin-top:10px}
 .scan-preview{width:100%;max-height:520px;object-fit:contain;background:#111827;border-radius:12px;display:none}
+.scan-preview-strip{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:3px}
+.scan-thumb{position:relative;flex:0 0 112px;border:2px solid transparent;border-radius:10px;padding:3px;background:#f8fafc;cursor:pointer}
+.scan-thumb.active{border-color:var(--blue);background:var(--soft)}
+.scan-thumb img{display:block;width:100%;height:64px;object-fit:cover;border-radius:7px;background:#e5e7eb}
+.scan-thumb span{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px;text-align:center}
 .scan-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .scan-status{margin-top:10px;padding:10px 12px;border-radius:10px;background:#f8fafc;border:1px solid var(--line);font-size:13px;color:var(--muted);line-height:1.6}
 .scan-results{display:grid;gap:8px}.scan-result{display:grid;grid-template-columns:minmax(200px,1fr) 110px 82px 72px;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}
@@ -113,12 +118,13 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
         <option value="wbsecret">WB・秘伝ノート</option>
       </select>
     </div>
-    <div class="scan-actions"><button id="scanAnalyzeBtn" disabled>画像を解析</button><button id="scanApplyBtn" disabled>確認した内容を一括反映</button><button id="scanClearBtn">クリア</button></div>
+    <div class="scan-actions"><button id="scanAnalyzeBtn" disabled>画像を解析</button><button id="scanApplyBtn" disabled>確認した内容を一括反映</button><button id="scanCopyBtn" disabled>結果を文字でコピー</button><button id="scanClearBtn">クリア</button></div>
     <div id="scanStatus" class="scan-status">画像を選択してください。</div>
     <div class="scan-debug">クレジットは最後に選択した画像の上部表示を読み取ります。低信頼の候補は自動反映せず「要確認」にします。現在は画像種別を細かく分け、別カテゴリへの誤判定を抑える方式です。</div>
   </div>
   <div class="scan-panel">
     <img id="scanPreview" class="scan-preview" alt="読取画像プレビュー">
+    <div id="scanPreviewStrip" class="scan-preview-strip"></div>
     <div id="scanEmpty" class="caption" style="padding:40px 10px;text-align:center">ここに画像プレビューと読取候補を表示します。</div>
     <div id="scanSummary" class="scan-summary"></div>
     <div id="scanResults" class="scan-results"></div>
@@ -508,7 +514,7 @@ function renderScanRows(kind){
   scanResults.querySelectorAll(".scan-result").forEach(el=>{const i=+el.dataset.i;el.querySelector("[data-sel]").onchange=e=>{scanRows[i].key=e.target.value;scanRows[i].label=e.target.selectedOptions[0].textContent;scanRows[i].confidence="手動";scanRows[i].confClass="mid";el.querySelector(".conf").textContent="手動";el.querySelector(".conf").className="conf mid"};el.querySelector("[data-count]").oninput=e=>scanRows[i].count=n(e.target.value)});
   const hi=scanRows.filter(x=>x.confClass==="high").length,lo=scanRows.filter(x=>x.confClass==="low").length;
   scanSummary.innerHTML='<span class="pill">'+scanRows.length+'件検出</span><span class="pill">高信頼 '+hi+'</span><span class="pill">要確認 '+lo+'</span>';
-  scanApplyBtn.disabled=!scanRows.length;
+  scanApplyBtn.disabled=!scanRows.length;scanCopyBtn.disabled=!scanRows.length;
 }
 function applyScanKey(key,val){
   const p=key.split(".");
@@ -520,16 +526,32 @@ function applyScanKey(key,val){
   else if(p[0]==="wb")state.wb[p[1]]=val;
   else if(p[0]==="simple")state.simple[p[1]]=val;
 }
+let scanPreviewUrls=[];
+function showScanPreview(index){
+  if(index<0||index>=scanPreviewUrls.length)return;
+  scanPreview.src=scanPreviewUrls[index];scanPreview.style.display="block";scanEmpty.style.display="none";
+  scanPreviewStrip.querySelectorAll(".scan-thumb").forEach((x,i)=>x.classList.toggle("active",i===index));
+}
+function renderScanPreviewStrip(){
+  scanPreviewStrip.innerHTML="";
+  scanPreviewUrls.forEach((url,i)=>{
+    const b=document.createElement("button");b.type="button";b.className="scan-thumb"+(i===0?" active":"");
+    b.innerHTML='<img src="'+url+'" alt="画像'+(i+1)+'"><span>画像'+(i+1)+'</span>';
+    b.onclick=()=>showScanPreview(i);scanPreviewStrip.appendChild(b);
+  });
+}
 scanFile.onchange=e=>{
+  scanPreviewUrls.forEach(u=>URL.revokeObjectURL(u));scanPreviewUrls=[];
   scanFiles=[...e.target.files];if(!scanFiles.length)return;
-  if(scanObjectUrl)URL.revokeObjectURL(scanObjectUrl);scanObjectUrl=URL.createObjectURL(scanFiles[0]);scanPreview.src=scanObjectUrl;scanPreview.style.display="block";scanEmpty.style.display="none";
-  scanRows=[];scanResults.innerHTML="";scanSummary.innerHTML="";scanAnalyzeBtn.disabled=false;scanApplyBtn.disabled=true;scanStatus.textContent=scanFiles.length+"枚読み込みました。画像の種類を確認して解析してください。";
+  scanPreviewUrls=scanFiles.map(f=>URL.createObjectURL(f));scanObjectUrl=scanPreviewUrls[0];
+  renderScanPreviewStrip();showScanPreview(0);
+  scanRows=[];scanResults.innerHTML="";scanSummary.innerHTML="";scanAnalyzeBtn.disabled=false;scanApplyBtn.disabled=true;scanCopyBtn.disabled=true;scanStatus.textContent=scanFiles.length+"枚読み込みました。下のサムネイルで全画像を切り替えて確認できます。";
 };
 scanClearBtn.onclick=()=>{
-  if(scanObjectUrl)URL.revokeObjectURL(scanObjectUrl);scanObjectUrl=null;scanFiles=[];scanRows=[];scanFile.value="";scanPreview.removeAttribute("src");scanPreview.style.display="none";scanEmpty.style.display="block";scanResults.innerHTML="";scanSummary.innerHTML="";scanAnalyzeBtn.disabled=true;scanApplyBtn.disabled=true;scanStatus.textContent="画像を選択してください。";
+  scanPreviewUrls.forEach(u=>URL.revokeObjectURL(u));scanPreviewUrls=[];scanObjectUrl=null;scanFiles=[];scanRows=[];scanFile.value="";scanPreview.removeAttribute("src");scanPreview.style.display="none";scanPreviewStrip.innerHTML="";scanEmpty.style.display="block";scanResults.innerHTML="";scanSummary.innerHTML="";scanAnalyzeBtn.disabled=true;scanApplyBtn.disabled=true;scanCopyBtn.disabled=true;scanStatus.textContent="画像を選択してください。";
 };
 scanAnalyzeBtn.onclick=async()=>{
-  if(!scanFiles.length)return;scanAnalyzeBtn.disabled=true;scanApplyBtn.disabled=true;scanRows=[];scanResults.innerHTML="";scanSummary.innerHTML="";
+  if(!scanFiles.length)return;scanAnalyzeBtn.disabled=true;scanApplyBtn.disabled=true;scanCopyBtn.disabled=true;scanRows=[];scanResults.innerHTML="";scanSummary.innerHTML="";
   const kind=scanKind.value;
   try{
     scanStatus.textContent="認識用アイコンを準備しています…";
@@ -540,6 +562,24 @@ scanAnalyzeBtn.onclick=async()=>{
     scanRows=dedupeRows(rows);renderScanRows(kind);
     scanStatus.textContent=scanRows.length+"件の候補を検出しました。レポートは4枠を個別OCR、その他はアイコン照合＋所持数読取です。赤い「要確認」を中心に確認してください。";
   }catch(e){console.error(e);scanStatus.textContent="解析に失敗しました。通信状況を確認して再試行してください。";}finally{scanAnalyzeBtn.disabled=false}
+};
+function scanCopyText(){
+  const kindLabel=scanKind.selectedOptions[0]?.textContent||scanKind.value;
+  const lines=["【ブルアカ素材 画像読取結果】","種類: "+kindLabel,"画像数: "+scanFiles.length,""];
+  scanRows.forEach((r,i)=>lines.push((i+1)+". "+r.label+" = "+n(r.count)+" / 判定:"+r.confidence+(r.source?" / 画像"+r.source:"")));
+  return lines.join("\n");
+}
+scanCopyBtn.onclick=async()=>{
+  if(!scanRows.length)return;
+  const text=scanCopyText();
+  try{
+    await navigator.clipboard.writeText(text);
+    scanStatus.textContent="読取結果を文字でコピーしました。このままチャットに貼り付けられます。";
+  }catch{
+    const ta=document.createElement("textarea");ta.value=text;document.body.appendChild(ta);ta.select();
+    document.execCommand("copy");ta.remove();
+    scanStatus.textContent="読取結果を文字でコピーしました。このままチャットに貼り付けられます。";
+  }
 };
 scanApplyBtn.onclick=()=>{
   if(!scanRows.length)return;if(!confirm(scanRows.length+"件を所持数へ反映しますか？"))return;
