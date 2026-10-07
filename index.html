@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.10";
+const APP_VERSION="0.9.11";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -453,16 +453,12 @@ function readConnectedCount(slot){
     mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
     const y=Math.floor(p/sw),x=p%sw;if(y<sh*.77||x<sw*.35)mask[p]=0;
   }
-  let comps=connectedComponents(mask,sw,sh).filter(c=>c.area>=18&&c.h>=10&&c.w>=4&&c.w<=16).sort((a,b)=>a.minx-b.minx);
+  let comps=connectedComponents(mask,sw,sh).filter(c=>c.area>=18&&c.h>=10&&c.w>=4).sort((a,b)=>a.minx-b.minx);
   if(comps.length<2)return null;
-  comps=comps.slice(1);
+  comps=comps.slice(1); // leading "x"
   if(!comps.length||comps.length>6)return null;
   const digits=[],scores=[],margins=[];
-  for(const c of comps){
-    const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyEmpiricalDigit(norm);
-    if(!r.digit||r.score<.22)return null;
-    digits.push(r.digit);scores.push(r.score);margins.push(r.margin);
-  }
+  for(const c of comps){const norm=normalizeDigitComponent(c,mask,sw,sh),r=classifyEmpiricalDigit(norm);if(!r.digit||r.score<.22)return null;digits.push(r.digit);scores.push(r.score);margins.push(r.margin)}
   const value=Number(digits.join(""));if(!Number.isFinite(value))return null;
   return {value,conf:Math.min(...scores)*100,text:String(value),margin:Math.min(...margins)};
 }
@@ -586,6 +582,38 @@ async function analyzeReports(base,fileIndex){
   }
   return rows;
 }
+function expectedCountDigits(slot){
+  const sw=slot.width,sh=slot.height,d=slot.getContext("2d",{willReadFrequently:true}).getImageData(0,0,sw,sh).data,mask=new Uint8Array(sw*sh);
+  for(let p=0,i=0;i<d.length;i+=4,p++){
+    const dr=d[i]-45,dg=d[i+1]-70,db=d[i+2]-99;
+    mask[p]=(dr*dr+dg*dg+db*db)<=45*45?1:0;
+    const y=Math.floor(p/sw),x=p%sw;
+    if(y<sh*.77||x<sw*.35)mask[p]=0;
+  }
+  const comps=connectedComponents(mask,sw,sh)
+    .filter(c=>c.area>=18&&c.h>=10&&c.w>=4)
+    .sort((a,b)=>a.minx-b.minx);
+  let xIndex=-1;
+  for(let j=0;j<comps.length;j++){
+    const c=comps[j];
+    if(c.w>=9&&c.w<=14&&c.h>=9&&c.h<=12){
+      const tallAfter=comps.slice(j+1).filter(q=>q.h>=13&&q.w>=4&&q.w<=14).length;
+      if(tallAfter>=1)xIndex=j;
+    }
+  }
+  if(xIndex<0)return null;
+  const n=comps.slice(xIndex+1).filter(c=>c.h>=13&&c.w>=4&&c.w<=14).length;
+  return n||null;
+}
+function trimCountByGeometry(slot,count){
+  if(!count||count.value==null)return count;
+  const digits=expectedCountDigits(slot);
+  if(!digits)return count;
+  const raw=String(count.value);
+  if(raw.length<=digits)return count;
+  const trimmed=raw.slice(-digits);
+  return {...count,value:Number(trimmed),text:trimmed};
+}
 async function analyzeOne(file,fileIndex,kind,cat){
   const url=URL.createObjectURL(file);try{
     const img=await loadImg(url),base=makeCanvasFromImage(img),rows=[];
@@ -596,6 +624,7 @@ async function analyzeOne(file,fileIndex,kind,cat){
       const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
       let count=(kind==="notes"||kind==="bd")?readConnectedCount(slot):counts.get(i);
       if(!count||count.value<0||count.value>999999)continue;
+      if(kind==="notes"||kind==="bd")count=trimCountByGeometry(slot,count);
       const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
       const [ct0,cc0]=confInfo(kind,m.score,m.margin);
       const countWeak=count.conf<45,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
