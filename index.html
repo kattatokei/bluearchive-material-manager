@@ -135,7 +135,7 @@ input[type=file]{display:none}.pill{font-size:11px;padding:3px 7px;border-radius
 </main>
 
 <script>
-const APP_VERSION="0.9.5";
+const APP_VERSION="0.9.6";
 document.getElementById("versionBadge").textContent="v"+APP_VERSION;
 document.title="ブルアカ 素材管理 v"+APP_VERSION;
 const KEY="ba-material-manager-v2", OLDKEY="ba-material-manager-v1";
@@ -596,9 +596,9 @@ async function analyzeOne(file,fileIndex,kind,cat){
     if(kind==="notes"||kind==="bd"){
       for(let i=0;i<SCAN_SLOTS.length;i++){
         const [x1,y1,x2,y2]=SCAN_SLOTS[i],slot=cropCanvas(base,base.width*x1,base.height*y1,base.width*(x2-x1),base.height*(y2-y1));
-        const count=readConnectedCount(slot);if(!count||count.value<0||count.value>999999)continue;
+        const count=readConnectedCount(slot);
         const m=kind==="notes"?(matchNoteHash(slot,slotTier(slot),cat)||matchCell(slot,cat,kind)):matchCell(slot,cat,kind);if(!m.best)continue;
-        const [ct0,cc0]=confInfo(kind,m.score,m.margin);
+        if(!count||count.value<0||count.value>999999){rows.push({key:m.best.key,label:m.best.label,count:"",confidence:"要確認",confClass:"low",score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});continue;}const [ct0,cc0]=confInfo(kind,m.score,m.margin);
         const countWeak=count.conf<50,ct=countWeak&&cc0==="high"?"中":ct0,cc=countWeak&&cc0==="high"?"mid":cc0;
         rows.push({key:m.best.key,label:m.best.label,count:count.value,confidence:ct,confClass:cc,score:m.score,margin:m.margin,candidates:m.candidates,source:fileIndex+1,row:Math.floor(i/5),col:i%5});
       }
